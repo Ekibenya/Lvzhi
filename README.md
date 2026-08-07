@@ -152,34 +152,3 @@
 十六篇论考加九地区调查册，从身体构造、尾耳语言、发情与窝群契约，一路写到姓名权、军役、殖民展示与学派论战。书里明说猫娘没有对应人类白黄黑那样的面容分界 —— 所谓「种族」往往只是军队、殖民机关或谱牒家族的行政命名，把行政类别误作自然界限，是该院内部最激烈的争论之一。
 
 游戏里那些数目 —— 一天一百二十里、军功簿的杂役栏、血不能混、脸不老而寿数照旧 —— 都是从这一册里出来的。
-
----
-
-## 自己跑一份
-
-```
-git clone https://github.com/Ekibenya/Lvzhi
-cd Lvzhi
-python3 -m http.server 8080
-```
-
-然后开 `http://127.0.0.1:8080/core/vendor/three/build/chunks/9d717bc0/156a50943028.html`。
-
-线上那份靠 `vercel.json` 把 `/` 重写到这个文件，所以直接开根路径就行。
-
-## 目录
-
-```
-core/vendor/…/156a50943028.html   整个游戏，一个文件
-core/three-bundle.min.js          三维引擎
-core/res/data/idx/v1/             五十个城市索引包
-core/res/data/st/v1/              十个三维资材包
-core/res/icon/                    图标
-docs/books/                       参考书
-docs/img/                         截图
-sw.js                             离线壳
-manifest.webmanifest              可装成桌面应用
-vercel.json                       路由与缓存
-```
-
-素材总量近 200 MB，`sw.js` 只预存「打得开」所需的那几个档，其余用过哪个存哪个。
