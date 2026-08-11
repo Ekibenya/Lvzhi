@@ -490,41 +490,37 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
    每一枚是自己那个抽屉的缩略图（标题栏三个点 + 内容示意），绕 Y 轴向里转十几度、
    压一层投影，左下角挂一枚方圆图标探出窗外——就是台前调度左侧那一叠最近窗口的样子。
    点一下那枚小窗，对应的抽屉滑出来；正在开着的那一枚转正、贴金边、往右挪一点。 */
-.gRail{position:absolute;left:8px;top:50%;transform:translateY(-50%);z-index:34;
-      display:flex;flex-direction:column;gap:27px;padding:6px 0 6px 16px;
-      perspective:760px;perspective-origin:0% 50%;
+.gRail{position:absolute;left:6px;top:50%;transform:translateY(-50%);z-index:34;
+      display:flex;flex-direction:column;gap:20px;padding:4px 0 4px 12px;
+      perspective:620px;perspective-origin:0% 50%;
       }
-.gArr{position:relative;width:88px;height:62px;cursor:pointer;color:var(--mut);
+.gArr{position:relative;width:64px;height:44px;cursor:pointer;color:var(--mut);
       transform:rotateY(17deg);transform-style:preserve-3d;
       transition:transform .34s cubic-bezier(.2,.85,.25,1),color .22s}
 .gArr:hover{transform:rotateY(9deg) translateX(4px) translateZ(14px);color:var(--txt)}
-/* 缩略窗本体 */
-.gArr .win{position:absolute;inset:0;border-radius:9px;overflow:hidden;
-      background:rgba(19,19,18,.70);border:1px solid rgba(236,236,232,.17);
-      box-shadow:0 12px 26px rgba(0,0,0,.58),inset 0 1px 0 rgba(255,255,255,.06);
-      -webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%);
-      transition:border-color .22s,box-shadow .22s}
-.gArr .bar{height:12px;display:flex;align-items:center;gap:3px;padding:0 5px;
-      border-bottom:1px solid rgba(236,236,232,.11);background:rgba(236,236,232,.045)}
-.gArr .bar i{width:3px;height:3px;border-radius:50%;background:rgba(236,236,232,.34)}
+/* 缩略窗本体：一道细边框住内容。没有标题栏、没有四角括号——
+   那三颗视窗按钮是苹果的，角括号是本作别处的花活，搁在 44px 高的小窗上只剩噪点。 */
+.gArr .win{position:absolute;inset:0;overflow:hidden;
+      background:rgba(6,6,6,.80);border:1px solid rgba(236,236,232,.30);
+      -webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);
+      transition:border-color .22s}
 /* 小窗里装的是那个抽屉的真内容，不是画一张示意图：把抽屉的 innerHTML 原样搬进
    一个 520px 宽的容器（抽屉的真实宽度），再整体 scale 到 88px。
    搬进来之前把所有 id 剥掉——克隆里带着 #shopWrap、#armWrap 这些 id 的话，
    document.getElementById 会先摸到缩略图里的那一份，真面板当场失灵。
    地图是画布，innerHTML 搬过去是空的，单独用 drawImage 拷贝像素。 */
-.gArr .mini{position:absolute;left:0;right:0;top:12px;bottom:0;overflow:hidden;
-      pointer-events:none;opacity:.9}
-.gArr .mw{position:absolute;left:0;top:0;width:520px;height:830px;
-      transform:scale(.1692);transform-origin:0 0}
+.gArr .mini{position:absolute;inset:0;overflow:hidden;pointer-events:none;opacity:.9}
+.gArr .mw{position:absolute;left:0;top:0;width:500px;height:830px;
+      transform:scale(.128);transform-origin:0 0}
 .gArr .mmap{position:absolute;left:0;top:0;width:100%;height:100%;display:block;opacity:.92}
-/* 左下角探出窗外的那枚方圆图标 */
-.gArr .ic{position:absolute;left:-15px;bottom:-9px;width:31px;height:31px;border-radius:9px;
-      background:linear-gradient(158deg,#33322d,#131312);border:1px solid rgba(236,236,232,.22);
-      box-shadow:0 7px 15px rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;
-      color:var(--gold-hi);transition:border-color .22s}
-.gArr .ic svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.4;
+/* 左下角探出窗外的那枚标记：方的，不是方圆；一道细边、纯黑底、金线图形 */
+.gArr .ic{position:absolute;left:-11px;bottom:-7px;width:22px;height:22px;
+      background:#0a0a0a;border:1px solid rgba(236,236,232,.34);
+      display:flex;align-items:center;justify-content:center;
+      color:var(--gold-hi);transition:border-color .22s,color .22s}
+.gArr .ic svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.4;
       stroke-linecap:square;stroke-linejoin:miter;display:block}
-.gArr .t{position:absolute;left:20px;bottom:-19px;font-size:8px;letter-spacing:.16em;
+.gArr .t{position:absolute;left:15px;bottom:-15px;font-size:7.5px;letter-spacing:.26em;
       white-space:nowrap;color:var(--mut)}
 #arrShop{order:2}
 #arrArm{order:3}
@@ -532,14 +528,14 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
 #game.mapOpen #arrMap,#game.armOpen #arrArm,#game.shopOpen #arrShop{
       transform:rotateY(0deg) translateX(8px) translateZ(26px);color:var(--gold-hi)}
 #game.mapOpen #arrMap .win,#game.armOpen #arrArm .win,#game.shopOpen #arrShop .win{
-      border-color:rgba(201,155,63,.62);box-shadow:0 14px 30px rgba(0,0,0,.6),0 0 0 1px rgba(201,155,63,.3)}
+      border-color:var(--gold)}
 #game.mapOpen #arrMap .ic,#game.armOpen #arrArm .ic,#game.shopOpen #arrShop .ic{
-      border-color:rgba(201,155,63,.62)}
+      border-color:var(--gold);background:var(--gold);color:#0a0a0a}
 #game.mapOpen #arrMap .t,#game.armOpen #arrArm .t,#game.shopOpen #arrShop .t{color:var(--gold-hi)}
-.gPanel{position:absolute;left:126px;width:min(42vw,500px);z-index:30;
-      background:rgba(13,13,12,.62);border:1px solid rgba(236,236,232,.13);border-radius:18px;
-      box-shadow:0 18px 48px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.05);
-      backdrop-filter:blur(24px) saturate(170%);-webkit-backdrop-filter:blur(24px) saturate(170%);
+.gPanel{position:absolute;left:96px;width:min(42vw,500px);z-index:30;
+      background:rgba(6,6,6,.78);border:1px solid rgba(236,236,232,.20);
+      box-shadow:0 14px 34px rgba(0,0,0,.5);
+      backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
       transform-origin:0% 50%;transform:translateX(-26px) scale(.955);opacity:0;pointer-events:none;
       transition:transform .34s cubic-bezier(.2,.85,.25,1),opacity .26s ease;overflow:hidden}
 #pnMap{top:56px;bottom:10px}
@@ -554,6 +550,7 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
 #game.mapOpen #pnMap,#game.armOpen #pnArm,#game.shopOpen #pnShop{
       transform:none;opacity:1;pointer-events:auto;z-index:33}
 #pnShop{top:56px;bottom:10px}
+
 .shRow{display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid rgba(236,236,232,.07)}
 .shRow:hover{background:rgba(236,236,232,.045)}
 .shRow .ic{width:22px;height:22px;flex:0 0 22px;opacity:.82}
@@ -775,7 +772,7 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
   #game .gMfd{display:none;left:0;right:0;width:auto;bottom:0;border-left:0;padding-bottom:40px}
   .gRail{display:none}
   .gPanel{display:none;transform:none;transition:none;width:auto;left:0;right:0;
-      opacity:1;pointer-events:auto;border:0;border-radius:0;box-shadow:none}
+      opacity:1;pointer-events:auto;border:0;box-shadow:none}
   /* 舆·备一页：地图上、装备下（Ghost 式上下布局省空间） */
   #game[data-pg=map] #pnMap{display:block;top:46px;bottom:auto;height:calc((100dvh - 80px)*.52)}
   #game[data-pg=map] #pnArm{display:block;top:calc(46px + (100dvh - 80px)*.52);bottom:0;padding-bottom:40px;border-top:1px solid rgba(236,236,232,.16);overflow-y:auto}
@@ -1072,10 +1069,18 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
        -webkit-backdrop-filter:blur(7px) saturate(140%);backdrop-filter:blur(7px) saturate(140%)}
 .mvCard .cedge{position:absolute;inset:0;width:100%;height:100%;overflow:visible;
        pointer-events:none;z-index:4;fill:none}
-/* 卡叠是一张压一张，卡面必须挡得住后面那张：环那边的卡是转开的、彼此错着，
-   六成不透明够用；叠起来之后同样的六成就成了「后一张的字透到前一张上」。 */
-.gMfd.mvDeck .mvCard .cfr{background:rgba(7,7,7,.96)}
-.gMfd.mvDeck .mvCard.on .cfr{background:rgba(8,8,8,.93)}
+/* 与地图／装备／商店那三扇窗同一档毛玻璃：同样的底色、同样的模糊。
+   台前调度里小窗彼此不重叠，不必再靠不透明去挡后面那张。 */
+.gMfd.mvDeck .mvCard .cfr{background:rgba(6,6,6,.80);
+      -webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px)}
+/* 收成小窗的那几段：正文只看不点，标题挪到窗下面一行 */
+.mvCard.thumb .mvBody{overflow:hidden;pointer-events:none}
+.mvCard.thumb .ftag,.mvCard.thumb .fnum{display:none}
+.mvCard.thumb .mvGhost{left:1px;right:auto;bottom:-14px;text-align:left}
+.mvCard.thumb .mvGhost .g1,.mvCard.thumb .mvGhost .g2{display:none}
+.mvCard.thumb .mvGhost .g3{margin-top:0;font-size:7.5px;letter-spacing:.26em;color:var(--mut)}
+#game .gMfd.mvDeck{overflow:visible}
+.gMfd.mvDeck .mvStage{overflow:visible}
 /* 顶沿与底沿是弧最宽的地方，小字贴边写没问题；细的是腰，让正文去躲。 */
 .mvCard .ftag{position:absolute;left:11px;top:8px;z-index:2;
               font-size:8px;letter-spacing:.34em;color:var(--mut);white-space:nowrap}
@@ -1315,18 +1320,15 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
 
   <div class="gRail">
     <div class="gArr" id="arrMap" title="TABVLA · 地图">
-      <div class="win"><div class="bar"><i></i><i></i><i></i></div>
-        <div class="mini"><canvas class="mmap" width="176" height="100"></canvas></div></div>
+      <div class="win"><div class="mini"><canvas class="mmap" width="128" height="88"></canvas></div></div>
       <div class="ic"><svg viewBox="0 0 24 24"><path d="M3 6l6-2.2 6 2.2 6-2.2V18l-6 2.2L9 18l-6 2.2z"/><path d="M9 3.8V18M15 6v14.2"/></svg></div>
       <span class="t">地图</span></div>
     <div class="gArr" id="arrShop" title="MERCATVS · 商店">
-      <div class="win"><div class="bar"><i></i><i></i><i></i></div>
-        <div class="mini"><div class="mw"></div></div></div>
+      <div class="win"><div class="mini"><div class="mw"></div></div></div>
       <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 9.5l2-5h12l2 5H4z"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5.5h4V20"/></svg></div>
       <span class="t">商店</span></div>
     <div class="gArr" id="arrArm" title="ARMA · 装备">
-      <div class="win"><div class="bar"><i></i><i></i><i></i></div>
-        <div class="mini"><div class="mw"></div></div></div>
+      <div class="win"><div class="mini"><div class="mw"></div></div></div>
       <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3.2l7 2.6v5.4c0 4.1-2.8 7.4-7 8.8-4.2-1.4-7-4.7-7-8.8V5.8z"/><path d="M12 8v6M9.4 10.6h5.2"/></svg></div>
       <span class="t">装备</span></div>
   </div>
@@ -11314,11 +11316,15 @@ function mvSize(){
      正前那张放开到 0.70 台高（够读，超出的才滚），转开的那几张收到 0.26 台高，
      于是它们贴得近、斜得狠、还看得见内容，环的形状一眼就出来了。
      高度按离正前的距离连续插值，不是到位才跳：转的过程本身就是伸缩的过程。 */
-  var PEEK0=Math.max(24,Math.round(H*.042));
-  /* 卡叠要让「正前一张 + 其余各一条抬头」全部站得下，上限按这个反推；
-     环那边没有抬头，照旧给 0.68 台高。 */
+  /* 小窗尺寸与上限：要让「正前一整扇窗 + 其余各一枚小窗」全部站得下。
+     小窗宽度按整扇窗的两成四走，但封在 46~72px 之间——手机上面板宽，
+     不封顶的话小窗跟着涨到九十几像素，五枚就把台面吃光了。 */
+  MV.tw=Math.max(46,Math.min(72,Math.round(cw*.24)));
+  MV.th=Math.round(MV.tw*.68);
+  MV.tgap=8;
+  var STEP0=MV.th+MV.tgap;
   var maxH=(mvMode()===2)?Math.max(150,Math.round(H*.68))
-                         :Math.max(150,H-PEEK0*Math.max(0,MV.cards.length-1)-16);
+                         :Math.max(150,H-STEP0*Math.max(0,MV.cards.length-1)-16);
   var minH=104,PADY=43;   /* PADY＝正文上下内距＋两条 1px 内衬 */
   /* 侧卡收到一条边的高度：屏幕上下总共就这么点地方，侧卡越矮，同屏能站的段数越多，
      弧面上每寸屏幕转过的角度也越大——「在轮子里看轮圈」靠的就是这个。 */
@@ -11496,44 +11502,60 @@ function mvShell(C,w,h,R,P,a,curve){
    没有任何旋转——面是平的，纵深全由「退后＋缩小＋压暗」给。翻页就是这一叠往上或
    往下走一格，和切换视窗一个道理。 */
 function mvDeck(){
-  var n=MV.n,P=MV.P||1500,DZ=MV.dz||120,PEEK=MV.peek||34,C0=MV.cards;
+  var n=MV.n,C0=MV.cards;
   if(!n||!MV.full||MV.full.length!==n)return;      /* 高度还没量出来：这一帧先不画 */
-  /* 上一版把非正前的卡按原高摆着，只靠位置错开：可下面那一叠里，离得近的那张在前、
-     又比一条抬头高得多，把它后面所有卡整个盖住——所以「好多框都不显示」。
-     现在非正前的卡一律收成「渲染后正好 PEEK 高」的一条，谁也盖不住谁，n 张全在台上。
-     翻页＝正前那张展开、原先那张收回去。 */
-  var hs=[],ss=[],ds=[],i;
+  /* 台前调度：正前那一段是整扇窗，其余收成斜着的小窗贴在左边一列。
+     小窗里装的是那一段自己的正文——直接把真节点 scale 下去，不另做一份。
+     深度不靠 translateZ，靠「尺寸 + 倾角 + 压暗」，免得又变成广角哈哈镜。 */
+  var cw=MV.cw||260;
+  var TW=MV.tw||60,TH=MV.th||42,GAP=(MV.tgap==null?8:MV.tgap);
+  var ds=[],ws=[],hs=[],i;
   for(i=0;i<n;i++){
-    var d0=i-MV.pos,k0=Math.abs(d0),S0=P/(P+DZ*k0);
-    var strip=PEEK/S0;                               /* 收起来的高度，乘上透视正好一条 PEEK */
-    var h0=Math.round(strip+(MV.full[i]-strip)*clamp01(1-k0));
-    ds.push(d0);ss.push(S0);hs.push(h0);
-    if(Math.abs((C0[i].h||0)-h0)>=1){C0[i].el.style.height=h0+'px';C0[i].h=h0;}
+    var d0=i-MV.pos,k0=Math.abs(d0),w0=clamp01(1-k0);
+    ds.push(d0);
+    ws.push(Math.round(TW+(cw-TW)*w0));
+    hs.push(Math.round(TH+(MV.full[i]-TH)*w0));
   }
   var ia=Math.max(0,Math.min(n-1,Math.floor(MV.pos))),ib=Math.min(n-1,ia+1),fr=MV.pos-ia;
-  var hF=hs[ia]*(1-fr)+hs[ib]*fr;                    /* 正前那张此刻的高度 */
-  /* 居中的是「整叠」，不是正前那一张。停在第一段时上面一条抬头都没有、下面却有五条，
-     只把正前那张摆在正中，最下面两条就掉到台外去了。 */
-  var ctr=(MV.peek||34)*(MV.pos-((n-1)-MV.pos))/2;
+  var hF=hs[ia]*(1-fr)+hs[ib]*fr;
+  /* 居中的是整叠，不是正前那一张：停在第一段时上面一个小窗都没有、下面却有五个。 */
+  var step=TH+GAP, ctr=step*(MV.pos-((n-1)-MV.pos))/2;
   for(i=0;i<n;i++){
-    var C=C0[i],dd=ds[i],kk=Math.abs(dd),S2=ss[i],h2=hs[i],z=-DZ*kk;
-    /* 露头的那条边：k=0 居中；k=1 退到正前那张的上／下沿外；再往后每张挪一个 PEEK。
-       两个分支在 k→0 处都收敛到「居中」，所以翻页途中不跳。 */
-    var edge=(dd>0?(hF/2):(-hF/2-PEEK));
-    var t=Math.min(1,kk);
-    var Tr=(-h2*S2/2)*(1-t)+edge*t+PEEK*Math.max(0,kk-1)*(dd>0?1:-1)+ctr;
-    var y=(Tr+h2*S2/2)/S2;                           /* 由渲染后的上沿反解世界坐标的卡心 */
-    if(C.w!==MV.cw){C.w=MV.cw;C.el.style.width=MV.cw+'px';}
-    mvShell(C,MV.cw||1,h2,MV.R,P,0,false);
-    C.el.style.transform='translate(-50%,-50%) translateY('+y.toFixed(1)+'px) translateZ('+z.toFixed(1)+'px)';
+    var C=C0[i],dd=ds[i],kk=Math.abs(dd),W=ws[i],H=hs[i];
+    var t=Math.min(1,kk),thumb=(kk>.5);
+    var edge=(dd>0?(hF/2+GAP):(-hF/2-GAP-TH));
+    var Tr=(-H/2)*(1-t)+edge*t+step*Math.max(0,kk-1)*(dd>0?1:-1)+ctr;
+    var y=Tr+H/2;
+    var x=-(cw-W)/2;                               /* 小窗左沿与整扇窗的左沿对齐 */
+    var rot=17*(1-clamp01(1-kk));                  /* 转开的才斜，正前那扇是正的 */
+    if(C.w!==W){C.w=W;C.el.style.width=W+'px';}
+    if(Math.abs((C.h||0)-H)>=1){C.h=H;C.el.style.height=H+'px';}
+    mvShell(C,W,H,MV.R,MV.P||1500,0,false);
+    C.el.style.transform='translate(-50%,-50%) translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px)'
+      +' rotateY('+rot.toFixed(1)+'deg)';
     C.el.style.visibility='visible';
     C.el.style.opacity='1';
     C.el.style.pointerEvents='auto';
-    C.fr.style.filter='brightness('+(1-Math.min(.46,kk*.13)).toFixed(3)+')';
-    C.shade.style.background='rgba(0,0,0,'+Math.min(.44,kk*.13).toFixed(3)+')';
+    C.fr.style.filter='brightness('+(1-Math.min(.44,kk*.14)).toFixed(3)+')';
+    C.shade.style.background='rgba(0,0,0,'+Math.min(.34,kk*.11).toFixed(3)+')';
     C.shade.style.opacity='1';
-    C.ghost.style.opacity='0';                       /* 只剩一条抬头，轮廓编号没地方站 */
-    C.body.style.opacity=clamp01(1.02-kk*.5).toFixed(3);
+    C.ghost.style.opacity='1';
+    C.body.style.opacity='1';
+    /* 小窗里的正文：把真节点按整扇窗的尺寸摆好，再整体缩到小窗大小 */
+    var sc=W/cw, key=thumb?('t'+W+'x'+H):'f';
+    if(C.bk!==key){
+      C.bk=key;
+      var b=C.body;
+      if(thumb){
+        b.style.left='0px';b.style.right='auto';b.style.top='0px';b.style.bottom='auto';
+        b.style.width=cw+'px';b.style.height=Math.round(H/sc)+'px';
+        b.style.transformOrigin='0 0';b.style.transform='scale('+sc.toFixed(4)+')';
+      }else{
+        b.style.left='';b.style.right='';b.style.top='';b.style.bottom='';
+        b.style.width='';b.style.height='';b.style.transform='';C.pad=-1;
+      }
+    }
+    C.el.classList.toggle('thumb',thumb);
     C.el.classList.toggle('on',kk<.5);
   }
 }
@@ -11671,9 +11693,13 @@ function railThumb(arrId,srcId){
 function railMapThumb(){
   var c=document.querySelector('#arrMap .mmap'),src=document.getElementById('gmapCv');
   if(!c||!src)return;
-  /* 地图画布只在抽屉开着的时候画。没开过就一片空白，缩略窗跟着空——
-     先替它量一次尺寸、画一帧，缩略图才有东西可拷。之后开抽屉自会重画。 */
-  if(!railMapThumb._did&&GAME.on){railMapThumb._did=1;try{gmapSize();gmapDraw();}catch(_){}}
+  /* 地图画布只在抽屉开着的时候画，没开过就是一片空白，缩略窗跟着空。
+     只补画一次也不够——那一次很可能赶在地点、纪年定下来之前，画出来还是空的。
+     所以抽屉关着的时候每隔 1.4s 替它重画一帧；开着时本来就每帧在画，不必插手。 */
+  if(GAME.on&&!GAME.mapOpen){
+    var _mn=performance.now();
+    if(_mn-(railMapThumb._t||0)>1400){railMapThumb._t=_mn;try{gmapSize();gmapDraw();}catch(_){}}
+  }
   if(!(src.width>1)||!(src.height>1))return;
   var g=c.getContext('2d');if(!g)return;
   g.clearRect(0,0,c.width,c.height);
