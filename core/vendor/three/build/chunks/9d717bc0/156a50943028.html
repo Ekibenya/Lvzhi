@@ -11359,12 +11359,12 @@ function mvSize(){
   MV.tgap=6;
   var _cn=Math.max(1,MV.cards.length);
   while(_cn*(MV.th+MV.tgap)>H-20&&MV.th>22){MV.tw-=3;MV.th=Math.round(MV.tw*.70);}
-  /* 让出来那一条：窗 + 缩略列 + 三道 2px 的缝，紧贴着排，一寸不空着。
-     缩略列吃掉四十来像素，光靠原来那 322 的话窗只剩 268——比原来那一栏的
-     可读宽度还窄。所以这一条比原来宽 30px，这 30px 就是三维与正文让出来的：
-     三维右缘从 1118 收到 1088，窗回到 300 出头。 */
-  MV.marg=2;
-  MV.gut=Math.max(240,Math.min(352,W-24));
+  /* 让出来那一条：外缝 + 窗 + 内缝 + 缩略列 + 内缝。
+     外缝是三维／正文与情报台之间那道界，给足 14px——2px 那一版贴得死紧，
+     两块内容像糊在一起。内缝 6px：窗与缩略列本来就是一件东西，不必分那么开。
+     这一条总宽因此到 368，比原来那一栏（322）宽 46px，全是三维与正文让的。 */
+  MV.mo=14;MV.mi=6;
+  MV.gut=Math.max(240,Math.min(368,W-24));
   try{gEl.style.setProperty('--mvGut',MV.gut+'px');}catch(_){}
   /* 整扇窗在台上，缩略列不再从它头上占位：上限只受台高约束。 */
   var maxH=(mvMode()===2)?Math.max(150,Math.round(H*.68)):Math.max(180,H-12);
@@ -11553,15 +11553,15 @@ function mvDeck(){
        · 被点的那一段离开自己的格子，飘到左边、长成一扇整窗（与左边三扇抽屉同一种「请到台上」）。
      它原来的格子就空着——那扇窗此刻在台上，本来就不该还在缩略列里。
      深度不靠 translateZ，靠「尺寸 + 倾角 + 压暗」，免得又变成广角哈哈镜。 */
-  var SW=MV.w||320,SH=MV.h||600,MARG=MV.marg||6;
+  var SW=MV.w||320,SH=MV.h||600,MO=MV.mo||14,MI=MV.mi||6;
   var TW=MV.tw||52,TH=MV.th||36,STEP=TH+(MV.tgap==null?7:MV.tgap);
-  var GUT=MV.gut||322;
-  /* 窗正好嵌进「让出来那一条」：右边挨着缩略列，左边挨着正文的收边线，
-     上下把这一条填满。三维与正文都在收边线左侧，所以一寸都不会被盖住。 */
-  var winW=Math.max(180,GUT-TW-MARG*3);
-  var winMax=Math.max(160,SH-MARG*2);
-  var thumbX=SW/2-TW/2-MARG;                       /* 缩略位：最右缘 */
-  var winX=SW/2-TW-MARG*2-winW/2;                  /* 台上位：紧挨缩略列左边 */
+  var GUT=MV.gut||368;
+  /* 窗正好嵌进「让出来那一条」：右边隔一道内缝挨着缩略列，
+     左边隔一道外缝挨着三维／正文的收边线，上下把这一条填满。 */
+  var winW=Math.max(180,GUT-MO-TW-MI*2);
+  var winMax=Math.max(160,SH-MO);
+  var thumbX=SW/2-TW/2-MI;                         /* 缩略位：最右缘，留一道内缝 */
+  var winX=SW/2-MI*2-TW-winW/2;                    /* 台上位：隔一道内缝挨着缩略列 */
   var y0=-(n-1)*STEP/2;
   for(var i=0;i<n;i++){
     var C=C0[i],d=i-MV.pos,k=Math.abs(d),w=clamp01(1-k),thumb=(k>.5);
