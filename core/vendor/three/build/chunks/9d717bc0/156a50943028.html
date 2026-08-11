@@ -486,34 +486,62 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
       font-size:9.5px;letter-spacing:.12em;color:var(--mut);cursor:pointer;transition:color .2s,border-color .2s}
 .mOp.on{border-color:var(--gold);color:var(--gold-hi)}
 .mOp:hover{color:var(--txt)}
-/* 左侧栏：照 macOS / iPadOS 现在那套来——不再是贴着窗沿的一条硬边，
-   而是一枚从边缘浮起来的圆角玻璃栏：四周留白、大圆角、背景模糊、一道极细的亮边，
-   底下压一层柔影。选中项不再靠箭头指示，而是整行铺一块圆角底色（金）。
-   抽屉拉开时整条栏跟着往右让位，位移与抽屉同一条缓动。 */
-.gRail{position:absolute;left:10px;top:50%;transform:translateY(-50%);z-index:34;
-      display:flex;flex-direction:column;gap:4px;padding:5px;border-radius:17px;
-      background:rgba(17,17,16,.55);border:1px solid rgba(236,236,232,.13);
-      -webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);
-      box-shadow:0 12px 34px rgba(0,0,0,.46),inset 0 1px 0 rgba(255,255,255,.07);
-      transition:left .45s cubic-bezier(.2,.85,.25,1)}
-.gArr{position:relative;width:54px;padding:9px 0 7px;cursor:pointer;border:0;background:transparent;
-      border-radius:12px;display:flex;flex-direction:column;align-items:center;gap:5px;
-      color:var(--mut);transition:background .18s,color .18s,box-shadow .18s}
-.gArr:hover{background:rgba(236,236,232,.08);color:var(--txt)}
-.gArr svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.4;
+/* 左边这一条照 iPadOS 的「台前调度」来：不是一排按钮，是一列**斜着的小窗**。
+   每一枚是自己那个抽屉的缩略图（标题栏三个点 + 内容示意），绕 Y 轴向里转十几度、
+   压一层投影，左下角挂一枚方圆图标探出窗外——就是台前调度左侧那一叠最近窗口的样子。
+   点一下那枚小窗，对应的抽屉滑出来；正在开着的那一枚转正、贴金边、往右挪一点。 */
+.gRail{position:absolute;left:8px;top:50%;transform:translateY(-50%);z-index:34;
+      display:flex;flex-direction:column;gap:27px;padding:6px 0 6px 16px;
+      perspective:760px;perspective-origin:0% 50%;
+      }
+.gArr{position:relative;width:88px;height:62px;cursor:pointer;color:var(--mut);
+      transform:rotateY(17deg);transform-style:preserve-3d;
+      transition:transform .34s cubic-bezier(.2,.85,.25,1),color .22s}
+.gArr:hover{transform:rotateY(9deg) translateX(4px) translateZ(14px);color:var(--txt)}
+/* 缩略窗本体 */
+.gArr .win{position:absolute;inset:0;border-radius:9px;overflow:hidden;
+      background:rgba(19,19,18,.70);border:1px solid rgba(236,236,232,.17);
+      box-shadow:0 12px 26px rgba(0,0,0,.58),inset 0 1px 0 rgba(255,255,255,.06);
+      -webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%);
+      transition:border-color .22s,box-shadow .22s}
+.gArr .bar{height:12px;display:flex;align-items:center;gap:3px;padding:0 5px;
+      border-bottom:1px solid rgba(236,236,232,.11);background:rgba(236,236,232,.045)}
+.gArr .bar i{width:3px;height:3px;border-radius:50%;background:rgba(236,236,232,.34)}
+/* 小窗里装的是那个抽屉的真内容，不是画一张示意图：把抽屉的 innerHTML 原样搬进
+   一个 520px 宽的容器（抽屉的真实宽度），再整体 scale 到 88px。
+   搬进来之前把所有 id 剥掉——克隆里带着 #shopWrap、#armWrap 这些 id 的话，
+   document.getElementById 会先摸到缩略图里的那一份，真面板当场失灵。
+   地图是画布，innerHTML 搬过去是空的，单独用 drawImage 拷贝像素。 */
+.gArr .mini{position:absolute;left:0;right:0;top:12px;bottom:0;overflow:hidden;
+      pointer-events:none;opacity:.9}
+.gArr .mw{position:absolute;left:0;top:0;width:520px;height:830px;
+      transform:scale(.1692);transform-origin:0 0}
+.gArr .mmap{position:absolute;left:0;top:0;width:100%;height:100%;display:block;opacity:.92}
+/* 左下角探出窗外的那枚方圆图标 */
+.gArr .ic{position:absolute;left:-15px;bottom:-9px;width:31px;height:31px;border-radius:9px;
+      background:linear-gradient(158deg,#33322d,#131312);border:1px solid rgba(236,236,232,.22);
+      box-shadow:0 7px 15px rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;
+      color:var(--gold-hi);transition:border-color .22s}
+.gArr .ic svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.4;
       stroke-linecap:square;stroke-linejoin:miter;display:block}
-.gArr .t{writing-mode:horizontal-tb;font-size:8px;letter-spacing:.12em;white-space:nowrap}
+.gArr .t{position:absolute;left:20px;bottom:-19px;font-size:8px;letter-spacing:.16em;
+      white-space:nowrap;color:var(--mut)}
 #arrShop{order:2}
 #arrArm{order:3}
+/* 正在开着的那一枚：转正、往右挪、贴金边 */
 #game.mapOpen #arrMap,#game.armOpen #arrArm,#game.shopOpen #arrShop{
-      background:rgba(201,155,63,.20);color:var(--gold-hi);
-      box-shadow:inset 0 0 0 1px rgba(201,155,63,.42)}
-.gPanel{position:absolute;left:10px;width:min(44vw,520px);z-index:30;
+      transform:rotateY(0deg) translateX(8px) translateZ(26px);color:var(--gold-hi)}
+#game.mapOpen #arrMap .win,#game.armOpen #arrArm .win,#game.shopOpen #arrShop .win{
+      border-color:rgba(201,155,63,.62);box-shadow:0 14px 30px rgba(0,0,0,.6),0 0 0 1px rgba(201,155,63,.3)}
+#game.mapOpen #arrMap .ic,#game.armOpen #arrArm .ic,#game.shopOpen #arrShop .ic{
+      border-color:rgba(201,155,63,.62)}
+#game.mapOpen #arrMap .t,#game.armOpen #arrArm .t,#game.shopOpen #arrShop .t{color:var(--gold-hi)}
+.gPanel{position:absolute;left:126px;width:min(42vw,500px);z-index:30;
       background:rgba(13,13,12,.62);border:1px solid rgba(236,236,232,.13);border-radius:18px;
       box-shadow:0 18px 48px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.05);
       backdrop-filter:blur(24px) saturate(170%);-webkit-backdrop-filter:blur(24px) saturate(170%);
-      transform:translateX(calc(-100% - 24px)) translateZ(0);
-      transition:transform .45s cubic-bezier(.2,.85,.25,1);overflow:hidden}
+      transform-origin:0% 50%;transform:translateX(-26px) scale(.955);opacity:0;pointer-events:none;
+      transition:transform .34s cubic-bezier(.2,.85,.25,1),opacity .26s ease;overflow:hidden}
 #pnMap{top:56px;bottom:10px}
 #pnArm{top:56px;bottom:10px}
 #pnArm::before{
@@ -523,9 +551,9 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
   -webkit-mask-image:linear-gradient(180deg,#000 44%,transparent 100%);
           mask-image:linear-gradient(180deg,#000 44%,transparent 100%)}
 
-#game.mapOpen #pnMap,#game.armOpen #pnArm,#game.shopOpen #pnShop{transform:translateZ(0);z-index:33}
+#game.mapOpen #pnMap,#game.armOpen #pnArm,#game.shopOpen #pnShop{
+      transform:none;opacity:1;pointer-events:auto;z-index:33}
 #pnShop{top:56px;bottom:10px}
-#game.mapOpen .gRail,#game.armOpen .gRail,#game.shopOpen .gRail{left:calc(min(44vw,520px) + 20px)}
 .shRow{display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid rgba(236,236,232,.07)}
 .shRow:hover{background:rgba(236,236,232,.045)}
 .shRow .ic{width:22px;height:22px;flex:0 0 22px;opacity:.82}
@@ -747,7 +775,7 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
   #game .gMfd{display:none;left:0;right:0;width:auto;bottom:0;border-left:0;padding-bottom:40px}
   .gRail{display:none}
   .gPanel{display:none;transform:none;transition:none;width:auto;left:0;right:0;
-      border:0;border-radius:0;box-shadow:none}
+      opacity:1;pointer-events:auto;border:0;border-radius:0;box-shadow:none}
   /* 舆·备一页：地图上、装备下（Ghost 式上下布局省空间） */
   #game[data-pg=map] #pnMap{display:block;top:46px;bottom:auto;height:calc((100dvh - 80px)*.52)}
   #game[data-pg=map] #pnArm{display:block;top:calc(46px + (100dvh - 80px)*.52);bottom:0;padding-bottom:40px;border-top:1px solid rgba(236,236,232,.16);overflow-y:auto}
@@ -1286,9 +1314,21 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
   </aside>
 
   <div class="gRail">
-    <div class="gArr" id="arrMap" title="TABVLA · 地图"><svg viewBox="0 0 24 24"><path d="M3 6l6-2.2 6 2.2 6-2.2V18l-6 2.2L9 18l-6 2.2z"/><path d="M9 3.8V18M15 6v14.2"/></svg><span class="t">地图</span></div>
-    <div class="gArr" id="arrShop" title="MERCATVS · 商店"><svg viewBox="0 0 24 24"><path d="M4 9.5l2-5h12l2 5H4z"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5.5h4V20"/></svg><span class="t">商店</span></div>
-    <div class="gArr" id="arrArm" title="ARMA · 装备"><svg viewBox="0 0 24 24"><path d="M12 3.2l7 2.6v5.4c0 4.1-2.8 7.4-7 8.8-4.2-1.4-7-4.7-7-8.8V5.8z"/><path d="M12 8v6M9.4 10.6h5.2"/></svg><span class="t">装备</span></div>
+    <div class="gArr" id="arrMap" title="TABVLA · 地图">
+      <div class="win"><div class="bar"><i></i><i></i><i></i></div>
+        <div class="mini"><canvas class="mmap" width="176" height="100"></canvas></div></div>
+      <div class="ic"><svg viewBox="0 0 24 24"><path d="M3 6l6-2.2 6 2.2 6-2.2V18l-6 2.2L9 18l-6 2.2z"/><path d="M9 3.8V18M15 6v14.2"/></svg></div>
+      <span class="t">地图</span></div>
+    <div class="gArr" id="arrShop" title="MERCATVS · 商店">
+      <div class="win"><div class="bar"><i></i><i></i><i></i></div>
+        <div class="mini"><div class="mw"></div></div></div>
+      <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 9.5l2-5h12l2 5H4z"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5.5h4V20"/></svg></div>
+      <span class="t">商店</span></div>
+    <div class="gArr" id="arrArm" title="ARMA · 装备">
+      <div class="win"><div class="bar"><i></i><i></i><i></i></div>
+        <div class="mini"><div class="mw"></div></div></div>
+      <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3.2l7 2.6v5.4c0 4.1-2.8 7.4-7 8.8-4.2-1.4-7-4.7-7-8.8V5.8z"/><path d="M12 8v6M9.4 10.6h5.2"/></svg></div>
+      <span class="t">装备</span></div>
   </div>
 
   <div id="pnTx"><div id="zjScene3D" style="position:absolute;inset:0"></div><div id="mdScene3D" style="position:absolute;inset:0;display:none;outline:none"></div><div id="modScene3D" style="position:absolute;inset:0;display:none;background:#030303"><canvas id="mcGl" style="position:absolute;inset:0;width:100%;height:100%"></canvas><canvas id="mcOv" style="position:absolute;inset:0;width:100%;height:100%;touch-action:none"></canvas></div>
@@ -7096,7 +7136,7 @@ $('#cfgGlass').addEventListener('input',function(){SET.glass=+this.value;
 var formaCss=document.createElement('style');document.head.appendChild(formaCss);
 function applyForma(){
   if(SET.forma===1)formaCss.textContent='@media(max-width:760px){#game .gMain{left:64px;right:322px;bottom:0}#game .gMfd{display:block}.gRail{display:flex}.gNav{display:none}}';
-  else if(SET.forma===2)formaCss.textContent='#game .gMain{left:0;right:0;bottom:0}#game .gMfd{display:none;left:0;right:0;width:auto;bottom:0;padding-bottom:40px;border-left:0}.gRail{display:none}.gPanel{display:none;transform:none;transition:none;width:auto;left:0;right:0;border:0;border-radius:0;box-shadow:none}.gNav{display:flex;position:absolute;left:50%;transform:translateX(-50%);bottom:5px;height:24px;z-index:40;border:1px solid rgba(236,236,232,.22);background:rgba(6,6,6,.72);-webkit-backdrop-filter:blur(14px) saturate(150%);backdrop-filter:blur(14px) saturate(150%);touch-action:pan-x}.gNav span{display:flex;align-items:center;padding:0 15px;color:var(--mut);cursor:pointer}.gNav span b{display:none}.gNav span svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:square;stroke-linejoin:miter;display:block}.gNav span.on{color:#0a0a0a;background:var(--gold)}#game[data-pg=map] #pnMap{display:block;transform:none;top:46px;bottom:auto;height:calc((100dvh - 80px)*.52);width:100%}#game[data-pg=map] #pnArm{display:block;transform:none;top:calc(46px + (100dvh - 80px)*.52);bottom:0;padding-bottom:40px;width:100%;border-top:1px solid rgba(236,236,232,.16);overflow-y:auto}#pnArm::before{content:\'\';position:absolute;left:0;right:0;top:0;height:62px;z-index:2;pointer-events:none;background:linear-gradient(180deg,rgba(6,6,6,.92) 0%,rgba(6,6,6,.62) 46%,rgba(6,6,6,0) 100%);-webkit-backdrop-filter:blur(10px) saturate(140%);backdrop-filter:blur(10px) saturate(140%);-webkit-mask-image:linear-gradient(180deg,#000 44%,transparent 100%);mask-image:linear-gradient(180deg,#000 44%,transparent 100%)}#game[data-pg=mfd] .gMfd{display:block;top:46px;bottom:0;padding-bottom:40px}#game[data-pg=shop] #pnShop{display:block;transform:none;top:46px;bottom:0;width:100%}#game[data-pg=shop] .shWrap{padding-bottom:44px}#game[data-pg=map] .gMain,#game[data-pg=mfd] .gMain,#game[data-pg=shop] .gMain{display:none}';
+  else if(SET.forma===2)formaCss.textContent='#game .gMain{left:0;right:0;bottom:0}#game .gMfd{display:none;left:0;right:0;width:auto;bottom:0;padding-bottom:40px;border-left:0}.gRail{display:none}.gPanel{display:none;transform:none;transition:none;width:auto;left:0;right:0;opacity:1;pointer-events:auto;border:0;border-radius:0;box-shadow:none}.gNav{display:flex;position:absolute;left:50%;transform:translateX(-50%);bottom:5px;height:24px;z-index:40;border:1px solid rgba(236,236,232,.22);background:rgba(6,6,6,.72);-webkit-backdrop-filter:blur(14px) saturate(150%);backdrop-filter:blur(14px) saturate(150%);touch-action:pan-x}.gNav span{display:flex;align-items:center;padding:0 15px;color:var(--mut);cursor:pointer}.gNav span b{display:none}.gNav span svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:square;stroke-linejoin:miter;display:block}.gNav span.on{color:#0a0a0a;background:var(--gold)}#game[data-pg=map] #pnMap{display:block;transform:none;top:46px;bottom:auto;height:calc((100dvh - 80px)*.52);width:100%}#game[data-pg=map] #pnArm{display:block;transform:none;top:calc(46px + (100dvh - 80px)*.52);bottom:0;padding-bottom:40px;width:100%;border-top:1px solid rgba(236,236,232,.16);overflow-y:auto}#pnArm::before{content:\'\';position:absolute;left:0;right:0;top:0;height:62px;z-index:2;pointer-events:none;background:linear-gradient(180deg,rgba(6,6,6,.92) 0%,rgba(6,6,6,.62) 46%,rgba(6,6,6,0) 100%);-webkit-backdrop-filter:blur(10px) saturate(140%);backdrop-filter:blur(10px) saturate(140%);-webkit-mask-image:linear-gradient(180deg,#000 44%,transparent 100%);mask-image:linear-gradient(180deg,#000 44%,transparent 100%)}#game[data-pg=mfd] .gMfd{display:block;top:46px;bottom:0;padding-bottom:40px}#game[data-pg=shop] #pnShop{display:block;transform:none;top:46px;bottom:0;width:100%}#game[data-pg=shop] .shWrap{padding-bottom:44px}#game[data-pg=map] .gMain,#game[data-pg=mfd] .gMain,#game[data-pg=shop] .gMain{display:none}';
   else formaCss.textContent='';
 }
 applyForma();setSeg('#sgForma',SET.forma);
@@ -11074,6 +11114,8 @@ function loop(t){
     try{mg.clearRect(0,0,mW,mH);}catch(_){}
   }
   if(GAME.on&&(GAME.mapOpen||gEl.getAttribute('data-pg')==='map'))gmapDraw();
+  /* 缩略图每 700ms 对一次：内容没变就只是一次字符串比较，不重排 */
+  if(GAME.on){var _rn=performance.now();if(_rn-_railT>700){_railT=_rn;try{railSync();}catch(_){}}}
   if(((!INTRO.on&&!MENU.on)||MENU.exiting)&&!GAME.on){terrainDraw(t);cardLayout();railDraw();}
   if(!INTRO.on&&!MENU.on&&!GAME.on)grainDraw();
  }catch(err){
@@ -11610,6 +11652,38 @@ function mvStart(){if(!MV.raf)MV.raf=requestAnimationFrame(mvTick);}
 function mvStop(){if(MV.raf)cancelAnimationFrame(MV.raf);MV.raf=0;}
 addEventListener('resize',function(){if(MV.stage){MV.w=0;MV.h=0;}});
 try{if(mvOn())mvRingMount();}catch(_){}      /* 模块就位后补挂一次：进对局前那份占位面板也要立起来 */
+
+
+/* ═══ 台前调度小窗里的真缩略图 ═══
+   不画示意图：把对应抽屉的内容原样搬进一个 520px 宽的容器（抽屉的真实宽度），
+   整体 scale 到 88px，看到的就是那扇窗自己。
+   搬之前必须把 id 全剥掉——克隆里带着 #shopWrap、#armWrap 这些 id 的话，
+   document.getElementById 会先摸到缩略图里的那一份（它在文档里更靠前），
+   真面板的渲染与点击当场全失灵。
+   地图是画布，innerHTML 搬过去只是一张空画布，改用 drawImage 拷贝像素。 */
+var _railT=0;
+function railThumb(arrId,srcId){
+  var mw=document.querySelector('#'+arrId+' .mw'),src=document.getElementById(srcId);
+  if(!mw||!src)return;
+  var h=src.innerHTML.replace(/\sid="[^"]*"/g,'');
+  if(mw._h!==h){mw._h=h;mw.innerHTML=h;}
+}
+function railMapThumb(){
+  var c=document.querySelector('#arrMap .mmap'),src=document.getElementById('gmapCv');
+  if(!c||!src)return;
+  /* 地图画布只在抽屉开着的时候画。没开过就一片空白，缩略窗跟着空——
+     先替它量一次尺寸、画一帧，缩略图才有东西可拷。之后开抽屉自会重画。 */
+  if(!railMapThumb._did&&GAME.on){railMapThumb._did=1;try{gmapSize();gmapDraw();}catch(_){}}
+  if(!(src.width>1)||!(src.height>1))return;
+  var g=c.getContext('2d');if(!g)return;
+  g.clearRect(0,0,c.width,c.height);
+  try{g.drawImage(src,0,0,c.width,c.height);}catch(_){}
+}
+function railSync(){
+  try{railThumb('arrArm','pnArm');}catch(_){}
+  try{railThumb('arrShop','pnShop');}catch(_){}
+  try{railMapThumb();}catch(_){}
+}
 
 /* 版本印：设置面板底部常驻，一眼看出当前跑的是哪一版，省得靠猜缓存 */
 try{var _bs=document.getElementById('buildStamp');if(_bs)_bs.textContent='BUILD 2.3.2';}catch(_){}
