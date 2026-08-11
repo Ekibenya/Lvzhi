@@ -1144,13 +1144,20 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
      · 缩略列钉死在最右缘，一格一枚，永远那么大、永远在原地；
      · 正文另有一扇窗，位置尺寸同样钉死，切换时只是淡入淡出。
    谁都不挪窝，「动完之后重新命中」这件事根本不存在。 */
-.gMfd.mvDeck .mvPanes{position:absolute;inset:0;pointer-events:none}
+.gMfd.mvDeck .mvPanes{position:absolute;inset:0;pointer-events:none;
+/* 正文窗也要斜，就得先给这一层自己的透视：.mvPanes 没有 preserve-3d，
+   在它这儿三维被压平了，台子那份透视传不到窗上——不补这一句，
+   rotateY 只会把窗横向压扁一点，看着像字变窄了，一点纵深都没有。
+   数值与缩略列同源：620px，原点同样钉在最右缘，两者斜得一模一样。 */
+      perspective:620px;perspective-origin:100% 50%}
 /* 出现的方式照抄 .gPanel，只把方向左右对调：那三扇从左边推出来，
-   这一扇从右边推出来，transform-origin 也跟着挪到右缘。 */
-.gMfd.mvDeck .mvWin{position:absolute;transform-origin:100% 50%;
-      transform:translateX(26px) scale(.955);opacity:0;pointer-events:none;
+   这一扇从右边推出来。倾角在开、合两态里是同一个值，
+   所以推出来的过程只有平移与淡入，不会连带转一下（转着出现会晃眼）。
+   绕中心转，不绕右缘——绕边转的话左沿要甩出八十多像素，那是开门不是倾斜。 */
+.gMfd.mvDeck .mvWin{position:absolute;transform-origin:50% 50%;
+      transform:translateX(26px) scale(.955) rotateY(-17deg);opacity:0;pointer-events:none;
       transition:transform .34s cubic-bezier(.2,.85,.25,1),opacity .26s ease}
-.gMfd.mvDeck .mvWin.on{transform:none;opacity:1;pointer-events:auto;z-index:2}
+.gMfd.mvDeck .mvWin.on{transform:rotateY(-17deg);opacity:1;pointer-events:auto;z-index:2}
 .gMfd.mvDeck .mvWin .cfr{position:absolute;inset:0;
       background:rgba(6,6,6,.78);border:1px solid rgba(236,236,232,.20);
       box-shadow:0 14px 34px rgba(0,0,0,.5);
@@ -11675,7 +11682,26 @@ function mvDeck(){
   var winH=Math.max(160,SH-MO);
   var thumbX=SW/2-TW/2-MI;                         /* 缩略列：最右缘，留一道内缝 */
   var winX=SW/2-MI*2-TW-winW/2;                    /* 窗位：隔一道内缝挨着缩略列 */
-  var wl=Math.round(SW/2+winX-winW/2),wt=Math.round(SH/2-winH/2);
+  /* 窗斜了 17°，屏幕上就不再是 winW×winH 那一块了：
+       · 近的那条边（右沿）被放大 a 倍，远的那条边（左沿）被缩小 b 倍——照旧给足高度，
+         右沿会顶穿台顶台底；
+       · 整块还因为灭点钉在最右缘而被压窄，左边平白空出三十来像素。
+     所以反解一次：已知「投影后该占哪一块」（就是没斜时那一块），倒推 CSS 该给多宽、
+     窗心该摆在哪。投影式 X(u)=ox+(xc+u·cosθ−ox)·P/(P−u·sinθ)，u 是离窗心的横向偏移；
+     两端两个方程、两个未知数，a 与 b 又随宽度变，迭代四轮足够收敛。 */
+  var PP=620,SN=Math.sin(17*Math.PI/180),CS=Math.cos(17*Math.PI/180);
+  var ox=SW;                                     /* perspective-origin:100% → 台子最右缘 */
+  var xl=SW/2+winX-winW/2,xr=SW/2+winX+winW/2;   /* 投影后要占的左右两端 */
+  var Wc=winW,xc=SW/2+winX,ka=1;
+  for(var it=0;it<4;it++){
+    ka=PP/(PP-SN*Wc/2);
+    var kb=PP/(PP+SN*Wc/2);
+    Wc=((xr-ox)/ka-(xl-ox)/kb)/CS;
+    xc=ox+(xr-ox)/ka-CS*Wc/2;
+  }
+  winW=Math.round(Wc);
+  winH=Math.round(winH/ka);                      /* 除掉近边那点放大，斜完正好卡在台里 */
+  var wl=Math.round(xc-Wc/2),wt=Math.round(SH/2-winH/2);
   var y0=-(n-1)*STEP/2;
   var sc=TW/Math.max(1,winW),mwH=Math.round((TH-2)/Math.max(.001,sc));
   var cur=mvWrap(Math.round(MV.pos));
