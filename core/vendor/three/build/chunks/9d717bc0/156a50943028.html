@@ -1089,10 +1089,24 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
 .gMfd.mvDeck .mvFoot{left:auto;right:0;width:212px;pointer-events:auto;
       border-left:1px solid #232320}
 .gMfd.mvDeck .mvFoot .l{display:none}
-/* 与地图／装备／商店那三扇窗同一档毛玻璃：同样的底色、同样的模糊。
-   台前调度里小窗彼此不重叠，不必再靠不透明去挡后面那张。 */
-.gMfd.mvDeck .mvCard .cfr{background:rgba(6,6,6,.80);
-      -webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px)}
+/* 情报台的每一扇窗，就是地图／装备／商店那一扇窗：底色、边、投影、模糊
+   四项照抄 .gPanel，一个数都不改。边框交回 CSS，SVG 那一套在卡叠里停用——
+   尺寸改由 CSS 过渡插值，逐帧重描的 SVG 反倒跟不上。 */
+.gMfd.mvDeck .mvCard .cfr{background:rgba(6,6,6,.78);border:1px solid rgba(236,236,232,.20);
+      box-shadow:0 14px 34px rgba(0,0,0,.5);
+      -webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);
+      transition:border-color .26s ease,box-shadow .26s ease}
+.gMfd.mvDeck .mvCard .cedge{display:none}
+/* 交互动画也照抄那三扇：同一条 cubic-bezier(.2,.85,.25,1)、同样的 .34s／.26s。
+   位置与尺寸一步写到位，插值全交给 CSS——不再逐帧 lerp。 */
+.gMfd.mvDeck .mvCard{transition:transform .34s cubic-bezier(.2,.85,.25,1),
+      width .34s cubic-bezier(.2,.85,.25,1),height .34s cubic-bezier(.2,.85,.25,1),
+      opacity .26s ease,filter .26s ease}
+.gMfd.mvDeck .mvBody{transition:transform .34s cubic-bezier(.2,.85,.25,1),
+      width .34s cubic-bezier(.2,.85,.25,1),height .34s cubic-bezier(.2,.85,.25,1),
+      opacity .26s ease}
+.gMfd.mvDeck .mvGhost{transition:opacity .26s ease}
+.gMfd.mvDeck .cshade{transition:background .26s ease}
 /* 收成小窗的那几段：正文只看不点，标题挪到窗下面一行 */
 .mvCard.thumb .mvBody{overflow:hidden;pointer-events:none}
 .mvCard.thumb .ftag,.mvCard.thumb .fnum{display:none}
@@ -7148,7 +7162,9 @@ function applyGlass(){
     +'#game .gMfd{background:rgba(8,8,8,'+(.06+.25*a).toFixed(2)+') !important}'
     +'#game .gInput{background:linear-gradient(0deg,rgba(6,6,6,'+(.55+.4*a).toFixed(2)+') 0%,rgba(6,6,6,'+(.35+.35*a).toFixed(2)+') 55%,rgba(6,6,6,0) 100%) !important}'
     +'#game .gTop{background:rgba(6,6,6,'+(.05+.22*a).toFixed(2)+') !important}'
-    +'.gPanel{background:rgba(6,6,6,'+(.10+.36*a).toFixed(2)+') !important}';
+    /* 情报台那几扇窗跟着同一根「面板透明度」拉杆走——它们就是同一种窗，
+       底色不该有两套。 */
+    +'.gPanel,.gMfd.mvDeck .mvCard .cfr{background:rgba(6,6,6,'+(.10+.36*a).toFixed(2)+') !important}';
 }
 applyGlass();
 $('#cfgGlass').value=SET.glass;
@@ -11557,7 +11573,6 @@ function mvDeck(){
     var rot=17*(1-w);
     if(C.w!==W){C.w=W;C.el.style.width=W+'px';}
     if(Math.abs((C.h||0)-H)>=1){C.h=H;C.el.style.height=H+'px';}
-    mvShell(C,W,H,MV.R,MV.P||1500,0,false);
     C.el.style.transform='translate(-50%,-50%) translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px)'
       +' rotateY('+rot.toFixed(1)+'deg)';
     C.el.style.visibility='visible';
@@ -11569,19 +11584,15 @@ function mvDeck(){
     /* 轮廓编号只给缩略窗当名牌；上了台的那扇窗自己有顶栏，再压一个大编号纯属挡字 */
     C.ghost.style.opacity=thumb?'1':'0';
     C.body.style.opacity='1';
-    /* 缩略窗里的正文：把真节点按整扇窗的尺寸摆好，再整体缩到缩略窗大小 */
-    var sc=W/winW,key=thumb?('t'+W+'x'+H):'f';
-    if(C.bk!==key){
-      C.bk=key;
-      var b=C.body;
-      if(thumb){
-        b.style.left='0px';b.style.right='auto';b.style.top='0px';b.style.bottom='auto';
-        b.style.width=winW+'px';b.style.height=Math.round(H/sc)+'px';
-        b.style.transformOrigin='0 0';b.style.transform='scale('+sc.toFixed(4)+')';
-      }else{
-        b.style.left='';b.style.right='';b.style.top='';b.style.bottom='';
-        b.style.width='';b.style.height='';b.style.transform='';C.pad=-1;
-      }
+    /* 正文一律按「整扇窗的宽度」摆好，再整体缩到当前卡宽——
+       宽高与 scale 三个都是数值，才过渡得动；换成 width:auto 就只能硬跳。 */
+    var sc=Math.max(.02,W/winW),bh=Math.round(H/sc);
+    var b=C.body,bkey=W+'x'+H;
+    if(C.bk!==bkey){
+      C.bk=bkey;
+      b.style.left='0px';b.style.right='auto';b.style.top='0px';b.style.bottom='auto';
+      b.style.width=winW+'px';b.style.height=bh+'px';
+      b.style.transformOrigin='0 0';b.style.transform='scale('+sc.toFixed(4)+')';
     }
     C.el.classList.toggle('thumb',thumb);
     C.el.classList.toggle('on',k<.5);
@@ -11676,9 +11687,15 @@ function mvTick(){
     var dt=Math.min(80,Math.max(1,now-(MV._t||now)));MV._t=now;
     var f=dt/16.7;
     if(!MV.drag){
-      var t=(MV.tgt==null)?Math.round(MV.pos):MV.tgt;
-      MV.pos=lerp(MV.pos,t,1-Math.pow(.82,f));
-      if(Math.abs(MV.pos-t)<.002){MV.pos=mvWrap(t);MV.tgt=null;}   /* 停稳时把圈数归零 */
+      if(MV.mode!==2){
+        /* 卡叠：段号一步到位，动画由 CSS 过渡走——与地图／装备／商店同一条曲线。 */
+        if(MV.tgt!=null){MV.pos=mvWrap(MV.tgt);MV.tgt=null;}
+        else MV.pos=mvWrap(Math.round(MV.pos));
+      }else{
+        var t=(MV.tgt==null)?Math.round(MV.pos):MV.tgt;
+        MV.pos=lerp(MV.pos,t,1-Math.pow(.82,f));
+        if(Math.abs(MV.pos-t)<.002){MV.pos=mvWrap(t);MV.tgt=null;}   /* 停稳时把圈数归零 */
+      }
     }
     if(now-(MV._mT||0)>600){MV._mT=now;try{mvRemeasure();}catch(_){}}
     var sel=Math.round(MV.pos);
