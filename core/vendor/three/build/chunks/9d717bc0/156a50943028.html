@@ -15,6 +15,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="LVZHI.SYS">
 <script defer src="/_vercel/insights/script.js"></script>
+<script defer src="/_vercel/speed-insights/script.js"></script>
 </head>
 <body>
 <style>
@@ -1010,6 +1011,56 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
    nth-of-type 会在嵌套层重新计数，排出来是 0/55/0/55。 */
 .gMfd .mBar i{transition:width 420ms var(--e-io)}   /* 数值条走过去，不是跳过去 */
 
+/* ═══════ 情报台·环 TABVLARIVM RING ═══════
+   把选局环那一整套外壳搬到状态栏上：细边框＋四角括号＋框外顶栏小字、粒子山脉背景、
+   底条。只把转轴从竖轴换成横轴——读一列数值本来就是自上而下的动作，
+   左右转要人在脑子里多拐一道弯。
+   数学与选局环同源：卡先 rotateX(a) 再 translateZ(-R)，卡心落在 (0, R·sin a, -R·cos a)。
+   CSS 屏幕 y 向下为正，所以 a 取正的那几张自然排在下面，越远越往里倒。
+   轨道整体 translateZ(R)（与选局环 size() 里那一句同理）把环心拉到镜头上，
+   正前那张才是 1:1 不缩。全部规则都压在 .mvRing 之下，列表版一行不受影响。 */
+#game .gMfd.mvRing{overflow:hidden;padding:0}
+.gMfd.mvRing .mSec{margin-bottom:0;animation:none!important}
+.mvBg{position:absolute;inset:0;width:100%;height:100%;opacity:.58;pointer-events:none}
+.mvVig{position:absolute;inset:0;pointer-events:none;
+       background:radial-gradient(ellipse 92% 76% at 50% 46%,transparent 48%,rgba(0,0,0,.66) 100%)}
+.mvStage{position:absolute;left:0;right:16px;top:0;bottom:calc(var(--mvNav,0px) + 34px);
+         perspective:1600px;perspective-origin:50% 50%;touch-action:none;overflow:hidden}
+.mvTrack{position:absolute;inset:0;transform-style:preserve-3d;pointer-events:none}
+.mvCard{position:absolute;left:50%;top:50%;pointer-events:auto;cursor:pointer;touch-action:none;
+        will-change:transform,opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.mvCard .cfr{position:absolute;inset:0;border:1px solid rgba(236,236,232,.5);background:rgba(6,6,6,.60)}
+/* 毛玻璃只给正前那张：六张卡同时糊背景，在三维变换里是实打实的六层离屏合成。 */
+.mvCard.on .cfr{background:rgba(6,6,6,.66);
+       -webkit-backdrop-filter:blur(7px) saturate(140%);backdrop-filter:blur(7px) saturate(140%)}
+.mvCard .cfr::before,.mvCard .cfr::after{content:'';position:absolute;width:7px;height:7px;border:1px solid var(--paper)}
+.mvCard .cfr::before{left:-4px;top:-4px;border-right:0;border-bottom:0}
+.mvCard .cfr::after{right:-4px;bottom:-4px;border-left:0;border-top:0}
+.mvCard .ftag{position:absolute;left:0;top:-7px;transform:translateY(-100%);
+              font-size:8px;letter-spacing:.34em;color:var(--mut);white-space:nowrap}
+.mvCard .fnum{position:absolute;right:0;top:-7px;transform:translateY(-100%);
+              font-size:8px;letter-spacing:.2em;color:var(--mut)}
+.mvBody{position:absolute;inset:1px;overflow-y:auto;overflow-x:hidden;padding:15px 14px 16px;
+        overscroll-behavior:contain}
+.mvBody::-webkit-scrollbar{width:3px}
+/* 侧卡的正文淡出、留下轮廓数字——与选局环边上那几张的读法一致 */
+.mvGhost{position:absolute;left:9%;top:11%;line-height:1;pointer-events:none}
+.mvGhost .g1{display:block;font-size:9px;letter-spacing:.3em;color:var(--mut);margin-bottom:11px}
+.mvGhost .g2{font-size:clamp(40px,6.5vw,74px);font-weight:700;color:transparent;line-height:.9;
+             -webkit-text-stroke:1px rgba(236,236,232,.72);font-variant-numeric:tabular-nums}
+.mvGhost .g3{margin-top:13px;font-size:12px;letter-spacing:.26em;color:var(--txt);white-space:nowrap}
+.mvRail{position:absolute;right:0;top:0;width:16px;cursor:ns-resize;touch-action:none;
+        height:calc(100% - var(--mvNav,0px) - 34px)}
+.mvFoot{position:absolute;left:0;right:0;bottom:var(--mvNav,0px);height:34px;z-index:4;
+        border-top:1px solid #232320;display:flex;align-items:center;justify-content:space-between;
+        padding:0 9px;font-size:9px;letter-spacing:.22em;color:var(--mut);background:rgba(6,6,6,.72)}
+.mvFoot .r{display:flex;align-items:center;gap:7px}
+.mvFoot b{font-weight:400;color:var(--gold-hi);letter-spacing:.16em}
+.mvFoot .go{border:1px solid rgba(236,236,232,.26);padding:4px 7px 3px;cursor:pointer;color:var(--txt);
+            line-height:1;transition:border-color .2s,color .2s}
+.mvFoot .go:hover{border-color:var(--gold);color:var(--gold-hi)}
+@media (max-width:760px){ .mvFoot .l{display:none} }
+
 /* —— 参谋四策：四条依次出现 —— */
 .gSugRow .sg{animation:mvRiseSm 240ms var(--e-out) backwards}
 .gSugRow .sg:nth-child(2){animation-delay:60ms}
@@ -1077,7 +1128,6 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
 #lineTg{display:none!important}
 </style>
 
-<script defer src="/_vercel/speed-insights/script.js"></script>
 <canvas id="terrain"></canvas>
 <div id="vig"></div>
 
@@ -1263,6 +1313,8 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
       <div class="sub">透明度：拖动即时生效——拉到最左＝完全透明（直接看穿到后面的动态背景）；拉到最右＝完全不透明（纯色纸底，彻底看不穿）。开低配模式时模糊被关闭。版式：自动依屏幕宽窄选择版式，也可强制使用电脑或手机布局。</div>
       <div class="sRow"><span>OBSCVRITAS&nbsp;·&nbsp;面板透明度</span><input type="range" id="cfgGlass" min="0" max="100" value="80"></div>
       <div class="sRow"><span>FORMA&nbsp;·&nbsp;版式</span><span class="sSeg" id="sgForma"><span class="on">自动</span><span>桌面</span><span>手机</span></span></div>
+      <div class="sRow"><span>TABVLARIVM&nbsp;·&nbsp;情报台</span><span class="sSeg" id="sgMvu"><span class="on">列表</span><span>环&nbsp;·&nbsp;三维</span></span></div>
+      <div class="sub">情报台的排法。「列表」是一栏到底的老样子；「环·三维」把每一段立成一张卡，用选局那套外框与山脉底，围成一圈绕横轴转——上下拖动、滚轮、右侧刻度或底条的&nbsp;▲▼&nbsp;都能翻，点侧边那张也会转到正前。正文能滚的时候按在正文上照旧是滚正文。底条上的「列表」可随时切回。</div>
       <div class="sRow"><span>字体</span><span style="display:flex;gap:8px;align-items:center"><span class="sSeg" id="sgFace"><span class="on">等宽</span><span>衬线</span><span>系统</span></span><span class="gt" id="fontUp">自定义字体</span><input type="file" id="fontFile" accept=".ttf,.otf,.woff,.woff2" style="display:none"></span></div>
       <div class="sub" id="dispMsg" style="margin-top:8px"></div>
     </div>
@@ -1812,50 +1864,56 @@ function parTarget(){
   }
   return [mouseX,mouseY];
 }
-function terrainDraw(t){
-  var W=tc.width,H=tc.height;
-  tg.clearRect(0,0,W,H);
+/* 山脉背景本来只画给选局那张全屏画布。情报台的环也要同一张底，
+   于是把「往哪张画布画、山往哪边推、画多密」三件事提成参数：
+   q 是密度系数——情报台那块只有三百来像素宽，按全屏的 84×42 画纯属浪费。 */
+function terrainPaint(g,W,H,t,travel,par,q){
+  q=q||1;
+  var cols=Math.max(18,Math.round(COLS*q)),rows=Math.max(12,Math.round(ROWS*q));
+  g.clearRect(0,0,W,H);
   var cx=W/2,hor=H*.40,f=H*.62,camY=210;
   var zoff=REDUCED?40:t*.022;
-  var travel=pos*230;            /* mountains slide sideways as the ring turns */
-  parX=lerp(parX,mouseX*46,.04);
-  for(var r=ROWS-1;r>=0;r--){
-    var z=Z0+(Z1-Z0)*Math.pow(r/(ROWS-1),1.6);
-    var fade=1-r/(ROWS-1);
+  for(var r=rows-1;r>=0;r--){
+    var z=Z0+(Z1-Z0)*Math.pow(r/(rows-1),1.6);
+    var fade=1-r/(rows-1);
     var alpha=.05+.42*fade*fade;
-    tg.beginPath();
-    for(var c=0;c<=COLS;c++){
-      var x=-XSPAN/2+XSPAN*c/COLS;
+    g.beginPath();
+    for(var c=0;c<=cols;c++){
+      var x=-XSPAN/2+XSPAN*c/cols;
       var vv=Math.abs(x)/(XSPAN/2);
       var mask=Math.pow(Math.max(0,vv-.13),1.25)*1.9+.03;
       var h=ridge((x+travel)*.0021+7.3,(z+zoff)*.0021)*430*mask;
-      var sx=cx+(x-parX)*f/z, sy=hor+(camY-h)*f/z;
-      if(c===0)tg.moveTo(sx,sy);else tg.lineTo(sx,sy);
+      var sx=cx+(x-par)*f/z, sy=hor+(camY-h)*f/z;
+      if(c===0)g.moveTo(sx,sy);else g.lineTo(sx,sy);
       var hs=hash(c,Math.floor((z+zoff)*.01));
       if(hs>.986&&fade>.15){
-        tg.save();tg.globalAlpha=.55*fade;
-        tg.fillStyle=(hs>.9965)?'#c99b3f':'#d9d9d4';
-        tg.fillRect(sx,sy-1.2,1.6,1.6);tg.restore();
+        g.save();g.globalAlpha=.55*fade;
+        g.fillStyle=(hs>.9965)?'#c99b3f':'#d9d9d4';
+        g.fillRect(sx,sy-1.2,1.6,1.6);g.restore();
       }
     }
-    tg.strokeStyle='rgba(156,156,152,'+alpha.toFixed(3)+')';
-    tg.lineWidth=1;
-    tg.stroke();
+    g.strokeStyle='rgba(156,156,152,'+alpha.toFixed(3)+')';
+    g.lineWidth=1;
+    g.stroke();
   }
-  tg.strokeStyle='rgba(156,156,152,.07)';
-  for(var c2=0;c2<=COLS;c2+=6){
-    tg.beginPath();
-    for(var r2=0;r2<ROWS;r2++){
-      var z2=Z0+(Z1-Z0)*Math.pow(r2/(ROWS-1),1.6);
-      var x2=-XSPAN/2+XSPAN*c2/COLS;
+  g.strokeStyle='rgba(156,156,152,.07)';
+  for(var c2=0;c2<=cols;c2+=6){
+    g.beginPath();
+    for(var r2=0;r2<rows;r2++){
+      var z2=Z0+(Z1-Z0)*Math.pow(r2/(rows-1),1.6);
+      var x2=-XSPAN/2+XSPAN*c2/cols;
       var vv2=Math.abs(x2)/(XSPAN/2);
       var mask2=Math.pow(Math.max(0,vv2-.13),1.25)*1.9+.03;
       var h2=ridge((x2+travel)*.0021+7.3,(z2+zoff)*.0021)*430*mask2;
-      var sx2=cx+(x2-parX)*f/z2, sy2=hor+(camY-h2)*f/z2;
-      if(r2===0)tg.moveTo(sx2,sy2);else tg.lineTo(sx2,sy2);
+      var sx2=cx+(x2-par)*f/z2, sy2=hor+(camY-h2)*f/z2;
+      if(r2===0)g.moveTo(sx2,sy2);else g.lineTo(sx2,sy2);
     }
-    tg.stroke();
+    g.stroke();
   }
+}
+function terrainDraw(t){
+  parX=lerp(parX,mouseX*46,.04);
+  terrainPaint(tg,tc.width,tc.height,t,pos*230,parX,1);   /* mountains slide as the ring turns */
 }
 
 /* ================= cards (360° ring carousel) ================ */
@@ -6950,7 +7008,7 @@ $('#gtFull').addEventListener('click',function(){
   else document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();
 });
 /* ============ 设置·控制中枢（12页签，代码级对齐 Ghost setBody） ============ */
-var SET={glass:80,forma:0,face:0,loreBud:5000,
+var SET={glass:80,forma:0,face:0,mvuRing:1,loreBud:5000,
   tts:{src:0,base:'',key:'',model:'tts-1',voice:'',rate:105,scope:0,auto:0},
   img:{on:0,base:'',key:'',model:'',size:0,style:0},   /* style 0 ＝ NovelAI，见 IMGSTY */
   sub:{base:'',key:'',model:''},
@@ -6964,7 +7022,7 @@ try{var _s=JSON.parse(localStorage.getItem('rome_set')||'{}');
    「绘此幕」点了整个函数当场中断、毫无反应；cam/disp 为 undefined 则查表得 undefined，
    提示词里混进字面量「undefined」、图片显示宽度失效。这就是「设置里某些项目不作用」。 */
 (function(){
-  var D={glass:80,forma:0,face:0,loreBud:5000,
+  var D={glass:80,forma:0,face:0,mvuRing:1,loreBud:5000,
     tts:{src:0,base:'',key:'',model:'tts-1',voice:'',rate:105,scope:0,auto:0},
     img:{on:0,auto:0,count:0,cam:0,disp:2,base:'',key:'',model:'',size:0,style:0,
          steps:'',cfg:'',w:'',h:'',seed:'',workflow:''},
@@ -7020,6 +7078,7 @@ function applyForma(){
   else formaCss.textContent='';
 }
 applyForma();setSeg('#sgForma',SET.forma);
+setSeg('#sgMvu',SET.mvuRing);try{mvRingMount();}catch(_){}
 var faceCss=document.createElement('style');document.head.appendChild(faceCss);
 function applyFace(){
   var fam=['','Georgia,\"Times New Roman\",serif','system-ui,sans-serif'][SET.face]||'';
@@ -8299,6 +8358,7 @@ $('#cxFile').addEventListener('change',function(){
 
         if(typeof SET!=='undefined'){
           if(sg.id==='sgForma'){SET.forma=idx;applyForma();setStore();}
+          if(sg.id==='sgMvu'){SET.mvuRing=idx;setStore();try{mvRingMount();}catch(_){}}
           if(sg.id==='sgFace'){SET.face=idx;try{localStorage.removeItem('rome_font');}catch(_){}applyFace();setStore();}
           if(sg.id==='sgImgOn'){SET.img.on=idx;setStore();}
           if(sg.id==='sgImgAuto'){SET.img.auto=idx;setStore();}
@@ -8559,7 +8619,7 @@ function renderMvu(panel){
   if(!panel)return;
   try{dreamSync(panel);}catch(_){}
   var spec=(CARDS[ACTIVE]&&CARDS[ACTIVE].panelSpec)||null;
-  var h='<div class="mSec"><div class="mHead"><i>◆</i>&nbsp;'+'怯薛台&nbsp;·&nbsp;军情录'+'</div>';
+  var h='<div class="mSec"><div class="mHead"><i>◆</i>&nbsp;'+'石室&nbsp;·&nbsp;起居录'+'</div>';
   var bars=[],glyphSrc=null,glyphMap=null;
   if(spec&&spec.widgets)spec.widgets.forEach(function(w){
     if(w.type==='bar')bars.push(w);
@@ -8672,9 +8732,9 @@ function renderMvu(panel){
   GAME.lastPanel=panel;
   try{memSync();}catch(_){}
   h+='<div class="zjP">'
-    +'<div class="mSec">'+zjHead(S.secG,'tgG','','族帐谱&nbsp;·&nbsp;人物图谱',S.secG)+(S.secG?'<div id="zjGraphBox" class="fade">'+graphInner()+'</div>':'')+'</div>'
-    +'<div class="mSec">'+zjHead(S.secA,'tgA','','汗廷纪&nbsp;·&nbsp;编年史',S.secA)+(S.secA?'<div class="fade">'+axisInner()+'</div>':'')+'</div>'
-    +'<div class="mSec">'+zjHead(S.secM,'tgM','','毡帐录&nbsp;·&nbsp;长程记忆',S.secM)+(S.secM?'<div class="fade zjMemPane">'+memPaneInner(true)+'</div>':'')+'</div>'
+    +'<div class="mSec">'+zjHead(S.secG,'tgG','','宗谱&nbsp;·&nbsp;人物图谱',S.secG)+(S.secG?'<div id="zjGraphBox" class="fade">'+graphInner()+'</div>':'')+'</div>'
+    +'<div class="mSec">'+zjHead(S.secA,'tgA','','秦纪&nbsp;·&nbsp;编年史',S.secA)+(S.secA?'<div class="fade">'+axisInner()+'</div>':'')+'</div>'
+    +'<div class="mSec">'+zjHead(S.secM,'tgM','','金匮&nbsp;·&nbsp;长程记忆',S.secM)+(S.secM?'<div class="fade zjMemPane">'+memPaneInner(true)+'</div>':'')+'</div>'
     +'</div>';
   document.querySelector('#game .gMfd').innerHTML=h;
   /* 情报台整块重绘后，按文档顺序给各分区派发错开量（55ms 一级，封顶 220ms）。
@@ -8684,6 +8744,7 @@ function renderMvu(panel){
     for(var _i=0;_i<_secs.length;_i++)
       _secs[_i].style.animationDelay=Math.min(_i*55,220)+'ms';
   }catch(_){}
+  try{mvRingMount();}catch(_){}
   try{graphHydrate();}catch(_){}
   try{zj3dTick();}catch(_){}
 }
@@ -10602,6 +10663,7 @@ function svLoad(v){
   gLocSet(v.loc||'');
   $('#gNarr').innerHTML=v.html||'';
   document.querySelector('#game .gMfd').innerHTML=v.mfd||'';
+  try{mvRingMount();}catch(_){}
   TURNS=v.turns||[];TURNI=TURNS.length?(Math.max.apply(null,TURNS.map(function(t){return t.t||0;}))+1):0;
   if(v.inv&&v.inv.eq&&v.inv.bag){INV=v.inv;invStore();}
   GAME.place=v.place||null;INVSEL=null;invRender();
@@ -11008,6 +11070,278 @@ if('serviceWorker' in navigator&&!/[?&]dev=1/.test(location.search))addEventList
   try{navigator.serviceWorker.register('/sw.js',{scope:'/'}).catch(function(){});}catch(_){}
   try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(function(){});}catch(_){}
 });
+
+/* ═══════════════ 情报台·环 TABVLARIVM RING ═══════════════
+   选局环那一整套（细边框＋四角括号＋框外顶栏小字、侧卡的轮廓数字、山脉底、底条）
+   原样搬到状态栏上，只把转轴由竖轴改成横轴：读一列数值本来就是自上而下的动作。
+   排布数学与选局环同源，见上面 cardLayout 的注释；这里只列不同的三处：
+     · rotateY→rotateX。卡心落在 (0, R·sin a, -R·cos a)，屏幕 y 向下为正，
+       所以 a 取正的那几张自然排在下面。
+     · 不闭环。选局是二十一张首尾相接的环，情报台是「从体魄到长程记忆」的一列，
+       有头有尾，转到两端就停住，不绕回去。
+     · 步角写死 22°（选局是 360/N）。段数只有五六段，按闭环算一步就是六十度，
+       邻卡整个侧过去只剩一条缝，读不成。
+   段落节点只搬家、不重建：.gMfd 整块上挂着好几处事件委托，graphHydrate／zj3dTick
+   也按 id 取节点，重建一遍全断。 */
+var MV={pos:0,tgt:null,vel:0,drag:null,n:0,cards:[],raf:0,step:26,R:0,stepPix:600,
+        box:null,stage:null,track:null,bg:null,bgx:null,rail:null,railx:null,foot:null,
+        bgT:0,w:0,h:0,scroll:{}};
+function mvOn(){try{return SET&&SET.mvuRing===1;}catch(_){return false;}}
+function mvBox(){return document.querySelector('#game .gMfd');}
+function mvTag(t){
+  if(/在场|诸人/.test(t))return 'PRAESENTES';
+  if(/大势|万国|天下/.test(t))return 'MVNDVS';
+  if(/图谱/.test(t))return 'NEXVS';
+  if(/编年/.test(t))return 'ANNALES';
+  if(/记忆/.test(t))return 'MEMORIA';
+  if(/线索|INDICIA/.test(t))return 'INDICIA';
+  if(/资材|RES/.test(t))return 'RES';
+  if(/阶段|ACTA/.test(t))return 'ACTA';
+  return 'STATVS';
+}
+/* 拆环：把每张卡里的段落原样送回 .gMfd 平铺。
+   .zjP 是図谱三节共用的样式壳（.zjP .btn / .zjP * 一大票后代选择器挂在它上面），
+   装卡时每张补了一层，拆的时候要剥掉，否则来回切几次就套了好几层。 */
+function mvFlatten(box){
+  var st=box.querySelector('.mvStage');
+  if(!st)return;
+  var frag=document.createDocumentFragment(),bodies=st.querySelectorAll('.mvBody');
+  for(var i=0;i<bodies.length;i++){
+    var b=bodies[i],inner=b.firstElementChild;
+    if(inner&&inner.classList.contains('zjP')&&b.children.length===1){
+      while(inner.firstChild)frag.appendChild(inner.firstChild);
+    }else while(b.firstChild)frag.appendChild(b.firstChild);
+  }
+  box.innerHTML='';box.appendChild(frag);
+}
+function mvRingMount(){
+  var box=mvBox();if(!box)return;
+  if(!mvOn()){
+    if(box.querySelector('.mvStage')){mvFlatten(box);box.classList.remove('mvRing');}
+    box.classList.remove('mvRing');mvStop();return;
+  }
+  /* 每一幕 renderMvu 都会整块重写 innerHTML，所以这里必须幂等：先拆回平铺再重装。 */
+  var keep={};
+  if(box.querySelector('.mvStage')){
+    var bs=box.querySelectorAll('.mvBody');
+    for(var q=0;q<bs.length;q++)keep[q]=bs[q].scrollTop;      /* 逐卡记住读到哪儿 */
+    mvFlatten(box);
+  }
+  mvStop();
+  var secs=[],kids=[].slice.call(box.children);
+  for(var i=0;i<kids.length;i++){
+    var el=kids[i];
+    if(el.classList.contains('zjP')){
+      var cc=[].slice.call(el.children);
+      for(var j=0;j<cc.length;j++)if(cc[j].classList.contains('mSec'))secs.push({el:cc[j],shell:true});
+    }else if(el.classList.contains('mSec'))secs.push({el:el,shell:false});
+  }
+  if(!secs.length){box.classList.remove('mvRing');return;}
+
+  var stage=document.createElement('div');stage.className='mvStage';
+  var track=document.createElement('div');track.className='mvTrack';
+  stage.appendChild(track);
+  var bg=document.createElement('canvas');bg.className='mvBg';
+  var vig=document.createElement('div');vig.className='mvVig';
+  var rail=document.createElement('canvas');rail.className='mvRail';
+  var foot=document.createElement('div');foot.className='mvFoot';
+  foot.innerHTML='<span class="l">TABVLARIVM&nbsp;·&nbsp;情报台</span>'
+    +'<span class="r"><b class="mvIdx"></b>'
+    +'<span class="go" data-mv="up" title="上一段">▲</span>'
+    +'<span class="go" data-mv="dn" title="下一段">▼</span>'
+    +'<span class="go" data-mv="list" title="切回一栏到底的列表">列表</span></span>';
+
+  var cards=[];
+  for(var k=0;k<secs.length;k++){
+    var sec=secs[k];
+    var head=sec.el.querySelector('.mHead');
+    var ttl=(head?head.textContent:'').replace(/[◆▾▸\s]/g,'')||('SECTIO '+pad(k+1));
+    var card=document.createElement('div');card.className='mvCard';card.setAttribute('data-i',k);
+    var fr=document.createElement('div');fr.className='cfr';
+    fr.innerHTML='<span class="ftag"></span><span class="fnum"></span>'
+      +'<div class="mvGhost"><span class="g1"></span><div class="g2"></div><div class="g3"></div></div>'
+      +'<div class="mvBody"></div>';
+    var tag=mvTag(ttl);
+    fr.querySelector('.ftag').textContent=tag+' SECTIO // '+pad(k+1);
+    fr.querySelector('.fnum').textContent='SIG_'+pad(k+1)+'/'+pad(secs.length);
+    fr.querySelector('.g1').textContent=tag;
+    fr.querySelector('.g2').textContent=pad(k+1);
+    fr.querySelector('.g3').textContent=ttl;
+    var body=fr.querySelector('.mvBody');
+    if(sec.shell){var sh=document.createElement('div');sh.className='zjP';sh.appendChild(sec.el);body.appendChild(sh);}
+    else body.appendChild(sec.el);
+    if(keep[k])body.scrollTop=keep[k];
+    card.appendChild(fr);track.appendChild(card);
+    cards.push({el:card,body:body,ghost:fr.querySelector('.mvGhost')});
+  }
+  box.innerHTML='';
+  box.appendChild(bg);box.appendChild(vig);box.appendChild(stage);
+  box.appendChild(rail);box.appendChild(foot);
+  box.classList.add('mvRing');
+
+  MV.box=box;MV.stage=stage;MV.track=track;MV.foot=foot;MV.cards=cards;MV.n=cards.length;
+  MV.bg=bg;MV.bgx=bg.getContext('2d');MV.rail=rail;MV.railx=rail.getContext('2d');
+  MV.pos=Math.max(0,Math.min(MV.n-1,MV.pos||0));MV.tgt=null;MV.vel=0;MV.drag=null;MV.bgT=0;
+  MV.w=0;MV.h=0;
+  mvBind();mvSize();mvLayout();mvStart();
+}
+function mvBind(){
+  var st=MV.stage;
+  /* 正前那张的正文能自己滚时，按在正文上是滚它、不是转环；滚不动就交给转环，
+     免得屏幕正中一大块变成死区。 */
+  function bodyScrollable(t){
+    var b=t&&t.closest?t.closest('.mvBody'):null;
+    return (b&&b.scrollHeight>b.clientHeight+2)?b:null;
+  }
+  st.addEventListener('pointerdown',function(e){
+    if(bodyScrollable(e.target))return;
+    MV.drag={y:e.clientY,p:MV.pos,moved:0};MV.tgt=null;MV.vel=0;
+    try{st.setPointerCapture(e.pointerId);}catch(_){}
+  });
+  st.addEventListener('pointermove',function(e){
+    if(!MV.drag)return;
+    var dy=e.clientY-MV.drag.y;
+    MV.drag.moved=Math.max(MV.drag.moved,Math.abs(dy));
+    var np=MV.drag.p-dy/MV.stepPix;
+    np=Math.max(-.3,Math.min(MV.n-1+.3,np));     /* 两端留一点回弹，但不绕回去 */
+    MV.vel=(np-MV.pos)*.5;MV.pos=np;
+  });
+  function up(e){
+    if(!MV.drag)return;
+    var moved=MV.drag.moved;MV.drag=null;
+    if(moved<5&&e&&e.target&&e.target.closest){  /* 没拖动＝点选：把点到的那张转到正前 */
+      var c=e.target.closest('.mvCard');
+      if(c)MV.tgt=parseInt(c.getAttribute('data-i'),10)||0;
+    }
+  }
+  st.addEventListener('pointerup',up);st.addEventListener('pointercancel',up);
+  st.addEventListener('wheel',function(e){
+    var b=bodyScrollable(e.target);
+    if(b){                                       /* 正文滚到头再往外翻，中途不抢 */
+      var atTop=b.scrollTop<=0,atEnd=b.scrollTop+b.clientHeight>=b.scrollHeight-1;
+      if((e.deltaY<0&&!atTop)||(e.deltaY>0&&!atEnd))return;
+    }
+    e.preventDefault();
+    MV.tgt=Math.max(0,Math.min(MV.n-1,Math.round(MV.pos)+(e.deltaY>0?1:-1)));
+  },{passive:false});
+  MV.foot.addEventListener('click',function(e){
+    var g=e.target.closest?e.target.closest('[data-mv]'):null;if(!g)return;
+    var a=g.getAttribute('data-mv');
+    if(a==='up')MV.tgt=Math.max(0,Math.round(MV.pos)-1);
+    else if(a==='dn')MV.tgt=Math.min(MV.n-1,Math.round(MV.pos)+1);
+    else if(a==='list'){SET.mvuRing=0;try{setStore();}catch(_){}try{setSeg('#sgMvu',0);}catch(_){}mvRingMount();}
+  });
+  MV.rail.addEventListener('pointerdown',mvRailPick);
+  MV.rail.addEventListener('pointermove',function(e){if(e.buttons&1)mvRailPick(e);});
+}
+function mvRailPick(e){
+  if(!MV.rail||MV.n<2)return;
+  var r=MV.rail.getBoundingClientRect(),m=r.height*.08,span=r.height-2*m;
+  if(span<=0)return;
+  MV.tgt=Math.max(0,Math.min(MV.n-1,Math.round((e.clientY-r.top-m)/span*(MV.n-1))));
+}
+function mvSize(){
+  if(!MV.stage||!MV.box)return;
+  var W=MV.stage.clientWidth,H=MV.stage.clientHeight;
+  if(!(W>10&&H>10))return;
+  MV.w=W;MV.h=H;
+  /* 卡高取台高的 0.56：正前那张要够读，下一张的顶沿又得露出来一截，
+     不然「围成一圈」在屏幕上看不出，只剩一张孤零零的卡。 */
+  var cw=Math.max(150,W-26),ch=Math.max(130,Math.round(H*.60));
+  var th=MV.step*Math.PI/180;
+  MV.R=ch*.60/Math.tan(th/2);                    /* 与选局环同式：邻卡刚好错开，留两成余量 */
+  MV.stepPix=Math.max(40,2*MV.R*Math.sin(th/2)); /* 转一段，屏幕上走过的像素 */
+  MV.track.style.transform='translateZ('+MV.R.toFixed(1)+'px)';
+  for(var i=0;i<MV.cards.length;i++){
+    var el=MV.cards[i].el;el.style.width=cw+'px';el.style.height=ch+'px';
+  }
+  var d=Math.min(devicePixelRatio||1,2);
+  MV.bg.width=Math.max(1,Math.round(MV.box.clientWidth*d));
+  MV.bg.height=Math.max(1,Math.round(MV.box.clientHeight*d));
+  MV.rail.width=Math.max(1,Math.round((MV.rail.clientWidth||16)*d));
+  MV.rail.height=Math.max(1,Math.round((MV.rail.clientHeight||H)*d));
+  MV.bgT=0;
+}
+function mvLayout(){
+  var step=MV.step,R=MV.R;
+  for(var i=0;i<MV.n;i++){
+    var C=MV.cards[i],d=i-MV.pos,a=d*step,ad=Math.abs(d);
+    var hid=(ad>2.2);
+    C.el.style.transform=hid?'translate(-50%,-50%) scale(0)'
+      :('translate(-50%,-50%) rotateX('+a.toFixed(2)+'deg) translateZ('+(-R).toFixed(1)+'px)');
+    C.el.style.opacity=(hid?0:clamp01((2.2-ad)/1.35)).toFixed(3);
+    C.el.style.visibility=hid?'hidden':'visible';
+    C.el.style.pointerEvents=hid?'none':'auto';
+    /* 转开的那几张让正文退下、轮廓数字顶上来——与选局环边上那几张同一种读法 */
+    C.ghost.style.opacity=(clamp01(ad*1.5-.18)*.92).toFixed(3);
+    C.body.style.opacity=clamp01(1.16-ad*1.25).toFixed(3);
+    C.el.classList.toggle('on',ad<.5);
+  }
+}
+function mvRailDraw(){
+  var c=MV.rail,g=MV.railx;if(!g)return;
+  var d=Math.min(devicePixelRatio||1,2);
+  var pw=Math.max(1,Math.round((c.clientWidth||16)*d)),ph=Math.max(1,Math.round(c.clientHeight*d));
+  if(c.width!==pw||c.height!==ph){c.width=pw;c.height=ph;}
+  var W=c.width,H=c.height;if(!(W>1&&H>1))return;
+  g.clearRect(0,0,W,H);
+  var m=H*.08,span=H-2*m,x=W*.5;
+  g.lineWidth=1;
+  g.strokeStyle='rgba(217,217,212,.42)';
+  g.beginPath();g.moveTo(x,m);g.lineTo(x,H-m);g.stroke();
+  var sel=Math.round(MV.pos);
+  for(var i=0;i<MV.n;i++){
+    var y=m+span*(MV.n>1?i/(MV.n-1):.5),cur=(i===sel);
+    g.strokeStyle=cur?'rgba(236,200,120,.95)':'rgba(217,217,212,.40)';
+    g.beginPath();g.moveTo(x-(cur?5:3)*d,y);g.lineTo(x+(cur?5:3)*d,y);g.stroke();
+  }
+  var f=MV.n>1?Math.max(0,Math.min(1,MV.pos/(MV.n-1))):.5;
+  var fy=m+span*f;
+  g.beginPath();g.arc(x,fy,4.2*d,0,Math.PI*2);
+  g.fillStyle='rgba(6,6,6,.9)';g.fill();
+  g.strokeStyle='rgba(236,236,232,.9)';g.stroke();
+}
+function mvBgDraw(now){
+  if(!MV.bgx)return;
+  var W=MV.bg.width,H=MV.bg.height;if(!(W>1&&H>1))return;
+  try{terrainPaint(MV.bgx,W,H,now,MV.pos*260,0,.55);}catch(_){}
+}
+function mvTick(){
+  MV.raf=0;
+  var box=MV.box;
+  if(!box||!MV.stage||!box.parentNode){return;}          /* 面板被整块换掉了：这一轮到此为止 */
+  if(box.clientHeight>10&&box.clientWidth>10){           /* 手机上切到别页时整块 display:none，不空转 */
+    /* 手机上底部还有一条小岛切页胶囊，底条要让开那一条；桌面端没有，贴到底。 */
+    var nav=gEl.querySelector('.gNav');
+    var navH=(nav&&getComputedStyle(nav).display!=='none')?'34px':'0px';
+    if(MV._nav!==navH){MV._nav=navH;box.style.setProperty('--mvNav',navH);MV.w=0;}
+    if(MV.stage.clientWidth!==MV.w||MV.stage.clientHeight!==MV.h)mvSize();
+    var now=performance.now();
+    /* 缓动按真实时长算，不按帧数。三维城景一开，低配机上这个循环一秒只跑得动
+       两三帧——写死每帧 .16 的话，翻一段要等好几秒，人会以为按钮没反应。 */
+    var dt=Math.min(80,Math.max(1,now-(MV._t||now)));MV._t=now;
+    var f=dt/16.7;
+    if(!MV.drag){
+      if(Math.abs(MV.vel)>.002){
+        MV.pos=Math.max(0,Math.min(MV.n-1,MV.pos+MV.vel*f));MV.vel*=Math.pow(.90,f);
+      }else{
+        var t=Math.max(0,Math.min(MV.n-1,(MV.tgt==null)?Math.round(MV.pos):MV.tgt));
+        MV.pos=lerp(MV.pos,t,1-Math.pow(.84,f));
+        if(Math.abs(MV.pos-t)<.002){MV.pos=t;MV.tgt=null;}
+      }
+    }
+    mvLayout();mvRailDraw();
+    if(REDUCED){if(!MV.bgT){MV.bgT=now;mvBgDraw(now);}}
+    else if(now-MV.bgT>48){MV.bgT=now;mvBgDraw(now);}    /* 山脉 20Hz 足够，别跟着满帧跑 */
+    var ix=MV.foot.querySelector('.mvIdx');
+    if(ix){var lab=pad(Math.round(MV.pos)+1)+'/'+pad(MV.n);if(ix.textContent!==lab)ix.textContent=lab;}
+  }
+  MV.raf=requestAnimationFrame(mvTick);
+}
+function mvStart(){if(!MV.raf)MV.raf=requestAnimationFrame(mvTick);}
+function mvStop(){if(MV.raf)cancelAnimationFrame(MV.raf);MV.raf=0;}
+addEventListener('resize',function(){if(MV.stage){MV.w=0;MV.h=0;}});
+
 /* 版本印：设置面板底部常驻，一眼看出当前跑的是哪一版，省得靠猜缓存 */
 try{var _bs=document.getElementById('buildStamp');if(_bs)_bs.textContent='BUILD 2.3.2';}catch(_){}
 })();
