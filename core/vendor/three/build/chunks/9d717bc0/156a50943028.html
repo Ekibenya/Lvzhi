@@ -486,22 +486,36 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
       font-size:9.5px;letter-spacing:.12em;color:var(--mut);cursor:pointer;transition:color .2s,border-color .2s}
 .mOp.on{border-color:var(--gold);color:var(--gold-hi)}
 .mOp:hover{color:var(--txt)}
-/* left edge: two arrows, slide panels with bottom blur-fade */
-.gArr{position:absolute;left:0;width:27px;padding:15px 0;z-index:31;cursor:pointer;
-      border:1px solid rgba(236,236,232,.16);border-left:0;background:rgba(6,6,6,.88);
-      display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--mut);
-      transition:left .45s cubic-bezier(.2,.85,.25,1),color .2s,border-color .2s}
-.gArr:hover{color:var(--gold-hi);border-color:var(--gold)}
-.gArr .a{font-size:11px;transition:transform .35s}
-.gArr .t{writing-mode:vertical-rl;font-size:8px;letter-spacing:.3em}
-#arrMap{top:15%}
-#arrArm{top:60%}
-.gPanel{position:absolute;left:0;width:min(46vw,560px);z-index:30;background:rgba(6,6,6,.78);
-      border-right:1px solid rgba(236,236,232,.14);border-bottom:1px solid rgba(236,236,232,.10);
-      backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
-      transform:translateX(-103%) translateZ(0);transition:transform .45s cubic-bezier(.2,.85,.25,1);overflow:hidden}
-#pnMap{top:46px;bottom:0}
-#pnArm{top:46px;bottom:0}
+/* 左侧栏：照 macOS / iPadOS 现在那套来——不再是贴着窗沿的一条硬边，
+   而是一枚从边缘浮起来的圆角玻璃栏：四周留白、大圆角、背景模糊、一道极细的亮边，
+   底下压一层柔影。选中项不再靠箭头指示，而是整行铺一块圆角底色（金）。
+   抽屉拉开时整条栏跟着往右让位，位移与抽屉同一条缓动。 */
+.gRail{position:absolute;left:10px;top:50%;transform:translateY(-50%);z-index:34;
+      display:flex;flex-direction:column;gap:4px;padding:5px;border-radius:17px;
+      background:rgba(17,17,16,.55);border:1px solid rgba(236,236,232,.13);
+      -webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);
+      box-shadow:0 12px 34px rgba(0,0,0,.46),inset 0 1px 0 rgba(255,255,255,.07);
+      transition:left .45s cubic-bezier(.2,.85,.25,1)}
+.gArr{position:relative;width:54px;padding:9px 0 7px;cursor:pointer;border:0;background:transparent;
+      border-radius:12px;display:flex;flex-direction:column;align-items:center;gap:5px;
+      color:var(--mut);transition:background .18s,color .18s,box-shadow .18s}
+.gArr:hover{background:rgba(236,236,232,.08);color:var(--txt)}
+.gArr svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.4;
+      stroke-linecap:square;stroke-linejoin:miter;display:block}
+.gArr .t{writing-mode:horizontal-tb;font-size:8px;letter-spacing:.12em;white-space:nowrap}
+#arrShop{order:2}
+#arrArm{order:3}
+#game.mapOpen #arrMap,#game.armOpen #arrArm,#game.shopOpen #arrShop{
+      background:rgba(201,155,63,.20);color:var(--gold-hi);
+      box-shadow:inset 0 0 0 1px rgba(201,155,63,.42)}
+.gPanel{position:absolute;left:10px;width:min(44vw,520px);z-index:30;
+      background:rgba(13,13,12,.62);border:1px solid rgba(236,236,232,.13);border-radius:18px;
+      box-shadow:0 18px 48px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.05);
+      backdrop-filter:blur(24px) saturate(170%);-webkit-backdrop-filter:blur(24px) saturate(170%);
+      transform:translateX(calc(-100% - 24px)) translateZ(0);
+      transition:transform .45s cubic-bezier(.2,.85,.25,1);overflow:hidden}
+#pnMap{top:56px;bottom:10px}
+#pnArm{top:56px;bottom:10px}
 #pnArm::before{
   content:'';position:absolute;left:0;right:0;top:0;height:62px;z-index:2;pointer-events:none;
   background:linear-gradient(180deg,rgba(6,6,6,.92) 0%,rgba(6,6,6,.62) 46%,rgba(6,6,6,0) 100%);
@@ -509,19 +523,9 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
   -webkit-mask-image:linear-gradient(180deg,#000 44%,transparent 100%);
           mask-image:linear-gradient(180deg,#000 44%,transparent 100%)}
 
-#game.mapOpen #pnMap{transform:translateZ(0);z-index:33}
-#game.mapOpen #arrMap{z-index:34}
-#game.armOpen #pnArm{transform:translateZ(0);z-index:33}
-#game.armOpen #arrArm{z-index:34}
-#game.shopOpen #pnShop{transform:translateZ(0);z-index:33}
-#game.shopOpen #arrShop{z-index:34}
-#arrShop{top:37%}
-#pnShop{top:46px;bottom:0}
-#game.mapOpen #arrMap{left:min(46vw,560px)}
-#game.armOpen #arrArm{left:min(46vw,560px)}
-#game.shopOpen #arrShop{left:min(46vw,560px)}
-#game.mapOpen #arrMap .a,#game.armOpen #arrArm .a{transform:rotate(180deg)}
-#game.shopOpen #arrShop .a{transform:rotate(180deg)}
+#game.mapOpen #pnMap,#game.armOpen #pnArm,#game.shopOpen #pnShop{transform:translateZ(0);z-index:33}
+#pnShop{top:56px;bottom:10px}
+#game.mapOpen .gRail,#game.armOpen .gRail,#game.shopOpen .gRail{left:calc(min(44vw,520px) + 20px)}
 .shRow{display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid rgba(236,236,232,.07)}
 .shRow:hover{background:rgba(236,236,232,.045)}
 .shRow .ic{width:22px;height:22px;flex:0 0 22px;opacity:.82}
@@ -741,8 +745,9 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
      那条带里其实只有一个居中的小胶囊，电脑端根本没有这块，两端观感因此不一致。 */
   #game .gMain{left:0;right:0;bottom:0}
   #game .gMfd{display:none;left:0;right:0;width:auto;bottom:0;border-left:0;padding-bottom:40px}
-  .gArr{display:none}
-  .gPanel{display:none;transform:none;transition:none;width:auto;left:0;right:0;border-right:0}
+  .gRail{display:none}
+  .gPanel{display:none;transform:none;transition:none;width:auto;left:0;right:0;
+      border:0;border-radius:0;box-shadow:none}
   /* 舆·备一页：地图上、装备下（Ghost 式上下布局省空间） */
   #game[data-pg=map] #pnMap{display:block;top:46px;bottom:auto;height:calc((100dvh - 80px)*.52)}
   #game[data-pg=map] #pnArm{display:block;top:calc(46px + (100dvh - 80px)*.52);bottom:0;padding-bottom:40px;border-top:1px solid rgba(236,236,232,.16);overflow-y:auto}
@@ -1048,8 +1053,8 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
               font-size:8px;letter-spacing:.34em;color:var(--mut);white-space:nowrap}
 .mvCard .fnum{position:absolute;right:11px;top:8px;z-index:2;
               font-size:8px;letter-spacing:.2em;color:var(--mut)}
-.mvBody{position:absolute;top:1px;bottom:1px;left:20px;right:20px;
-        overflow-y:auto;overflow-x:hidden;padding:26px 9px 15px;
+.mvBody{position:absolute;top:1px;bottom:1px;left:5px;right:5px;
+        overflow-y:auto;overflow-x:hidden;padding:26px 8px 15px;
         overscroll-behavior:contain;touch-action:pan-y}
 /* 轮圈内壁的明暗：光从正前来，转开的那一段整体压暗（brightness），
    同时在它「更远的那条边」上压一道渐深的影——上方的卡暗在顶沿，下方的卡暗在底沿。
@@ -1280,9 +1285,11 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
     </div>
   </aside>
 
-  <div class="gArr" id="arrMap"><span class="a">▸</span><span class="t">TABVLA&nbsp;地图</span></div>
-  <div class="gArr" id="arrArm"><span class="a">▸</span><span class="t">ARMA&nbsp;装备</span></div>
-  <div class="gArr" id="arrShop"><span class="a">▸</span><span class="t">MERCATVS&nbsp;商店</span></div>
+  <div class="gRail">
+    <div class="gArr" id="arrMap" title="TABVLA · 地图"><svg viewBox="0 0 24 24"><path d="M3 6l6-2.2 6 2.2 6-2.2V18l-6 2.2L9 18l-6 2.2z"/><path d="M9 3.8V18M15 6v14.2"/></svg><span class="t">地图</span></div>
+    <div class="gArr" id="arrShop" title="MERCATVS · 商店"><svg viewBox="0 0 24 24"><path d="M4 9.5l2-5h12l2 5H4z"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5.5h4V20"/></svg><span class="t">商店</span></div>
+    <div class="gArr" id="arrArm" title="ARMA · 装备"><svg viewBox="0 0 24 24"><path d="M12 3.2l7 2.6v5.4c0 4.1-2.8 7.4-7 8.8-4.2-1.4-7-4.7-7-8.8V5.8z"/><path d="M12 8v6M9.4 10.6h5.2"/></svg><span class="t">装备</span></div>
+  </div>
 
   <div id="pnTx"><div id="zjScene3D" style="position:absolute;inset:0"></div><div id="mdScene3D" style="position:absolute;inset:0;display:none;outline:none"></div><div id="modScene3D" style="position:absolute;inset:0;display:none;background:#030303"><canvas id="mcGl" style="position:absolute;inset:0;width:100%;height:100%"></canvas><canvas id="mcOv" style="position:absolute;inset:0;width:100%;height:100%;touch-action:none"></canvas></div>
     <div id="txHint"></div>
@@ -7088,8 +7095,8 @@ $('#cfgGlass').addEventListener('input',function(){SET.glass=+this.value;
   if(!glassRaf)glassRaf=requestAnimationFrame(function(){glassRaf=0;applyGlass();setStore();});});
 var formaCss=document.createElement('style');document.head.appendChild(formaCss);
 function applyForma(){
-  if(SET.forma===1)formaCss.textContent='@media(max-width:760px){#game .gMain{left:64px;right:322px;bottom:0}#game .gMfd{display:block}.gArr{display:flex}.gNav{display:none}}';
-  else if(SET.forma===2)formaCss.textContent='#game .gMain{left:0;right:0;bottom:0}#game .gMfd{display:none;left:0;right:0;width:auto;bottom:0;padding-bottom:40px;border-left:0}.gArr{display:none}.gPanel{display:none;transform:none;transition:none;width:auto;left:0;right:0;border-right:0}.gNav{display:flex;position:absolute;left:50%;transform:translateX(-50%);bottom:5px;height:24px;z-index:40;border:1px solid rgba(236,236,232,.22);background:rgba(6,6,6,.72);-webkit-backdrop-filter:blur(14px) saturate(150%);backdrop-filter:blur(14px) saturate(150%);touch-action:pan-x}.gNav span{display:flex;align-items:center;padding:0 15px;color:var(--mut);cursor:pointer}.gNav span b{display:none}.gNav span svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:square;stroke-linejoin:miter;display:block}.gNav span.on{color:#0a0a0a;background:var(--gold)}#game[data-pg=map] #pnMap{display:block;transform:none;top:46px;bottom:auto;height:calc((100dvh - 80px)*.52);width:100%}#game[data-pg=map] #pnArm{display:block;transform:none;top:calc(46px + (100dvh - 80px)*.52);bottom:0;padding-bottom:40px;width:100%;border-top:1px solid rgba(236,236,232,.16);overflow-y:auto}#pnArm::before{content:\'\';position:absolute;left:0;right:0;top:0;height:62px;z-index:2;pointer-events:none;background:linear-gradient(180deg,rgba(6,6,6,.92) 0%,rgba(6,6,6,.62) 46%,rgba(6,6,6,0) 100%);-webkit-backdrop-filter:blur(10px) saturate(140%);backdrop-filter:blur(10px) saturate(140%);-webkit-mask-image:linear-gradient(180deg,#000 44%,transparent 100%);mask-image:linear-gradient(180deg,#000 44%,transparent 100%)}#game[data-pg=mfd] .gMfd{display:block;top:46px;bottom:0;padding-bottom:40px}#game[data-pg=shop] #pnShop{display:block;transform:none;top:46px;bottom:0;width:100%}#game[data-pg=shop] .shWrap{padding-bottom:44px}#game[data-pg=map] .gMain,#game[data-pg=mfd] .gMain,#game[data-pg=shop] .gMain{display:none}';
+  if(SET.forma===1)formaCss.textContent='@media(max-width:760px){#game .gMain{left:64px;right:322px;bottom:0}#game .gMfd{display:block}.gRail{display:flex}.gNav{display:none}}';
+  else if(SET.forma===2)formaCss.textContent='#game .gMain{left:0;right:0;bottom:0}#game .gMfd{display:none;left:0;right:0;width:auto;bottom:0;padding-bottom:40px;border-left:0}.gRail{display:none}.gPanel{display:none;transform:none;transition:none;width:auto;left:0;right:0;border:0;border-radius:0;box-shadow:none}.gNav{display:flex;position:absolute;left:50%;transform:translateX(-50%);bottom:5px;height:24px;z-index:40;border:1px solid rgba(236,236,232,.22);background:rgba(6,6,6,.72);-webkit-backdrop-filter:blur(14px) saturate(150%);backdrop-filter:blur(14px) saturate(150%);touch-action:pan-x}.gNav span{display:flex;align-items:center;padding:0 15px;color:var(--mut);cursor:pointer}.gNav span b{display:none}.gNav span svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:square;stroke-linejoin:miter;display:block}.gNav span.on{color:#0a0a0a;background:var(--gold)}#game[data-pg=map] #pnMap{display:block;transform:none;top:46px;bottom:auto;height:calc((100dvh - 80px)*.52);width:100%}#game[data-pg=map] #pnArm{display:block;transform:none;top:calc(46px + (100dvh - 80px)*.52);bottom:0;padding-bottom:40px;width:100%;border-top:1px solid rgba(236,236,232,.16);overflow-y:auto}#pnArm::before{content:\'\';position:absolute;left:0;right:0;top:0;height:62px;z-index:2;pointer-events:none;background:linear-gradient(180deg,rgba(6,6,6,.92) 0%,rgba(6,6,6,.62) 46%,rgba(6,6,6,0) 100%);-webkit-backdrop-filter:blur(10px) saturate(140%);backdrop-filter:blur(10px) saturate(140%);-webkit-mask-image:linear-gradient(180deg,#000 44%,transparent 100%);mask-image:linear-gradient(180deg,#000 44%,transparent 100%)}#game[data-pg=mfd] .gMfd{display:block;top:46px;bottom:0;padding-bottom:40px}#game[data-pg=shop] #pnShop{display:block;transform:none;top:46px;bottom:0;width:100%}#game[data-pg=shop] .shWrap{padding-bottom:44px}#game[data-pg=map] .gMain,#game[data-pg=mfd] .gMain,#game[data-pg=shop] .gMain{display:none}';
   else formaCss.textContent='';
 }
 applyForma();setSeg('#sgForma',SET.forma);
@@ -8762,6 +8769,8 @@ function renderMvu(panel){
   try{mvRingMount();}catch(_){}
   try{graphHydrate();}catch(_){}
   try{zj3dTick();}catch(_){}
+  /* 上面两句才把図谱与小图填进去，挂载时量的高度已经过时：逼下一帧重量 */
+  try{if(typeof MV!=='undefined'&&MV)MV.w=0;}catch(_){}
 }
 /* ═══════════ 図谱 CHAIN × 记忆 MEM（Ghost 原版整件移植：蛛网引擎/PERSONNEL FILE/编年长卷）═══════════ */
 var S={history:[],memNpc:null,_npcMetaBusy:null,memEdit:null,secG:true,secA:true,secM:true,
@@ -11257,7 +11266,7 @@ function mvSize(){
   var W=MV.stage.clientWidth,H=MV.stage.clientHeight;
   if(!(W>10&&H>10))return;
   MV.w=W;MV.h=H;
-  var cw=Math.max(150,W-18);
+  var cw=Math.max(150,W-10);
   /* 「每段按自己的内容量高」和「看得出是个环」是一对矛盾：正前那张越高，
      台上留给邻卡的地方越少，高到满屏就只剩一张平板。折中办法是拉手风琴——
      正前那张放开到 0.70 台高（够读，超出的才滚），转开的那几张收到 0.26 台高，
@@ -11279,11 +11288,8 @@ function mvSize(){
   /* 量的是内容自身的高度，不能量 .mvBody.scrollHeight——正文是 inset:1px 撑满整卡的，
      scrollHeight 永远不小于 clientHeight，一量就是当前卡高，每张卡都会顶到上限。
      写、读、写分三趟，别在一个循环里交替，否则每张卡逼一次重排。 */
-  MV.full=[];
-  for(i=0;i<C.length;i++){
-    var kid=C[i].body.firstElementChild;
-    MV.full.push(Math.max(minH,Math.min(maxH,(kid?kid.offsetHeight:0)+PADY)));
-  }
+  MV.minH=minH;MV.maxH=maxH;MV.padY=PADY;
+  MV.full=mvMeasure();
   var mean=0;for(i=0;i<MV.full.length;i++)mean+=MV.full[i];
   mean=MV.full.length?mean/MV.full.length:200;
   /* 半径按「正前那张与旁边那张之间的弧长」反推，让这一对斜过四十度上下。
@@ -11315,6 +11321,26 @@ function mvSize(){
   MV.rail.width=Math.max(1,Math.round((MV.rail.clientWidth||16)*d));
   MV.rail.height=Math.max(1,Math.round((MV.rail.clientHeight||H)*d));
   MV.bgT=0;
+}
+/* 量每一段内容自身的高度。量的是正文里那个内容节点，不是 .mvBody.scrollHeight——
+   正文是撑满整卡的，scrollHeight 永远不小于 clientHeight，一量就是当前卡高。 */
+function mvMeasure(){
+  var C=MV.cards,out=[],i;
+  for(i=0;i<C.length;i++){
+    var kid=C[i].body.firstElementChild;
+    out.push(Math.max(MV.minH||104,Math.min(MV.maxH||600,(kid?kid.offsetHeight:0)+(MV.padY||43))));
+  }
+  return out;
+}
+/* 図谱／编年／记忆这三节的正文是挂载之后才由 graphHydrate、zj3dTick 填进去的，
+   挂载那一刻量到的高度偏小；长程记忆与编年史还会一幕一幕地长。高度停在旧值，
+   卡就只展开那么高，后面的内容全被裁掉——看上去就是「这三节是空的」。
+   所以隔一阵重量一次，有变化就跟上。 */
+function mvRemeasure(){
+  if(!MV.cards||!MV.cards.length||!MV.full||MV.full.length!==MV.cards.length)return;
+  var m=mvMeasure(),ch=false;
+  for(var i=0;i<m.length;i++)if(Math.abs(m[i]-MV.full[i])>=4){MV.full[i]=m[i];ch=true;}
+  return ch;
 }
 /* 卡高与转角表都随 pos 变（手风琴），每帧重算一次。写样式前先比一比，
    差不到一像素就不写——否则每帧六次无谓的重排。 */
@@ -11378,7 +11404,7 @@ function mvShell(C,w,h,R,P,a,curve){
     C.p2.setAttribute('stroke','var(--paper)');C.p2.setAttribute('stroke-width','1');
     C.svg.setAttribute('viewBox','0 0 '+w.toFixed(1)+' '+h.toFixed(1));
     C.fr.style.clipPath='none';
-    if(C.pad!==10){C.pad=10;C.body.style.left='10px';C.body.style.right='10px';}
+    if(C.pad!==5){C.pad=5;C.body.style.left='5px';C.body.style.right='5px';}
     return;
   }
   var th=h/R, e=P-R;
@@ -11561,6 +11587,16 @@ function mvTick(){
       var t=(MV.tgt==null)?Math.round(MV.pos):MV.tgt;
       MV.pos=lerp(MV.pos,t,1-Math.pow(.82,f));
       if(Math.abs(MV.pos-t)<.002){MV.pos=mvWrap(t);MV.tgt=null;}   /* 停稳时把圈数归零 */
+    }
+    if(now-(MV._mT||0)>600){MV._mT=now;try{mvRemeasure();}catch(_){}}
+    var sel=Math.round(MV.pos);
+    if(MV._sel!==sel){
+      MV._sel=sel;
+      /* 図谱与三维小图要按容器实际尺寸画；刚才它还是一条 34px 的抬头，
+         这会儿才摊开，得让它们照新尺寸重画一遍。 */
+      try{graphHydrate();}catch(_){}
+      try{zj3dTick();}catch(_){}
+      try{mvRemeasure();}catch(_){}
     }
     mvLayout();mvRailDraw();
     if(REDUCED){if(!MV.bgT){MV.bgT=now;mvBgDraw(now);}}
