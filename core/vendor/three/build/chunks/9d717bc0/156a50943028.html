@@ -751,7 +751,11 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
      不限定页面：装备栏既能从手机底部「地图」页进，也能从侧边 ARMA 抽屉滑出，
      只挂在 [data-pg=map] 上的话，走抽屉那条路就完全不生效。 */
   #game[data-pg=mfd] .gMfd{display:block}
-  #game[data-pg=map] .gMain,#game[data-pg=mfd] .gMain{display:none}
+  /* 商店自成一页：手机端没有侧边拉手，只能从底部小岛切进来。
+     .shWrap 是绝对定位的滚动容器，底部要给小岛让出一条，不然最后一行被胶囊压住点不到。 */
+  #game[data-pg=shop] #pnShop{display:block;top:46px;bottom:0}
+  #game[data-pg=shop] .shWrap{padding-bottom:44px}
+  #game[data-pg=map] .gMain,#game[data-pg=mfd] .gMain,#game[data-pg=shop] .gMain{display:none}
   /* Ghost 式小岛切换条：底部居中小胶囊，点选或左右滑切页 */
   .gNav{display:flex;position:absolute;left:50%;transform:translateX(-50%);bottom:5px;height:24px;z-index:40;
       border:1px solid rgba(236,236,232,.22);background:rgba(6,6,6,.72);touch-action:pan-x;
@@ -1236,6 +1240,7 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
   </div>
 
   <nav class="gNav">
+    <span data-pg="shop" title="MERCATVS &middot; 商店"><svg viewBox="0 0 24 24"><path d="M4 9.5l2-5h12l2 5H4z"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5.5h4V20"/></svg></span>
     <span data-pg="map" title="TABVLA · 地图与装备"><svg viewBox="0 0 24 24"><path d="M3 6l6-2.2 6 2.2 6-2.2V18l-6 2.2L9 18l-6 2.2z"/><path d="M9 3.8V18M15 6v14.2"/></svg></span>
     <span class="on" data-pg="narr" title="SERMO · 叙事"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 9.5h16M4 14h16M4 18.5h9"/></svg></span>
     <span data-pg="mfd" title="TABVLARIVM · 情报"><svg viewBox="0 0 24 24"><path d="M5 20v-9M12 20V4M19 20v-6"/><path d="M3 20.5h18"/></svg></span>
@@ -5074,12 +5079,13 @@ invRender();
 /* mobile bottom nav（小岛式：点选或在胶囊上左右滑动切页） */
 (function(){
   var tabs=gEl.querySelectorAll('.gNav span');
-  var ORDER=['map','narr','mfd'];
+  var ORDER=['shop','map','narr','mfd'];
   var _paneWas=false;                 /* 切到情报台前三维是开着的第几档；false＝本来就关着 */
   function setPg(pg){
     for(var j=0;j<tabs.length;j++)tabs[j].classList.toggle('on',tabs[j].getAttribute('data-pg')===pg);
     gEl.setAttribute('data-pg',pg);
     if(pg==='map'){setTimeout(gmapSize,60);try{invRender();}catch(_){}}
+    if(pg==='shop'){try{shopRender();}catch(_){}}
     /* 情报台的 z-index 是 20，三维画面是 25——不收起来的话它整块压在状态栏上，
        这一页从头到 70vh 全被挡住，玩家看到的就是「切过去也读不了」。
        离开这一页时再把它按原来的档位还原，玩家不会觉得自己的三维被谁关掉了。 */
@@ -5109,7 +5115,7 @@ invRender();
       var dx=e.changedTouches[0].clientX-sx;sx=null;
       if(Math.abs(dx)<28)return;
       var cur=gEl.getAttribute('data-pg')||'narr';
-      var i2=ORDER.indexOf(cur);if(i2<0)i2=1;
+      var i2=ORDER.indexOf(cur);if(i2<0)i2=ORDER.indexOf('narr');
       i2=Math.max(0,Math.min(ORDER.length-1,i2+(dx<0?1:-1)));
       setPg(ORDER[i2]);
     },{passive:true});
@@ -7010,7 +7016,7 @@ $('#cfgGlass').addEventListener('input',function(){SET.glass=+this.value;
 var formaCss=document.createElement('style');document.head.appendChild(formaCss);
 function applyForma(){
   if(SET.forma===1)formaCss.textContent='@media(max-width:760px){#game .gMain{left:64px;right:322px;bottom:0}#game .gMfd{display:block}.gArr{display:flex}.gNav{display:none}}';
-  else if(SET.forma===2)formaCss.textContent='#game .gMain{left:0;right:0;bottom:0}#game .gMfd{display:none;left:0;right:0;width:auto;bottom:0;padding-bottom:40px;border-left:0}.gArr{display:none}.gPanel{display:none;transform:none;transition:none;width:auto;left:0;right:0;border-right:0}.gNav{display:flex;position:absolute;left:50%;transform:translateX(-50%);bottom:5px;height:24px;z-index:40;border:1px solid rgba(236,236,232,.22);background:rgba(6,6,6,.72);-webkit-backdrop-filter:blur(14px) saturate(150%);backdrop-filter:blur(14px) saturate(150%);touch-action:pan-x}.gNav span{display:flex;align-items:center;padding:0 15px;color:var(--mut);cursor:pointer}.gNav span b{display:none}.gNav span svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:square;stroke-linejoin:miter;display:block}.gNav span.on{color:#0a0a0a;background:var(--gold)}#game[data-pg=map] #pnMap{display:block;transform:none;top:46px;bottom:auto;height:calc((100dvh - 80px)*.52);width:100%}#game[data-pg=map] #pnArm{display:block;transform:none;top:calc(46px + (100dvh - 80px)*.52);bottom:0;padding-bottom:40px;width:100%;border-top:1px solid rgba(236,236,232,.16);overflow-y:auto}#pnArm::before{content:\'\';position:absolute;left:0;right:0;top:0;height:62px;z-index:2;pointer-events:none;background:linear-gradient(180deg,rgba(6,6,6,.92) 0%,rgba(6,6,6,.62) 46%,rgba(6,6,6,0) 100%);-webkit-backdrop-filter:blur(10px) saturate(140%);backdrop-filter:blur(10px) saturate(140%);-webkit-mask-image:linear-gradient(180deg,#000 44%,transparent 100%);mask-image:linear-gradient(180deg,#000 44%,transparent 100%)}#game[data-pg=mfd] .gMfd{display:block;top:46px;bottom:0;padding-bottom:40px}#game[data-pg=map] .gMain,#game[data-pg=mfd] .gMain{display:none}';
+  else if(SET.forma===2)formaCss.textContent='#game .gMain{left:0;right:0;bottom:0}#game .gMfd{display:none;left:0;right:0;width:auto;bottom:0;padding-bottom:40px;border-left:0}.gArr{display:none}.gPanel{display:none;transform:none;transition:none;width:auto;left:0;right:0;border-right:0}.gNav{display:flex;position:absolute;left:50%;transform:translateX(-50%);bottom:5px;height:24px;z-index:40;border:1px solid rgba(236,236,232,.22);background:rgba(6,6,6,.72);-webkit-backdrop-filter:blur(14px) saturate(150%);backdrop-filter:blur(14px) saturate(150%);touch-action:pan-x}.gNav span{display:flex;align-items:center;padding:0 15px;color:var(--mut);cursor:pointer}.gNav span b{display:none}.gNav span svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:square;stroke-linejoin:miter;display:block}.gNav span.on{color:#0a0a0a;background:var(--gold)}#game[data-pg=map] #pnMap{display:block;transform:none;top:46px;bottom:auto;height:calc((100dvh - 80px)*.52);width:100%}#game[data-pg=map] #pnArm{display:block;transform:none;top:calc(46px + (100dvh - 80px)*.52);bottom:0;padding-bottom:40px;width:100%;border-top:1px solid rgba(236,236,232,.16);overflow-y:auto}#pnArm::before{content:\'\';position:absolute;left:0;right:0;top:0;height:62px;z-index:2;pointer-events:none;background:linear-gradient(180deg,rgba(6,6,6,.92) 0%,rgba(6,6,6,.62) 46%,rgba(6,6,6,0) 100%);-webkit-backdrop-filter:blur(10px) saturate(140%);backdrop-filter:blur(10px) saturate(140%);-webkit-mask-image:linear-gradient(180deg,#000 44%,transparent 100%);mask-image:linear-gradient(180deg,#000 44%,transparent 100%)}#game[data-pg=mfd] .gMfd{display:block;top:46px;bottom:0;padding-bottom:40px}#game[data-pg=shop] #pnShop{display:block;transform:none;top:46px;bottom:0;width:100%}#game[data-pg=shop] .shWrap{padding-bottom:44px}#game[data-pg=map] .gMain,#game[data-pg=mfd] .gMain,#game[data-pg=shop] .gMain{display:none}';
   else formaCss.textContent='';
 }
 applyForma();setSeg('#sgForma',SET.forma);
