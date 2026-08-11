@@ -11526,16 +11526,31 @@ function mvDeck(){
      深度不靠 translateZ，靠「尺寸 + 倾角 + 压暗」，免得又变成广角哈哈镜。 */
   var SW=MV.w||320,SH=MV.h||600,MARG=8;
   var TW=MV.tw||60,TH=MV.th||42,STEP=TH+(MV.tgap==null?8:MV.tgap);
-  var winW=Math.max(220,SW-TW-MARG*3-6),winMax=Math.max(180,SH-24);
+  /* 上台那扇窗别把整个右半屏吃掉：宽度取台宽的六成二，并封在 340~470 之间，
+     比原来那一栏（322）宽一圈，读起来舒服，又不至于把三维和正文一起盖住。 */
+  var winW=Math.max(300,Math.min(470,Math.max(340,Math.round(SW*.62)),SW-TW-MARG*3-6));
+  /* 三维那一带与情报台互相让一点：窗顶落在三维画面的下沿之下，谁也不压谁。
+     三维收起／展开时高度会变，所以每帧照它当下的位置算，不写死。 */
+  var topPad=10;
+  try{
+    var _tx=document.getElementById('pnTx');
+    if(_tx&&MV.stage){
+      var _tr=_tx.getBoundingClientRect(),_sr=MV.stage.getBoundingClientRect();
+      if(_tr.height>4)topPad=Math.max(10,Math.min(SH*.6,Math.round(_tr.bottom-_sr.top)+10));
+    }
+  }catch(_){}
+  var winMax=Math.max(180,SH-topPad-10);
   var thumbX=SW/2-TW/2-MARG;                       /* 缩略位：右缘 */
   var winX=-SW/2+winW/2+MARG;                      /* 台上位：左缘 */
   var y0=-(n-1)*STEP/2;
   for(var i=0;i<n;i++){
     var C=C0[i],d=i-MV.pos,k=Math.abs(d),w=clamp01(1-k),thumb=(k>.5);
     var W=Math.round(TW+(winW-TW)*w);
-    var H=Math.round(TH+(Math.min(MV.full[i],winMax)-TH)*w);
+    var Hw=Math.min(MV.full[i],winMax);
+    var H=Math.round(TH+(Hw-TH)*w);
     var x=thumbX+(winX-thumbX)*w;
-    var y=(y0+i*STEP)*(1-w);                       /* 到台上就归中 */
+    var yWin=topPad+Hw/2-SH/2;                     /* 上台位：贴着三维下沿往下摆 */
+    var y=(y0+i*STEP)*(1-w)+yWin*w;
     var rot=17*(1-w);
     if(C.w!==W){C.w=W;C.el.style.width=W+'px';}
     if(Math.abs((C.h||0)-H)>=1){C.h=H;C.el.style.height=H+'px';}
