@@ -1083,7 +1083,15 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
    会把正文的选字、点按全吃掉。 */
 #game .gMfd.mvDeck{background:transparent !important;border-left:0;width:min(56vw,680px);
       overflow:visible;padding:0;pointer-events:none}
-.gMfd.mvDeck .mvBg,.gMfd.mvDeck .mvVig,.gMfd.mvDeck .mvRail{display:none}
+.gMfd.mvDeck .mvRail{display:none}
+/* 选局那张粒子山脉底搬进来，只铺在「让出来那一条」上——
+   底下全黑的话毛玻璃糊的是一片黑，等于没糊，窗看着就是一块死板。
+   只铺这一条，正文与三维那边一寸不占；左沿用 mask 化开，免得成一道硬边。 */
+.gMfd.mvDeck .mvBg{display:block;left:auto;right:0;width:var(--mvGut,368px);opacity:.62;
+      -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 52px);
+              mask-image:linear-gradient(90deg,transparent 0,#000 52px)}
+.gMfd.mvDeck .mvVig{display:block;left:auto;right:0;width:var(--mvGut,368px);
+      background:radial-gradient(ellipse 120% 70% at 60% 46%,transparent 40%,rgba(0,0,0,.55) 100%)}
 .gMfd.mvDeck .mvStage{left:0;right:0;overflow:visible;pointer-events:none}
 .gMfd.mvDeck .mvTrack{pointer-events:none}
 .gMfd.mvDeck .mvFoot{left:auto;right:0;width:212px;pointer-events:auto;
@@ -11421,7 +11429,8 @@ function mvSize(){
   for(i=0;i<C.length;i++){C[i].k='';C[i].w=-1;C[i].h=-1;C[i].bk='';}
   if(MV.mode===2)mvHeights();else mvHeightsDeck();
   var d=Math.min(devicePixelRatio||1,2);
-  MV.bg.width=Math.max(1,Math.round(MV.box.clientWidth*d));
+  /* 卡叠时底图只铺那一条，画布也只要那么宽 */
+  MV.bg.width=Math.max(1,Math.round((MV.mode===2?MV.box.clientWidth:(MV.gut||368))*d));
   MV.bg.height=Math.max(1,Math.round(MV.box.clientHeight*d));
   MV.rail.width=Math.max(1,Math.round((MV.rail.clientWidth||16)*d));
   MV.rail.height=Math.max(1,Math.round((MV.rail.clientHeight||H)*d));
