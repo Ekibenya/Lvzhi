@@ -324,6 +324,12 @@ canvas{display:block}
    （will-change:backdrop-filter 还把它钉死在显存里）。只留同样的压暗色。 */
 #game::before{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
       background:rgba(5,5,5,.31)}
+/* 选局那张粒子山脉底，铺满整个对局界面（正文底下也铺）。
+   必须挂在 #game 里面：#game 是 isolation:isolate 的独立层，
+   毛玻璃取的背景只到这一层为止——铺在外面的 #terrain 它根本采不到，
+   糊出来仍旧是一片黑。z-index:-1 让它落在压暗层之下，先被压暗再当背景。 */
+#game #gTerr{position:absolute;inset:0;width:100%;height:100%;z-index:-1;
+      pointer-events:none;opacity:.55}
 #menu.gbg{opacity:1;pointer-events:none;transition:none}
 #menu canvas{transform:translateZ(0)}
 #menu.gbg .mItems,#menu.gbg .mFoot,#menu.gbg #eraHud{display:none}
@@ -1084,14 +1090,8 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
 #game .gMfd.mvDeck{background:transparent !important;border-left:0;width:min(56vw,680px);
       overflow:visible;padding:0;pointer-events:none}
 .gMfd.mvDeck .mvRail{display:none}
-/* 选局那张粒子山脉底搬进来，只铺在「让出来那一条」上——
-   底下全黑的话毛玻璃糊的是一片黑，等于没糊，窗看着就是一块死板。
-   只铺这一条，正文与三维那边一寸不占；左沿用 mask 化开，免得成一道硬边。 */
-.gMfd.mvDeck .mvBg{display:block;left:auto;right:0;width:var(--mvGut,368px);opacity:.62;
-      -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 52px);
-              mask-image:linear-gradient(90deg,transparent 0,#000 52px)}
-.gMfd.mvDeck .mvVig{display:block;left:auto;right:0;width:var(--mvGut,368px);
-      background:radial-gradient(ellipse 120% 70% at 60% 46%,transparent 40%,rgba(0,0,0,.55) 100%)}
+/* 底铺到 #gTerr 上去了，情报台自己那张不再重复画 */
+.gMfd.mvDeck .mvBg,.gMfd.mvDeck .mvVig{display:none}
 .gMfd.mvDeck .mvStage{left:0;right:0;overflow:visible;pointer-events:none}
 .gMfd.mvDeck .mvTrack{pointer-events:none}
 .gMfd.mvDeck .mvFoot{left:auto;right:0;width:212px;pointer-events:auto;
@@ -1298,6 +1298,7 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
 </div>
 
 <div id="game">
+  <canvas id="gTerr"></canvas>
   <div class="gTop">
     <span class="gBrand">LINEA&nbsp;NOVA&nbsp;//&nbsp;LVZHI.SYS</span>
     <span class="gLoc" id="gLoc"></span>
@@ -11173,6 +11174,7 @@ function loop(t){
   /* 缩略图每 700ms 对一次：内容没变就只是一次字符串比较，不重排 */
   if(GAME.on){var _rn=performance.now();if(_rn-_railT>700){_railT=_rn;try{railSync();}catch(_){}}}
   if(((!INTRO.on&&!MENU.on)||MENU.exiting)&&!GAME.on){terrainDraw(t);cardLayout();railDraw();}
+  else if(GAME.on)gTerrDraw(t);
   if(!INTRO.on&&!MENU.on&&!GAME.on)grainDraw();
  }catch(err){
   /* 帧内任何异常都只吞掉这一帧。原先异常会顺着栈冲出 loop()，
@@ -11429,8 +11431,7 @@ function mvSize(){
   for(i=0;i<C.length;i++){C[i].k='';C[i].w=-1;C[i].h=-1;C[i].bk='';}
   if(MV.mode===2)mvHeights();else mvHeightsDeck();
   var d=Math.min(devicePixelRatio||1,2);
-  /* 卡叠时底图只铺那一条，画布也只要那么宽 */
-  MV.bg.width=Math.max(1,Math.round((MV.mode===2?MV.box.clientWidth:(MV.gut||368))*d));
+  MV.bg.width=Math.max(1,Math.round(MV.box.clientWidth*d));
   MV.bg.height=Math.max(1,Math.round(MV.box.clientHeight*d));
   MV.rail.width=Math.max(1,Math.round((MV.rail.clientWidth||16)*d));
   MV.rail.height=Math.max(1,Math.round((MV.rail.clientHeight||H)*d));
@@ -11751,6 +11752,18 @@ try{if(mvOn())mvRingMount();}catch(_){}      /* 模块就位后补挂一次：�
    真面板的渲染与点击当场全失灵。
    地图是画布，innerHTML 搬过去只是一张空画布，改用 drawImage 拷贝像素。 */
 var _railT=0;
+/* 对局里的全场底。山脉本身几乎不动（只有 t*.022 的缓慢漂移），
+   没必要跟着满帧重画：约 10Hz，密度也降到八成。 */
+var _gtT=0;
+function gTerrDraw(t){
+  var c=document.getElementById('gTerr');if(!c)return;
+  if(t-_gtT<96)return;_gtT=t;
+  var d=Math.min(devicePixelRatio||1,1.5);
+  var w=Math.max(1,Math.round(innerWidth*d)),h=Math.max(1,Math.round(innerHeight*d));
+  if(c.width!==w||c.height!==h){c.width=w;c.height=h;}
+  var g=c.getContext('2d');if(!g)return;
+  try{terrainPaint(g,w,h,t,pos*230,parX,.8);}catch(_){}
+}
 function railThumb(arrId,srcId){
   var mw=document.querySelector('#'+arrId+' .mw'),src=document.getElementById(srcId);
   if(!mw||!src)return;
