@@ -1025,7 +1025,7 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
 .mvVig{position:absolute;inset:0;pointer-events:none;
        background:radial-gradient(ellipse 92% 76% at 50% 46%,transparent 48%,rgba(0,0,0,.66) 100%)}
 .mvStage{position:absolute;left:0;right:16px;top:0;bottom:calc(var(--mvNav,0px) + 34px);
-         perspective:1600px;perspective-origin:50% 50%;touch-action:none;overflow:hidden}
+         perspective:1800px;perspective-origin:50% 48%;touch-action:pan-y;overflow:hidden}
 .mvTrack{position:absolute;inset:0;transform-style:preserve-3d;pointer-events:none}
 .mvCard{position:absolute;left:50%;top:50%;pointer-events:auto;cursor:pointer;touch-action:none;
         will-change:transform,opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden}
@@ -1036,19 +1036,19 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
 .mvCard .cfr::before,.mvCard .cfr::after{content:'';position:absolute;width:7px;height:7px;border:1px solid var(--paper)}
 .mvCard .cfr::before{left:-4px;top:-4px;border-right:0;border-bottom:0}
 .mvCard .cfr::after{right:-4px;bottom:-4px;border-left:0;border-top:0}
-.mvCard .ftag{position:absolute;left:0;top:-7px;transform:translateY(-100%);
+.mvCard .ftag{position:absolute;left:10px;top:8px;z-index:2;
               font-size:8px;letter-spacing:.34em;color:var(--mut);white-space:nowrap}
-.mvCard .fnum{position:absolute;right:0;top:-7px;transform:translateY(-100%);
+.mvCard .fnum{position:absolute;right:10px;top:8px;z-index:2;
               font-size:8px;letter-spacing:.2em;color:var(--mut)}
-.mvBody{position:absolute;inset:1px;overflow-y:auto;overflow-x:hidden;padding:15px 14px 16px;
-        overscroll-behavior:contain}
+.mvBody{position:absolute;inset:1px;overflow-y:auto;overflow-x:hidden;padding:26px 13px 15px;
+        overscroll-behavior:contain;touch-action:pan-y}
 .mvBody::-webkit-scrollbar{width:3px}
 /* 侧卡的正文淡出、留下轮廓数字——与选局环边上那几张的读法一致 */
-.mvGhost{position:absolute;left:9%;top:11%;line-height:1;pointer-events:none}
-.mvGhost .g1{display:block;font-size:9px;letter-spacing:.3em;color:var(--mut);margin-bottom:11px}
-.mvGhost .g2{font-size:clamp(40px,6.5vw,74px);font-weight:700;color:transparent;line-height:.9;
-             -webkit-text-stroke:1px rgba(236,236,232,.72);font-variant-numeric:tabular-nums}
-.mvGhost .g3{margin-top:13px;font-size:12px;letter-spacing:.26em;color:var(--txt);white-space:nowrap}
+.mvGhost{position:absolute;right:10px;bottom:8px;line-height:1;pointer-events:none;text-align:right}
+.mvGhost .g1{display:block;font-size:8px;letter-spacing:.3em;color:var(--mut);margin-bottom:6px}
+.mvGhost .g2{font-size:44px;font-weight:700;color:transparent;line-height:.86;
+             -webkit-text-stroke:1px rgba(236,236,232,.62);font-variant-numeric:tabular-nums}
+.mvGhost .g3{margin-top:7px;font-size:10px;letter-spacing:.22em;color:var(--txt);white-space:nowrap}
 .mvRail{position:absolute;right:0;top:0;width:16px;cursor:ns-resize;touch-action:none;
         height:calc(100% - var(--mvNav,0px) - 34px)}
 .mvFoot{position:absolute;left:0;right:0;bottom:var(--mvNav,0px);height:34px;z-index:4;
@@ -11083,7 +11083,7 @@ if('serviceWorker' in navigator&&!/[?&]dev=1/.test(location.search))addEventList
        邻卡整个侧过去只剩一条缝，读不成。
    段落节点只搬家、不重建：.gMfd 整块上挂着好几处事件委托，graphHydrate／zj3dTick
    也按 id 取节点，重建一遍全断。 */
-var MV={pos:0,tgt:null,vel:0,drag:null,n:0,cards:[],raf:0,step:26,R:0,stepPix:600,
+var MV={pos:0,tgt:null,drag:null,n:0,cards:[],raf:0,R:600,ang:[],maxH:600,
         box:null,stage:null,track:null,bg:null,bgx:null,rail:null,railx:null,foot:null,
         bgT:0,w:0,h:0,scroll:{}};
 function mvOn(){try{return SET&&SET.mvuRing===1;}catch(_){return false;}}
@@ -11181,7 +11181,7 @@ function mvRingMount(){
 
   MV.box=box;MV.stage=stage;MV.track=track;MV.foot=foot;MV.cards=cards;MV.n=cards.length;
   MV.bg=bg;MV.bgx=bg.getContext('2d');MV.rail=rail;MV.railx=rail.getContext('2d');
-  MV.pos=Math.max(0,Math.min(MV.n-1,MV.pos||0));MV.tgt=null;MV.vel=0;MV.drag=null;MV.bgT=0;
+  MV.pos=Math.max(0,Math.min(MV.n-1,MV.pos||0));MV.tgt=null;MV.drag=null;MV.bgT=0;
   MV.w=0;MV.h=0;
   mvBind();mvSize();mvLayout();mvStart();
 }
@@ -11193,28 +11193,44 @@ function mvBind(){
     var b=t&&t.closest?t.closest('.mvBody'):null;
     return (b&&b.scrollHeight>b.clientHeight+2)?b:null;
   }
+  /* 手势按「翻页」来，不按「甩惯性」来。原先松手后还带着一截速度自由滑行，
+     手指快划一下能一口气飞过三四段——想看下一段，看到的却是最后一段。
+     现在：越过 DEAD 才认作在拖（挡住轻微抖动与误触），松手一律只落到相邻一段，
+     没过阈值就退回原位。一划＝一段，怎么划都不会飞。 */
+  var DEAD=9;
   st.addEventListener('pointerdown',function(e){
     if(bodyScrollable(e.target))return;
-    MV.drag={y:e.clientY,p:MV.pos,moved:0};MV.tgt=null;MV.vel=0;
+    MV.drag={y:e.clientY,rot:mvRot(),p0:MV.pos,live:false,moved:0};MV.tgt=null;
     try{st.setPointerCapture(e.pointerId);}catch(_){}
   });
   st.addEventListener('pointermove',function(e){
     if(!MV.drag)return;
     var dy=e.clientY-MV.drag.y;
     MV.drag.moved=Math.max(MV.drag.moved,Math.abs(dy));
-    var np=MV.drag.p-dy/MV.stepPix;
-    np=Math.max(-.3,Math.min(MV.n-1+.3,np));     /* 两端留一点回弹，但不绕回去 */
-    MV.vel=(np-MV.pos)*.5;MV.pos=np;
+    if(!MV.drag.live){
+      if(MV.drag.moved<DEAD)return;
+      MV.drag.live=true;
+      MV.drag.y=e.clientY;dy=0;                  /* 抵掉死区，接手那一下不跳 */
+    }
+    /* 拖动走的是角度：手指下移 dy 像素，环就转 dy/R 弧度，跟手一比一。 */
+    var np=mvPosFromRot(MV.drag.rot-dy/MV.R);
+    MV.pos=Math.max(-.28,Math.min(MV.n-1+.28,np));
   });
   function up(e){
     if(!MV.drag)return;
-    var moved=MV.drag.moved;MV.drag=null;
-    if(moved<5&&e&&e.target&&e.target.closest){  /* 没拖动＝点选：把点到的那张转到正前 */
-      var c=e.target.closest('.mvCard');
-      if(c)MV.tgt=parseInt(c.getAttribute('data-i'),10)||0;
+    var d=MV.drag,live=d.live;MV.drag=null;
+    if(!live){                                   /* 没拖动＝点选：把点到的那张转到正前 */
+      var c=e&&e.target&&e.target.closest?e.target.closest('.mvCard'):null;
+      if(c)MV.tgt=Math.max(0,Math.min(MV.n-1,parseInt(c.getAttribute('data-i'),10)||0));
+      return;
     }
+    var base=Math.round(d.p0),dd=MV.pos-d.p0;
+    MV.tgt=Math.max(0,Math.min(MV.n-1,Math.abs(dd)<.22?base:base+(dd>0?1:-1)));
   }
   st.addEventListener('pointerup',up);st.addEventListener('pointercancel',up);
+  /* 转环途中把原生滚动挡掉。舞台的 touch-action 是 pan-y（要留给卡内正文滚），
+     所以这一层得手动拦，否则一边转环一边把整页拖走。 */
+  st.addEventListener('touchmove',function(e){if(MV.drag&&MV.drag.live)e.preventDefault();},{passive:false});
   st.addEventListener('wheel',function(e){
     var b=bodyScrollable(e.target);
     if(b){                                       /* 正文滚到头再往外翻，中途不抢 */
@@ -11222,8 +11238,12 @@ function mvBind(){
       if((e.deltaY<0&&!atTop)||(e.deltaY>0&&!atEnd))return;
     }
     e.preventDefault();
+    /* 触控板一次滑动会连发几十个小 delta，不设节流同样会飞。 */
+    var t=performance.now();if(t-(MV._wT||0)<300)return;MV._wT=t;
     MV.tgt=Math.max(0,Math.min(MV.n-1,Math.round(MV.pos)+(e.deltaY>0?1:-1)));
   },{passive:false});
+  /* 図谱那几节点一下就展开／收起，卡的内容高度随之变，得重新量一遍再排位。 */
+  st.addEventListener('click',function(){MV.w=0;});
   MV.foot.addEventListener('click',function(e){
     var g=e.target.closest?e.target.closest('[data-mv]'):null;if(!g)return;
     var a=g.getAttribute('data-mv');
@@ -11240,21 +11260,41 @@ function mvRailPick(e){
   if(span<=0)return;
   MV.tgt=Math.max(0,Math.min(MV.n-1,Math.round((e.clientY-r.top-m)/span*(MV.n-1))));
 }
+/* 每张卡照自己的内容量高，不再一刀切：短的一段不留半框空白，长的一段也不再被
+   一个固定高度切掉尾巴。高度不一，就不能再用「一段一个固定步角」，改按弧长排位——
+   相邻两张卡心之间在环面上走过 (h1+h2)/2 + 缝，除以半径就是这一段的转角。
+   转角表 MV.ang 存的是每张卡的绝对角度（弧度），pos 在表上线性插值。 */
 function mvSize(){
   if(!MV.stage||!MV.box)return;
   var W=MV.stage.clientWidth,H=MV.stage.clientHeight;
   if(!(W>10&&H>10))return;
   MV.w=W;MV.h=H;
-  /* 卡高取台高的 0.56：正前那张要够读，下一张的顶沿又得露出来一截，
-     不然「围成一圈」在屏幕上看不出，只剩一张孤零零的卡。 */
-  var cw=Math.max(150,W-26),ch=Math.max(130,Math.round(H*.60));
-  var th=MV.step*Math.PI/180;
-  MV.R=ch*.60/Math.tan(th/2);                    /* 与选局环同式：邻卡刚好错开，留两成余量 */
-  MV.stepPix=Math.max(40,2*MV.R*Math.sin(th/2)); /* 转一段，屏幕上走过的像素 */
-  MV.track.style.transform='translateZ('+MV.R.toFixed(1)+'px)';
-  for(var i=0;i<MV.cards.length;i++){
-    var el=MV.cards[i].el;el.style.width=cw+'px';el.style.height=ch+'px';
+  var cw=Math.max(150,W-18);
+  /* 「每段按自己的内容量高」和「看得出是个环」是一对矛盾：正前那张越高，
+     台上留给邻卡的地方越少，高到满屏就只剩一张平板。折中办法是拉手风琴——
+     正前那张放开到 0.70 台高（够读，超出的才滚），转开的那几张收到 0.26 台高，
+     于是它们贴得近、斜得狠、还看得见内容，环的形状一眼就出来了。
+     高度按离正前的距离连续插值，不是到位才跳：转的过程本身就是伸缩的过程。 */
+  var maxH=Math.max(150,Math.round(H*.70)),minH=104,PADY=43;   /* PADY＝正文上下内距＋两条 1px 内衬 */
+  MV.small=Math.max(96,Math.round(H*.26));
+  MV.gap=-8;                                   /* 负值：让邻卡的顶沿贴上来，中间那道缝才收得住 */
+  var C=MV.cards,i;
+  for(i=0;i<C.length;i++)C[i].el.style.width=cw+'px';
+  /* 量的是内容自身的高度，不能量 .mvBody.scrollHeight——正文是 inset:1px 撑满整卡的，
+     scrollHeight 永远不小于 clientHeight，一量就是当前卡高，每张卡都会顶到上限。
+     写、读、写分三趟，别在一个循环里交替，否则每张卡逼一次重排。 */
+  MV.full=[];
+  for(i=0;i<C.length;i++){
+    var kid=C[i].body.firstElementChild;
+    MV.full.push(Math.max(minH,Math.min(maxH,(kid?kid.offsetHeight:0)+PADY)));
   }
+  var mean=0;for(i=0;i<MV.full.length;i++)mean+=MV.full[i];
+  mean=MV.full.length?mean/MV.full.length:200;
+  /* 半径按「正前那张与旁边那张的平均弧长」反推，让这一对正好斜过三十一二度：
+     太平了看不出是环，太斜了邻卡被压扁又读不着内容。 */
+  MV.R=Math.max(240,Math.round(1.87*Math.max(120,(mean+MV.small)/2+MV.gap)));
+  mvHeights();
+  MV.track.style.transform='translateZ('+MV.R.toFixed(1)+'px)';
   var d=Math.min(devicePixelRatio||1,2);
   MV.bg.width=Math.max(1,Math.round(MV.box.clientWidth*d));
   MV.bg.height=Math.max(1,Math.round(MV.box.clientHeight*d));
@@ -11262,20 +11302,52 @@ function mvSize(){
   MV.rail.height=Math.max(1,Math.round((MV.rail.clientHeight||H)*d));
   MV.bgT=0;
 }
+/* 卡高与转角表都随 pos 变（手风琴），每帧重算一次。写样式前先比一比，
+   差不到一像素就不写——否则每帧六次无谓的重排。 */
+function mvHeights(){
+  var C=MV.cards,n=C.length;if(!n||!MV.full||MV.full.length!==n)return;
+  var hs=[],i;
+  for(i=0;i<n;i++){
+    var w=clamp01(1-Math.abs(MV.pos-i));
+    var h=Math.round(MV.small+(MV.full[i]-MV.small)*w);
+    hs.push(h);
+    if(Math.abs((C[i].h||0)-h)>=1){C[i].el.style.height=h+'px';C[i].h=h;}
+  }
+  MV.ang=[0];
+  for(i=1;i<n;i++)MV.ang.push(MV.ang[i-1]+((hs[i-1]+hs[i])/2+MV.gap)/MV.R);
+}
+function mvRot(){                                 /* 当前 pos 落在转角表上的角度 */
+  var A=MV.ang,n=MV.n;if(n<1)return 0;if(n<2)return A[0];
+  var p=MV.pos;
+  if(p<=0)return A[0]+p*(A[1]-A[0]);
+  if(p>=n-1)return A[n-1]+(p-(n-1))*(A[n-1]-A[n-2]);
+  var i=Math.floor(p);return A[i]+(p-i)*(A[i+1]-A[i]);
+}
+function mvPosFromRot(r){                          /* 反解：拖动是按角度走的，要换回段号 */
+  var A=MV.ang,n=MV.n;if(n<2)return 0;
+  if(r<=A[0])return (r-A[0])/((A[1]-A[0])||1);
+  if(r>=A[n-1])return (n-1)+(r-A[n-1])/((A[n-1]-A[n-2])||1);
+  for(var i=0;i<n-1;i++)if(r<=A[i+1])return i+(r-A[i])/((A[i+1]-A[i])||1);
+  return n-1;
+}
 function mvLayout(){
-  var step=MV.step,R=MV.R;
+  mvHeights();
+  var R=MV.R,rot=mvRot(),DEG=180/Math.PI;
   for(var i=0;i<MV.n;i++){
-    var C=MV.cards[i],d=i-MV.pos,a=d*step,ad=Math.abs(d);
-    var hid=(ad>2.2);
+    var C=MV.cards[i],a=(MV.ang[i]-rot)*DEG,aa=Math.abs(a);
+    /* 收卡按角度算。转过六十几度往后，卡的近边就要顶到镜头面，
+       投影会炸成几万像素的一整片半透明灰，盖住正前那张。 */
+    var hid=(aa>62);
     C.el.style.transform=hid?'translate(-50%,-50%) scale(0)'
       :('translate(-50%,-50%) rotateX('+a.toFixed(2)+'deg) translateZ('+(-R).toFixed(1)+'px)');
-    C.el.style.opacity=(hid?0:clamp01((2.2-ad)/1.35)).toFixed(3);
+    C.el.style.opacity=(hid?0:clamp01((62-aa)/38)).toFixed(3);
     C.el.style.visibility=hid?'hidden':'visible';
     C.el.style.pointerEvents=hid?'none':'auto';
-    /* 转开的那几张让正文退下、轮廓数字顶上来——与选局环边上那几张同一种读法 */
-    C.ghost.style.opacity=(clamp01(ad*1.5-.18)*.92).toFixed(3);
-    C.body.style.opacity=clamp01(1.16-ad*1.25).toFixed(3);
-    C.el.classList.toggle('on',ad<.5);
+    /* 侧卡留住大半正文：斜过去的那几行字是立体感真正的来源，只剩一只空框就又平回去了。
+       轮廓编号缩到右下角作陪衬，不再霸着整张卡。 */
+    C.ghost.style.opacity=clamp01(aa/30-.55).toFixed(3);
+    C.body.style.opacity=clamp01(1-aa/76).toFixed(3);
+    C.el.classList.toggle('on',aa<6);
   }
 }
 function mvRailDraw(){
@@ -11304,7 +11376,7 @@ function mvRailDraw(){
 function mvBgDraw(now){
   if(!MV.bgx)return;
   var W=MV.bg.width,H=MV.bg.height;if(!(W>1&&H>1))return;
-  try{terrainPaint(MV.bgx,W,H,now,MV.pos*260,0,.55);}catch(_){}
+  try{terrainPaint(MV.bgx,W,H,now,mvRot()*420,0,.55);}catch(_){}
 }
 function mvTick(){
   MV.raf=0;
@@ -11322,13 +11394,9 @@ function mvTick(){
     var dt=Math.min(80,Math.max(1,now-(MV._t||now)));MV._t=now;
     var f=dt/16.7;
     if(!MV.drag){
-      if(Math.abs(MV.vel)>.002){
-        MV.pos=Math.max(0,Math.min(MV.n-1,MV.pos+MV.vel*f));MV.vel*=Math.pow(.90,f);
-      }else{
-        var t=Math.max(0,Math.min(MV.n-1,(MV.tgt==null)?Math.round(MV.pos):MV.tgt));
-        MV.pos=lerp(MV.pos,t,1-Math.pow(.84,f));
-        if(Math.abs(MV.pos-t)<.002){MV.pos=t;MV.tgt=null;}
-      }
+      var t=Math.max(0,Math.min(MV.n-1,(MV.tgt==null)?Math.round(MV.pos):MV.tgt));
+      MV.pos=lerp(MV.pos,t,1-Math.pow(.82,f));
+      if(Math.abs(MV.pos-t)<.002){MV.pos=t;MV.tgt=null;}
     }
     mvLayout();mvRailDraw();
     if(REDUCED){if(!MV.bgT){MV.bgT=now;mvBgDraw(now);}}
