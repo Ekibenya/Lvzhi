@@ -1154,10 +1154,15 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
    这一扇从右边推出来。倾角在开、合两态里是同一个值，
    所以推出来的过程只有平移与淡入，不会连带转一下（转着出现会晃眼）。
    绕中心转，不绕右缘——绕边转的话左沿要甩出八十多像素，那是开门不是倾斜。 */
-.gMfd.mvDeck .mvWin{position:absolute;transform-origin:50% 50%;
-      transform:translateX(26px) scale(.955) rotateY(-17deg);opacity:0;pointer-events:none;
+/* 倾角写成变量，由 mvDeck 一处给值：CSS 转多少度、JS 反解时按多少度算，
+   两边必须是同一个数——差一度，窗就嵌不回那一条里去。
+   缩略窗照旧 17°（那么小一枚，斜得狠些才看得出来）；
+   正文窗收到 10°：同样一块八百像素高的面板，17° 的梯形比是 1.176，
+   一整屏小字全跟着斜，读起来累。 */
+.gMfd.mvDeck .mvWin{position:absolute;transform-origin:50% 50%;--mvTilt:-10deg;
+      transform:translateX(26px) scale(.955) rotateY(var(--mvTilt));opacity:0;pointer-events:none;
       transition:transform .34s cubic-bezier(.2,.85,.25,1),opacity .26s ease}
-.gMfd.mvDeck .mvWin.on{transform:rotateY(-17deg);opacity:1;pointer-events:auto;z-index:2}
+.gMfd.mvDeck .mvWin.on{transform:rotateY(var(--mvTilt));opacity:1;pointer-events:auto;z-index:2}
 .gMfd.mvDeck .mvWin .cfr{position:absolute;inset:0;
       background:rgba(6,6,6,.78);border:1px solid rgba(236,236,232,.20);
       box-shadow:0 14px 34px rgba(0,0,0,.5);
@@ -11689,7 +11694,9 @@ function mvDeck(){
      所以反解一次：已知「投影后该占哪一块」（就是没斜时那一块），倒推 CSS 该给多宽、
      窗心该摆在哪。投影式 X(u)=ox+(xc+u·cosθ−ox)·P/(P−u·sinθ)，u 是离窗心的横向偏移；
      两端两个方程、两个未知数，a 与 b 又随宽度变，迭代四轮足够收敛。 */
-  var PP=620,SN=Math.sin(17*Math.PI/180),CS=Math.cos(17*Math.PI/180);
+  var TILT=10;                                   /* 正文窗的倾角，唯一出处 */
+  var PP=620,SN=Math.sin(TILT*Math.PI/180),CS=Math.cos(TILT*Math.PI/180);
+  if(MV.panes&&MV.tiltK!==TILT){MV.tiltK=TILT;MV.panes.style.setProperty('--mvTilt',(-TILT)+'deg');}
   var ox=SW;                                     /* perspective-origin:100% → 台子最右缘 */
   var xl=SW/2+winX-winW/2,xr=SW/2+winX+winW/2;   /* 投影后要占的左右两端 */
   var Wc=winW,xc=SW/2+winX,ka=1;
@@ -11700,8 +11707,14 @@ function mvDeck(){
     xc=ox+(xr-ox)/ka-CS*Wc/2;
   }
   winW=Math.round(Wc);
-  winH=Math.round(winH/ka);                      /* 除掉近边那点放大，斜完正好卡在台里 */
-  var wl=Math.round(xc-Wc/2),wt=Math.round(SH/2-winH/2);
+  /* 高度不再一刀切成满台。原来每扇窗都撑到顶，短的那几段下面吊着一大片空框，
+     看着就是「这一段没内容」。改成各按自己那一段的实际内容量高：
+     MV.full 是 mvMeasure 量出来的每段内容高（已含正文上下内距），
+     mvTick 每 600ms 重量一次，図谱／编年那种后填进来的内容也跟得上。
+     上限仍是斜完之后台子装得下的那个高度。 */
+  var winCap=Math.round(winH/ka);                /* 除掉近边那点放大，斜完正好卡在台里 */
+  var full=MV.full||[];
+  var wl=Math.round(xc-Wc/2);
   var y0=-(n-1)*STEP/2;
   var sc=TW/Math.max(1,winW),mwH=Math.round((TH-2)/Math.max(.001,sc));
   var cur=mvWrap(Math.round(MV.pos));
@@ -11726,11 +11739,13 @@ function mvDeck(){
       C.mw.style.height=mwH+'px';
       C.mw.style.transform='scale('+sc.toFixed(4)+')';
     }
-    /* 窗的位置与尺寸也是钉死的：只有第一次和改尺寸时写一遍。 */
-    if(C.win&&C.wk!==wl+','+wt+','+winW+','+winH){
-      C.wk=wl+','+wt+','+winW+','+winH;
+    /* 窗的位置与尺寸只在真变了时才写。高度逐段不同，纵向一律居中。 */
+    var Hc=Math.max(160,Math.min(winCap,Math.round(full[i]||winCap)));
+    var wt=Math.round(SH/2-Hc/2);
+    if(C.win&&C.wk!==wl+','+wt+','+winW+','+Hc){
+      C.wk=wl+','+wt+','+winW+','+Hc;
       C.win.style.left=wl+'px';C.win.style.top=wt+'px';
-      C.win.style.width=winW+'px';C.win.style.height=winH+'px';
+      C.win.style.width=winW+'px';C.win.style.height=Hc+'px';
     }
   }
 }
