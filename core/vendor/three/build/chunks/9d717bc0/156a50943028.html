@@ -1135,12 +1135,41 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
 .mvCard.thumb .mvGhost{left:15px;right:auto;bottom:-15px;text-align:left}
 .mvCard.thumb .mvGhost .g1,.mvCard.thumb .mvGhost .g2{display:none}
 .mvCard.thumb .mvGhost .g3{margin-top:0;font-size:7.5px;letter-spacing:.26em;color:var(--mut)}
+/* ── 台前调度：改成「窗自己出现」，不再是缩略窗自己长大 ──
+   缩略窗一长大就得离开自己的格子飘到台上，下台那张又要沿原路飞回去；
+   两条路线都从光标底下横穿，光标底下一换东西浏览器就重判一次命中，
+   于是两张卡隔着光标来回顶——看着就是不停地放大缩小闪。
+   治标（换 pointermove、加位移闸）只能挡住重判，挡不住「东西在动」。
+   现在两件东西彻底分家，和左边地图／装备／商店一模一样：
+     · 缩略列钉死在最右缘，一格一枚，永远那么大、永远在原地；
+     · 正文另有一扇窗，位置尺寸同样钉死，切换时只是淡入淡出。
+   谁都不挪窝，「动完之后重新命中」这件事根本不存在。 */
+.gMfd.mvDeck .mvPanes{position:absolute;inset:0;pointer-events:none}
+/* 出现的方式照抄 .gPanel，只把方向左右对调：那三扇从左边推出来，
+   这一扇从右边推出来，transform-origin 也跟着挪到右缘。 */
+.gMfd.mvDeck .mvWin{position:absolute;transform-origin:100% 50%;
+      transform:translateX(26px) scale(.955);opacity:0;pointer-events:none;
+      transition:transform .34s cubic-bezier(.2,.85,.25,1),opacity .26s ease}
+.gMfd.mvDeck .mvWin.on{transform:none;opacity:1;pointer-events:auto;z-index:2}
+.gMfd.mvDeck .mvWin .cfr{position:absolute;inset:0;
+      background:rgba(6,6,6,.78);border:1px solid rgba(236,236,232,.20);
+      box-shadow:0 14px 34px rgba(0,0,0,.5);
+      -webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px)}
+/* 缩略窗里那张微缩：这一段的真内容克隆一份，按整窗宽度排好版再整体缩下来。
+   克隆而不是搬——真内容得留在窗里，缩略图只是它的影子。 */
+.gMfd.mvDeck .mvCard .mw{position:absolute;top:1px;left:1px;overflow:hidden;
+      transform-origin:0 0;pointer-events:none;padding:12px 8px 10px}
+/* 正在看的那一枚：转正、往前挪一点、镶一道金边——与左边开着的那扇抽屉同一套。 */
+.gMfd.mvDeck .mvCard.on .cfr{border-color:rgba(201,155,63,.72) !important}
+.gMfd.mvDeck .mvCard.on .ic{border-color:rgba(201,155,63,.8);
+      background:rgba(201,155,63,.16);color:var(--gold-hi)}
+.gMfd.mvDeck .mvCard.on .mvGhost .g3{color:var(--gold-hi)}
 #game .gMfd.mvDeck{overflow:visible}
 .gMfd.mvDeck .mvStage{overflow:visible}
 /* 顶沿与底沿是弧最宽的地方，小字贴边写没问题；细的是腰，让正文去躲。 */
-.mvCard .ftag{position:absolute;left:11px;top:8px;z-index:2;
+.mvCard .ftag,.mvWin .ftag{position:absolute;left:11px;top:8px;z-index:2;
               font-size:8px;letter-spacing:.34em;color:var(--mut);white-space:nowrap}
-.mvCard .fnum{position:absolute;right:11px;top:8px;z-index:2;
+.mvCard .fnum,.mvWin .fnum{position:absolute;right:11px;top:8px;z-index:2;
               font-size:8px;letter-spacing:.2em;color:var(--mut)}
 .mvBody{position:absolute;top:1px;bottom:1px;left:5px;right:5px;
         overflow-y:auto;overflow-x:hidden;padding:26px 8px 15px;
@@ -7190,7 +7219,7 @@ function applyGlass(){
     +'#game .gTop{background:rgba(6,6,6,'+(.05+.22*a).toFixed(2)+') !important}'
     /* 情报台那几扇窗跟着同一根「面板透明度」拉杆走——它们就是同一种窗，
        底色不该有两套。 */
-    +'.gPanel,.gMfd.mvDeck .mvCard .cfr{background:rgba(6,6,6,'+(.10+.36*a).toFixed(2)+') !important}';
+    +'.gPanel,.gMfd.mvDeck .mvWin .cfr{background:rgba(6,6,6,'+(.10+.36*a).toFixed(2)+') !important}';
 }
 applyGlass();
 $('#cfgGlass').value=SET.glass;
@@ -11282,6 +11311,10 @@ function mvRingMount(){
 
   var stage=document.createElement('div');stage.className='mvStage';
   var track=document.createElement('div');track.className='mvTrack';
+  /* 卡叠：缩略列与正文窗是两套元件，各自钉死不动（见 .mvPanes 那段注释）。
+     环模式仍是一张卡走天下——它本来就靠卡自己绕轴转，不存在「窗出现」这回事。 */
+  var deck=(mvMode()!==2),panes=null;
+  if(deck){panes=document.createElement('div');panes.className='mvPanes';stage.appendChild(panes);}
   stage.appendChild(track);
   var bg=document.createElement('canvas');bg.className='mvBg';
   var vig=document.createElement('div');vig.className='mvVig';
@@ -11298,35 +11331,58 @@ function mvRingMount(){
     var sec=secs[k];
     var head=sec.el.querySelector('.mHead');
     var ttl=(head?head.textContent:'').replace(/[◆▾▸\s]/g,'')||('SECTIO '+pad(k+1));
-    var card=document.createElement('div');card.className='mvCard';card.setAttribute('data-i',k);
-    var fr=document.createElement('div');fr.className='cfr';
-    fr.innerHTML='<span class="ftag"></span><span class="fnum"></span>'
-      +'<div class="mvGhost"><span class="g1"></span><div class="g2"></div><div class="g3"></div></div>'
-      +'<div class="mvBody"></div><div class="cshade"></div><div class="ic"></div>'
-      +'<svg class="cedge" preserveAspectRatio="none"><path class="ce1"></path><path class="ce2"></path></svg>';
     var tag=mvTag(ttl);
-    fr.querySelector('.ftag').textContent=tag+' SECTIO // '+pad(k+1);
-    fr.querySelector('.fnum').textContent='SIG_'+pad(k+1)+'/'+pad(secs.length);
+    var card=document.createElement('div');card.setAttribute('data-i',k);
+    card.className='mvCard'+(deck?' thumb':'');
+    var fr=document.createElement('div');fr.className='cfr';
+    var win=null,wfr=null,body=null,mw=null;
+    if(deck){
+      /* 缩略窗：一层框 + 一张微缩 + 左下角那枚编号片 + 窗外下面一行名字。没有正文。 */
+      fr.innerHTML='<div class="mw"></div><div class="cshade"></div><div class="ic"></div>'
+        +'<div class="mvGhost"><span class="g1"></span><div class="g2"></div><div class="g3"></div></div>';
+      mw=fr.querySelector('.mw');
+      /* 正文窗：真内容住在这里 */
+      win=document.createElement('div');win.className='mvWin';win.setAttribute('data-i',k);
+      wfr=document.createElement('div');wfr.className='cfr';
+      wfr.innerHTML='<span class="ftag"></span><span class="fnum"></span><div class="mvBody"></div>';
+      win.appendChild(wfr);panes.appendChild(win);
+      wfr.querySelector('.ftag').textContent=tag+' SECTIO // '+pad(k+1);
+      wfr.querySelector('.fnum').textContent='SIG_'+pad(k+1)+'/'+pad(secs.length);
+      body=wfr.querySelector('.mvBody');
+      /* 微缩那张是克隆件。id 必须逐个剥掉——缩略列在文档里排在真面板前面，
+         留着 id 会让 getElementById 命中这份影子，真面板的渲染与点击当场失灵。 */
+      mw.innerHTML=((sec.shell?'<div class="zjP">':'')+sec.el.outerHTML+(sec.shell?'</div>':''))
+                   .replace(/\sid="[^"]*"/g,'');
+    }else{
+      fr.innerHTML='<span class="ftag"></span><span class="fnum"></span>'
+        +'<div class="mvGhost"><span class="g1"></span><div class="g2"></div><div class="g3"></div></div>'
+        +'<div class="mvBody"></div><div class="cshade"></div><div class="ic"></div>'
+        +'<svg class="cedge" preserveAspectRatio="none"><path class="ce1"></path><path class="ce2"></path></svg>';
+      fr.querySelector('.ftag').textContent=tag+' SECTIO // '+pad(k+1);
+      fr.querySelector('.fnum').textContent='SIG_'+pad(k+1)+'/'+pad(secs.length);
+      body=fr.querySelector('.mvBody');
+    }
     fr.querySelector('.g1').textContent=tag;
     fr.querySelector('.g2').textContent=pad(k+1);
     fr.querySelector('.g3').textContent=ttl;
     fr.querySelector('.ic').textContent=pad(k+1);
-    var body=fr.querySelector('.mvBody');
     if(sec.shell){var sh=document.createElement('div');sh.className='zjP';sh.appendChild(sec.el);body.appendChild(sh);}
     else body.appendChild(sec.el);
     if(keep[k])body.scrollTop=keep[k];
     card.appendChild(fr);track.appendChild(card);
-    cards.push({el:card,fr:fr,body:body,ghost:fr.querySelector('.mvGhost'),
+    cards.push({el:card,fr:fr,body:body,win:win,wfr:wfr,mw:mw,
+                ghost:fr.querySelector('.mvGhost'),
                 shade:fr.querySelector('.cshade'),
                 svg:fr.querySelector('.cedge'),
-                p1:fr.querySelector('.ce1'),p2:fr.querySelector('.ce2'),k:''});
+                p1:fr.querySelector('.ce1'),p2:fr.querySelector('.ce2'),
+                k:'',mwk:'',wk:''});
   }
   box.innerHTML='';
   box.appendChild(bg);box.appendChild(vig);box.appendChild(stage);
   box.appendChild(rail);box.appendChild(foot);
   box.classList.add('mvRing');
 
-  MV.box=box;MV.stage=stage;MV.track=track;MV.foot=foot;MV.cards=cards;MV.n=cards.length;
+  MV.box=box;MV.stage=stage;MV.track=track;MV.panes=panes;MV.foot=foot;MV.cards=cards;MV.n=cards.length;
   MV.bg=bg;MV.bgx=bg.getContext('2d');MV.rail=rail;MV.railx=rail.getContext('2d');
   MV.n=cards.length;MV.pos=mvWrap(MV.pos||0);MV.tgt=null;MV.drag=null;MV.bgT=0;
   MV.w=0;MV.h=0;
@@ -11422,7 +11478,9 @@ function mvSize(){
   MV.gap=-6;                                   /* 负值：让邻卡的顶沿贴上来，中间那道缝才收得住 */
   var C=MV.cards,i;
   MV.cw=cw;
-  for(i=0;i<C.length;i++)C[i].el.style.width=cw+'px';
+  /* 卡叠里缩略窗的宽是钉死的 TW，这一句只对环模式有意义；
+     照写会让六枚缩略窗先闪一下 670px 再被 mvDeck 收回去。 */
+  if(mvMode()===2)for(i=0;i<C.length;i++)C[i].el.style.width=cw+'px';
   /* 量的是内容自身的高度，不能量 .mvBody.scrollHeight——正文是 inset:1px 撑满整卡的，
      scrollHeight 永远不小于 clientHeight，一量就是当前卡高，每张卡都会顶到上限。
      写、读、写分三趟，别在一个循环里交替，否则每张卡逼一次重排。 */
@@ -11459,8 +11517,9 @@ function mvSize(){
   /* 换排法／改尺寸＝所有缓存作废。这里必须连 w/h/bk 一起清：
      上面刚把每张卡的宽度按 cw 写过一遍，而 mvDeck 是「值没变就不写」的，
      不清缓存它就以为自己写过了，卡会一直挂着 cw 那个宽度不动。 */
-  for(i=0;i<C.length;i++){C[i].k='';C[i].w=-1;C[i].h=-1;C[i].bk='';}
-  if(MV.mode===2)mvHeights();else mvHeightsDeck();
+  for(i=0;i<C.length;i++){C[i].k='';C[i].w=-1;C[i].h=-1;C[i].bk='';C[i].mwk='';C[i].wk='';}
+  /* 卡叠不再按内容量高：窗是固定一扇，长了自己滚。 */
+  if(MV.mode===2)mvHeights();
   var d=Math.min(devicePixelRatio||1,2);
   MV.bg.width=Math.max(1,Math.round(MV.box.clientWidth*d));
   MV.bg.height=Math.max(1,Math.round(MV.box.clientHeight*d));
@@ -11601,57 +11660,52 @@ function mvShell(C,w,h,R,P,a,curve){
    往下走一格，和切换视窗一个道理。 */
 function mvDeck(){
   var n=MV.n,C0=MV.cards;
-  if(!n||!MV.full||MV.full.length!==n)return;      /* 高度还没量出来：这一帧先不画 */
-  /* 台前调度，摊在整块右半屏上：
-       · n 枚缩略窗竖排钉在最右缘，各占一个固定的格子；
-       · 被点的那一段离开自己的格子，飘到左边、长成一扇整窗（与左边三扇抽屉同一种「请到台上」）。
-     它原来的格子就空着——那扇窗此刻在台上，本来就不该还在缩略列里。
-     深度不靠 translateZ，靠「尺寸 + 倾角 + 压暗」，免得又变成广角哈哈镜。 */
+  if(!n||!C0[0]||!C0[0].win)return;                /* 还没按卡叠挂载（刚从环模式切过来）*/
+  /* 缩略列与正文窗都不动。这一趟只做三件事：
+       · 把每一枚缩略窗摆到自己那个固定的格子里（只在尺寸真变了时才写样式）；
+       · 正在看的那一枚转正、往前挪一点；
+       · 对应那扇窗挂上 .on，由 CSS 淡入——其余的淡出。
+     没有任何东西从一个位置搬到另一个位置，也就没有「搬运途中扫过光标」这回事。 */
   var SW=MV.w||320,SH=MV.h||600,MO=MV.mo||14,MI=MV.mi||6;
   var TW=MV.tw||52,TH=MV.th||36,STEP=TH+(MV.tgap==null?7:MV.tgap);
   var GUT=MV.gut||368;
   /* 窗正好嵌进「让出来那一条」：右边隔一道内缝挨着缩略列，
      左边隔一道外缝挨着三维／正文的收边线，上下把这一条填满。 */
   var winW=Math.max(180,GUT-MO-TW-MI*2);
-  var winMax=Math.max(160,SH-MO);
-  var thumbX=SW/2-TW/2-MI;                         /* 缩略位：最右缘，留一道内缝 */
-  var winX=SW/2-MI*2-TW-winW/2;                    /* 台上位：隔一道内缝挨着缩略列 */
+  var winH=Math.max(160,SH-MO);
+  var thumbX=SW/2-TW/2-MI;                         /* 缩略列：最右缘，留一道内缝 */
+  var winX=SW/2-MI*2-TW-winW/2;                    /* 窗位：隔一道内缝挨着缩略列 */
+  var wl=Math.round(SW/2+winX-winW/2),wt=Math.round(SH/2-winH/2);
   var y0=-(n-1)*STEP/2;
+  var sc=TW/Math.max(1,winW),mwH=Math.round((TH-2)/Math.max(.001,sc));
+  var cur=mvWrap(Math.round(MV.pos));
   for(var i=0;i<n;i++){
-    var C=C0[i],d=i-MV.pos,k=Math.abs(d),w=clamp01(1-k),thumb=(k>.5);
-    var W=Math.round(TW+(winW-TW)*w);
-    var Hw=winMax;                                 /* 上台就把这一条填满，不按内容缩 */
-    var H=Math.round(TH+(Hw-TH)*w);
-    var x=thumbX+(winX-thumbX)*w;
-    var y=(y0+i*STEP)*(1-w);                       /* 上台即归中 */
-    /* 负角：左边那一列是 rotateY(17deg)，右边取反，两叠窗朝里对着。
-       同角同向会像整屏都往一边歪，反过来才是「两侧各自朝中间收」。 */
-    var rot=-17*(1-w);
-    if(C.w!==W){C.w=W;C.el.style.width=W+'px';}
-    if(Math.abs((C.h||0)-H)>=1){C.h=H;C.el.style.height=H+'px';}
-    C.el.style.transform='translate(-50%,-50%) translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px)'
-      +' rotateY('+rot.toFixed(1)+'deg)';
-    C.el.style.visibility='visible';
-    C.el.style.opacity='1';
-    C.el.style.pointerEvents='auto';
-    C.fr.style.filter='brightness('+(1-Math.min(.44,k*.14)).toFixed(3)+')';
-    C.shade.style.background='rgba(0,0,0,'+Math.min(.34,k*.11).toFixed(3)+')';
-    C.shade.style.opacity='1';
-    /* 轮廓编号只给缩略窗当名牌；上了台的那扇窗自己有顶栏，再压一个大编号纯属挡字 */
-    C.ghost.style.opacity=thumb?'1':'0';
-    C.body.style.opacity='1';
-    /* 正文一律按「整扇窗的宽度」摆好，再整体缩到当前卡宽——
-       宽高与 scale 三个都是数值，才过渡得动；换成 width:auto 就只能硬跳。 */
-    var sc=Math.max(.02,W/winW),bh=Math.round(H/sc);
-    var b=C.body,bkey=W+'x'+H;
-    if(C.bk!==bkey){
-      C.bk=bkey;
-      b.style.left='0px';b.style.right='auto';b.style.top='0px';b.style.bottom='auto';
-      b.style.width=winW+'px';b.style.height=bh+'px';
-      b.style.transformOrigin='0 0';b.style.transform='scale('+sc.toFixed(4)+')';
+    var C=C0[i],on=(i===cur),y=y0+i*STEP;
+    if(C.w!==TW){C.w=TW;C.el.style.width=TW+'px';}
+    if(C.h!==TH){C.h=TH;C.el.style.height=TH+'px';}
+    /* 开着的那一枚转正并往镜头挪；其余保持 -17°（左边那一列是 +17°，两侧互为镜像）。 */
+    var key=(on?'1':'0')+'|'+thumbX.toFixed(1)+'|'+y.toFixed(1);
+    if(C.k!==key){
+      C.k=key;
+      C.el.style.transform='translate(-50%,-50%) translate('+thumbX.toFixed(1)+'px,'+y.toFixed(1)+'px)'
+        +(on?' translateX(-7px) translateZ(22px) rotateY(0deg)':' rotateY(-17deg)');
+      C.el.classList.toggle('on',on);
+      C.fr.style.filter=on?'none':'brightness(.86)';
+      if(C.win)C.win.classList.toggle('on',on);
     }
-    C.el.classList.toggle('thumb',thumb);
-    C.el.classList.toggle('on',k<.5);
+    /* 微缩按整窗宽度排版，再整体缩到缩略窗那么大——这样它和真窗是同一份版式。 */
+    if(C.mw&&C.mwk!==TW+'x'+TH){
+      C.mwk=TW+'x'+TH;
+      C.mw.style.width=winW+'px';
+      C.mw.style.height=mwH+'px';
+      C.mw.style.transform='scale('+sc.toFixed(4)+')';
+    }
+    /* 窗的位置与尺寸也是钉死的：只有第一次和改尺寸时写一遍。 */
+    if(C.win&&C.wk!==wl+','+wt+','+winW+','+winH){
+      C.wk=wl+','+wt+','+winW+','+winH;
+      C.win.style.left=wl+'px';C.win.style.top=wt+'px';
+      C.win.style.width=winW+'px';C.win.style.height=winH+'px';
+    }
   }
 }
 function mvLayout(){
