@@ -11340,6 +11340,19 @@ function mvBind(){
        · 点上面／下面那一条抬头 → 翻到那一段
        · 上下滑动 → 只滚正前那张卡里的正文（交回浏览器原生滚动）
      底条的 ▲▼ 与右侧刻度照旧能翻。 */
+  /* 缩略窗改成「鼠标放上去就切」。它们是一叠平铺的窗，不是按钮，
+     指过去看哪一扇就该是哪一扇，中间不该再隔一次点按。
+     用 pointerover（会冒泡）而不是 pointerenter（不冒泡，得逐张挂）。
+     触屏没有悬停这回事，pointerType==='touch' 一律放过，交给下面的 click。
+     不怕「切过去之后光标底下换了张卡再触发一次」——被选中那张离开格子飘上台，
+     其余各张的格子是钉死的（y=y0+i*STEP，与 pos 无关），不会顶上来补位。 */
+  st.addEventListener('pointerover',function(e){
+    if(e.pointerType==='touch')return;
+    var c=e.target&&e.target.closest?e.target.closest('.mvCard'):null;
+    if(!c||c.classList.contains('on'))return;
+    MV.tgt=mvNear(parseInt(c.getAttribute('data-i'),10)||0);
+  });
+  /* click 留着：触屏上没有悬停，全靠这一条。 */
   st.addEventListener('click',function(e){
     var c=e.target&&e.target.closest?e.target.closest('.mvCard'):null;
     if(!c){MV.w=0;return;}
@@ -11425,12 +11438,16 @@ function mvSize(){
   if(MV.mode===2){
     MV.P=Math.max(120,Math.round(MV.R*1.30));
   }else{
-    /* 卡叠：面一律正对镜头，纵深只靠「往后退＋压暗」。透视给得远一点，
-       退到后面的卡才只是小一圈，不会像广角镜头那样把边上的东西抻歪。 */
-    MV.P=1500;MV.peek=Math.max(24,Math.round(H*.042));MV.dz=Math.round(H*.16);
+    /* 卡叠：纵深不靠 translateZ（不用），只有缩略窗那点倾角吃透视。
+       1500 太远，17° 转过去几乎看不出是斜的；对齐左边那一列的 620，
+       两侧的斜度这才是同一个量。台上那扇窗 rotateY 为 0，不受影响。 */
+    MV.P=620;MV.peek=Math.max(24,Math.round(H*.042));MV.dz=Math.round(H*.16);
     MV.stepPix=Math.max(120,Math.round(H*.34));   /* 拖一段要走的距离 */
   }
   MV.stage.style.perspective=MV.P+'px';
+  /* 透视原点：左边那一列钉在最左缘（0% 50%），右边这一叠就钉最右缘——
+     两侧互为镜像，斜的方向自然相反。环模式不动，仍用 CSS 里的 50% 48%。 */
+  MV.stage.style.perspectiveOrigin=(MV.mode===2?'':'100% 50%');
   MV.track.style.transform=(MV.mode===2?'translateZ('+MV.R.toFixed(1)+'px)':'none');
   /* 换排法／改尺寸＝所有缓存作废。这里必须连 w/h/bk 一起清：
      上面刚把每张卡的宽度按 cw 写过一遍，而 mvDeck 是「值没变就不写」的，
@@ -11600,7 +11617,9 @@ function mvDeck(){
     var H=Math.round(TH+(Hw-TH)*w);
     var x=thumbX+(winX-thumbX)*w;
     var y=(y0+i*STEP)*(1-w);                       /* 上台即归中 */
-    var rot=17*(1-w);
+    /* 负角：左边那一列是 rotateY(17deg)，右边取反，两叠窗朝里对着。
+       同角同向会像整屏都往一边歪，反过来才是「两侧各自朝中间收」。 */
+    var rot=-17*(1-w);
     if(C.w!==W){C.w=W;C.el.style.width=W+'px';}
     if(Math.abs((C.h||0)-H)>=1){C.h=H;C.el.style.height=H+'px';}
     C.el.style.transform='translate(-50%,-50%) translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px)'
