@@ -11768,8 +11768,11 @@ function gTerrDraw(t){
   var c=document.getElementById('gTerr');if(!c)return;
   if(c.width!==tc.width||c.height!==tc.height){c.width=tc.width;c.height=tc.height;}
   var g=c.getContext('2d');if(!g)return;
-  parX=lerp(parX,mouseX*46,.04);                        /* 鼠标视差：对局里也要跟着推 */
-  try{terrainPaint(g,c.width,c.height,t,pos*230,parX,1);}catch(_){}
+  /* 视差恒为 0，不接鼠标。选局那边指针只管转环，山跟着推是顺的；
+     对局里指针在点按钮、拖正文、敲字，背景再跟着晃就是无端乱动。
+     parX 这个全局也一并不碰——省得回主菜单时山从一个歪掉的位置弹回来。
+     画面只留 zoff 那点向前漂移，其余一动不动。 */
+  try{terrainPaint(g,c.width,c.height,t,pos*230,0,1);}catch(_){}
 }
 function railThumb(arrId,srcId){
   var mw=document.querySelector('#'+arrId+' .mw'),src=document.getElementById(srcId);
