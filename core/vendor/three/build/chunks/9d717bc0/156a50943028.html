@@ -510,9 +510,30 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
 
 #game.mapOpen #pnMap{transform:translateZ(0)}
 #game.armOpen #pnArm{transform:translateZ(0)}
+#game.shopOpen #pnShop{transform:translateZ(0)}
+#arrShop{top:37%}
+#pnShop{top:46px;bottom:0}
 #game.mapOpen #arrMap{left:min(46vw,560px)}
 #game.armOpen #arrArm{left:min(46vw,560px)}
+#game.shopOpen #arrShop{left:min(46vw,560px)}
 #game.mapOpen #arrMap .a,#game.armOpen #arrArm .a{transform:rotate(180deg)}
+#game.shopOpen #arrShop .a{transform:rotate(180deg)}
+.shRow{display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid rgba(236,236,232,.07)}
+.shRow:hover{background:rgba(236,236,232,.045)}
+.shRow .ic{width:22px;height:22px;flex:0 0 22px;opacity:.82}
+.shRow .nm{flex:1;font-size:12px;letter-spacing:.04em;color:var(--txt)}
+.shRow .nm i{display:block;font-style:normal;font-size:9px;color:var(--mut);letter-spacing:.16em}
+.shRow .pr{font-size:11px;color:var(--gold2);letter-spacing:.06em;min-width:56px;text-align:right}
+.shRow .bu{font-size:10px;letter-spacing:.18em;padding:3px 9px;cursor:pointer;border:1px solid rgba(236,236,232,.28);color:var(--mut);white-space:nowrap}
+.shRow .bu:hover{color:var(--gold-hi);border-color:var(--gold)}
+.shRow.no .pr{color:var(--mut)}
+.shRow.no .bu{opacity:.38;cursor:not-allowed}
+.shHead{position:sticky;top:0;z-index:3;padding:10px 12px 8px;background:rgba(6,6,6,.92);border-bottom:1px solid rgba(236,236,232,.14)}
+.shHead b{font-size:15px;color:var(--gold2);letter-spacing:.04em}
+.shHead span{font-size:9px;color:var(--mut);letter-spacing:.2em;display:block;margin-top:3px}
+.shSec{padding:9px 12px 4px;font-size:9px;letter-spacing:.34em;color:var(--gold);border-bottom:1px solid rgba(236,236,232,.10)}
+.shWrap{position:absolute;inset:34px 0 0;overflow-y:auto;overflow-x:hidden}
+.shNote{padding:10px 12px 22px;font-size:10px;line-height:1.85;color:var(--mut);letter-spacing:.04em}
 /* ARMA: Ghost-style slot cards + 46px cell grid + detail card */
 .armWrap{position:absolute;left:0;right:0;top:44px;bottom:0;overflow-y:auto;padding:14px 18px 46px}
 .armSec{font-size:9px;letter-spacing:.3em;color:var(--gold);margin:14px 0 8px}
@@ -1185,6 +1206,7 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
 
   <div class="gArr" id="arrMap"><span class="a">▸</span><span class="t">TABVLA&nbsp;地图</span></div>
   <div class="gArr" id="arrArm"><span class="a">▸</span><span class="t">ARMA&nbsp;装备</span></div>
+  <div class="gArr" id="arrShop"><span class="a">▸</span><span class="t">MERCATVS&nbsp;市</span></div>
 
   <div id="pnTx"><div id="zjScene3D" style="position:absolute;inset:0"></div><div id="mdScene3D" style="position:absolute;inset:0;display:none;outline:none"></div><div id="modScene3D" style="position:absolute;inset:0;display:none;background:#030303"><canvas id="mcGl" style="position:absolute;inset:0;width:100%;height:100%"></canvas><canvas id="mcOv" style="position:absolute;inset:0;width:100%;height:100%;touch-action:none"></canvas></div>
     <div id="txHint"></div>
@@ -1198,6 +1220,11 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
   <div class="gPanel" id="pnArm">
     <div class="pnTitle"><i>◆</i>&nbsp;ARMA&nbsp;·&nbsp;装备</div>
     <div class="armWrap" id="armWrap"></div>
+    <div class="pFade"></div>
+  </div>
+  <div class="gPanel" id="pnShop">
+    <div class="pnTitle"><i>◆</i>&nbsp;MERCATVS&nbsp;·&nbsp;咸阳市</div>
+    <div class="shWrap" id="shopWrap"></div>
     <div class="pFade"></div>
   </div>
 
@@ -2234,8 +2261,9 @@ addEventListener('keydown',function(e){
       var gds=['#dlgCfg','#dlgBook','#dlgSave','#dlgExit','#dlgApi','#dlgVoc','#dlgBgm'],ghit=false;
       for(var gi=0;gi<gds.length;gi++){var ge2=$(gds[gi]);
         if(ge2.style.display==='flex'){ge2.style.display='none';ghit=true;break;}}
-      if(!ghit&&(GAME.mapOpen||GAME.armOpen)){
-        GAME.mapOpen=GAME.armOpen=false;gEl.classList.remove('mapOpen','armOpen');
+      if(!ghit&&(GAME.mapOpen||GAME.armOpen||GAME.shopOpen)){
+        GAME.mapOpen=GAME.armOpen=GAME.shopOpen=false;
+        gEl.classList.remove('mapOpen','armOpen','shopOpen');
       }
     }
     return;
@@ -4171,7 +4199,7 @@ function gameExit(){
   $('#stage').style.display='';$('#rail').style.display='';$('#mission').style.display='';
   GAME.on=false;GAME.txOpen=false;gEl.classList.remove('show','mapOpen','armOpen','txOpen');
   mOv.classList.remove('gbg');
-  GAME.mapOpen=GAME.armOpen=false;
+  GAME.mapOpen=GAME.armOpen=GAME.shopOpen=false;
   ['#dlgCfg','#dlgBook','#dlgSave','#dlgExit','#dlgApi','#dlgVoc','#dlgBgm'].forEach(function(d){$(d).style.display='none';});
   menuEnter();
 }
@@ -4403,15 +4431,21 @@ $('#dlgIter').addEventListener('pointerup',function(e){if(e.target.id==='dlgIter
 /* arrows / panels */
 $('#arrMap').addEventListener('click',function(){
   GAME.mapOpen=!GAME.mapOpen;
-  if(GAME.mapOpen){GAME.armOpen=false;gEl.classList.remove('armOpen');}
+  if(GAME.mapOpen){GAME.armOpen=GAME.shopOpen=false;gEl.classList.remove('armOpen','shopOpen');}
   gEl.classList.toggle('mapOpen',GAME.mapOpen);
   if(GAME.mapOpen)setTimeout(gmapSize,60);
 });
 $('#arrArm').addEventListener('click',function(){
   GAME.armOpen=!GAME.armOpen;
-  if(GAME.armOpen){GAME.mapOpen=false;gEl.classList.remove('mapOpen');}
+  if(GAME.armOpen){GAME.mapOpen=GAME.shopOpen=false;gEl.classList.remove('mapOpen','shopOpen');}
   gEl.classList.toggle('armOpen',GAME.armOpen);
   if(GAME.armOpen)invRender();
+});
+$('#arrShop').addEventListener('click',function(){
+  GAME.shopOpen=!GAME.shopOpen;
+  if(GAME.shopOpen){GAME.mapOpen=GAME.armOpen=false;gEl.classList.remove('mapOpen','armOpen');}
+  gEl.classList.toggle('shopOpen',GAME.shopOpen);
+  if(GAME.shopOpen)shopRender();
 });
 /* ---- ARMA: Ghost-style inventory — slot cards + cell grid + detail card,
    ledger injected into the oracle prompt, every item backed by a lore entry ---- */
@@ -4486,58 +4520,58 @@ var ARMDB={
     use:{act:'把洗过的水舀给她',gan:-8,xing:6,jie:-3,
       eff:'好感-8，原形+6；这是掖庭给猫娘喝的水，递这个等于当面把她划到人以外'}},
 
-  tongjian:{la:'銅劍',cn:'秦制铜剑',cat:'武器',slot:'dext',ic:'sword'},
-  bi:{la:'匕',cn:'短匕',cat:'武器',slot:'cing',ic:'dagger'},
-  nu:{la:'蹶張弩',cn:'蹶张弩',cat:'武器',slot:'terg',ic:'crossbow'},
-  ge:{la:'戈',cn:'长柄戈',cat:'武器',slot:'dext',ic:'ge'},
-  ji:{la:'戟',cn:'戟',cat:'武器',slot:'dext',ic:'spear'},
-  shi:{la:'矢',cn:'三棱铜镞箭',cat:'武器',slot:'',ic:'arrow',stack:1},
-  pijia:{la:'皮甲',cn:'犀兕皮甲',cat:'防具',slot:'corp',ic:'armor'},
-  dun:{la:'盾',cn:'木胎髹漆盾',cat:'防具',slot:'sin',ic:'shield'},
-  zhou:{la:'胄',cn:'铜胄',cat:'防具',slot:'cap',ic:'helm'},
-  chize:{la:'赤幘',cn:'赤帻',cat:'衣物',slot:'cap',ic:'headband'},
-  shenyi:{la:'深衣',cn:'深青粗布深衣',cat:'衣物',slot:'corp',ic:'tunic'},
-  dongpao:{la:'冬袍',cn:'深青冬料外袍',cat:'衣物',slot:'hum',ic:'cloak'},
-  geidai:{la:'革帶',cn:'革带',cat:'衣物',slot:'cing',ic:'belt'},
-  malv:{la:'麻履',cn:'麻履',cat:'衣物',slot:'ped',ic:'boot'},
-  chanbu:{la:'纏布',cn:'缠脚布二尺',cat:'衣物',slot:'ped',ic:'band',stack:1},
-  jinlian:{la:'金鏈',cn:'颈上金链',cat:'杂物',slot:'cing',ic:'chain'},
-  jiandu:{la:'簡牘',cn:'竹简与刀笔',cat:'杂物',slot:'',ic:'tablet'},
-  mupai:{la:'傳',cn:'出入木传',cat:'杂物',slot:'',ic:'tag'},
-  banliang:{la:'半兩',cn:'半两钱一串',cat:'杂物',slot:'',ic:'coin'},
-  tongdeng:{la:'銅燈',cn:'青铜油灯',cat:'杂物',slot:'',ic:'lamp'},
-  qiu:{la:'糗',cn:'干粮糗饼',cat:'消耗',slot:'',ic:'bread',stack:1},
-  shuinang:{la:'水囊',cn:'皮水囊',cat:'消耗',slot:'',ic:'flask'},
-  aicao:{la:'艾',cn:'艾草一束',cat:'消耗',slot:'',ic:'herb',stack:1},
-  mabu:{la:'麻布',cn:'麻布条',cat:'消耗',slot:'',ic:'band',stack:1},
+  tongjian:{la:'銅劍',cn:'秦制铜剑',cat:'武器',price:700,slot:'dext',ic:'sword'},
+  bi:{la:'匕',cn:'短匕',cat:'武器',price:150,slot:'cing',ic:'dagger'},
+  nu:{la:'蹶張弩',cn:'蹶张弩',cat:'武器',ban:'官造禁物·市上无售',slot:'terg',ic:'crossbow'},
+  ge:{la:'戈',cn:'长柄戈',cat:'武器',ban:'官造禁物·市上无售',slot:'dext',ic:'ge'},
+  ji:{la:'戟',cn:'戟',cat:'武器',ban:'官造禁物·市上无售',slot:'dext',ic:'spear'},
+  shi:{la:'矢',cn:'三棱铜镞箭',cat:'武器',ban:'官造禁物·市上无售',slot:'',ic:'arrow',stack:1},
+  pijia:{la:'皮甲',cn:'犀兕皮甲',cat:'防具',ban:'官造禁物·市上无售',slot:'corp',ic:'armor'},
+  dun:{la:'盾',cn:'木胎髹漆盾',cat:'防具',ban:'官造禁物·市上无售',slot:'sin',ic:'shield'},
+  zhou:{la:'胄',cn:'铜胄',cat:'防具',ban:'官造禁物·市上无售',slot:'cap',ic:'helm'},
+  chize:{la:'赤幘',cn:'赤帻',cat:'衣物',price:5,slot:'cap',ic:'headband'},
+  shenyi:{la:'深衣',cn:'深青粗布深衣',cat:'衣物',price:66,slot:'corp',ic:'tunic'},
+  dongpao:{la:'冬袍',cn:'深青冬料外袍',cat:'衣物',price:110,slot:'hum',ic:'cloak'},
+  geidai:{la:'革帶',cn:'革带',cat:'衣物',price:14,slot:'cing',ic:'belt'},
+  malv:{la:'麻履',cn:'麻履',cat:'衣物',price:6,slot:'ped',ic:'boot'},
+  chanbu:{la:'纏布',cn:'缠脚布二尺',cat:'衣物',price:2,slot:'ped',ic:'band',stack:1},
+  jinlian:{la:'金鏈',cn:'颈上金链',cat:'杂物',nomkt:'御府之物·不入市',slot:'cing',ic:'chain'},
+  jiandu:{la:'簡牘',cn:'竹简与刀笔',cat:'杂物',price:40,slot:'',ic:'tablet'},
+  mupai:{la:'傳',cn:'出入木传',cat:'杂物',nomkt:'官给之物·不入市',slot:'',ic:'tag'},
+  banliang:{la:'半兩',cn:'半两钱一串',cat:'杂物',nomkt:'这就是钱',slot:'',ic:'coin'},
+  tongdeng:{la:'銅燈',cn:'青铜油灯',cat:'杂物',price:120,slot:'',ic:'lamp'},
+  qiu:{la:'糗',cn:'干粮糗饼',cat:'消耗',price:4,slot:'',ic:'bread',stack:1},
+  shuinang:{la:'水囊',cn:'皮水囊',cat:'消耗',price:20,slot:'',ic:'flask'},
+  aicao:{la:'艾',cn:'艾草一束',cat:'消耗',price:3,slot:'',ic:'herb',stack:1},
+  mabu:{la:'麻布',cn:'麻布条',cat:'消耗',price:2,slot:'',ic:'band',stack:1},
   /* ---- 宫里女子的行头。掖庭、永巷、西殿都用得上 ---- */
-  ruqun:{la:'襦裙',cn:'短襦长裙',cat:'衣物',slot:'corp',ic:'skirt'},
-  cuqun:{la:'粗襦',cn:'官给粗布襦裙',cat:'衣物',slot:'corp',ic:'skirt'},
-  quju:{la:'曲裾',cn:'绕襟曲裾深衣',cat:'衣物',slot:'corp',ic:'robe'},
-  zhongdan:{la:'中單',cn:'素帛中单',cat:'衣物',slot:'corp',ic:'tunic'},
-  bopi:{la:'帛帔',cn:'素帛披帛',cat:'衣物',slot:'hum',ic:'veil'},
-  jipao:{la:'罽袍',cn:'毛罽夹袍',cat:'衣物',slot:'hum',ic:'cloak'},
-  sixie:{la:'絲履',cn:'绣面丝履',cat:'衣物',slot:'ped',ic:'slipper'},
-  muji:{la:'木屐',cn:'高齿木屐',cat:'衣物',slot:'ped',ic:'clog'},
-  zili:{la:'緇纚',cn:'缁帛束发',cat:'衣物',slot:'cap',ic:'wrap'},
-  yuji:{la:'玉笄',cn:'白玉笄',cat:'衣物',slot:'cap',ic:'pin'},
-  sitao:{la:'絲絛',cn:'织锦丝绦',cat:'衣物',slot:'cing',ic:'sash'},
-  zushou:{la:'組綬',cn:'铜印组绶',cat:'杂物',slot:'cing',ic:'ribbon'},
-  bianmian:{la:'便面',cn:'竹柄便面',cat:'器物',slot:'dext',ic:'fan'},
-  tongjing:{la:'銅鏡',cn:'四乳四虺铜镜',cat:'器物',slot:'sin',ic:'mirror'},
-  zhusi:{la:'竹笥',cn:'方竹笥',cat:'器物',slot:'terg',ic:'chest'},
-  daishi:{la:'黛石',cn:'画眉青黛',cat:'杂物',slot:'',ic:'stone'},
-  yanzhi:{la:'燕支',cn:'燕支绵',cat:'杂物',slot:'',ic:'rouge'},
-  qianfen:{la:'鉛粉',cn:'铅粉一奁',cat:'杂物',slot:'',ic:'powder'},
-  mushu:{la:'木梳',cn:'木梳与篦',cat:'杂物',slot:'',ic:'comb'},
-  tongnie:{la:'銅鑷',cn:'铜镊',cat:'杂物',slot:'',ic:'tweezer'},
-  xiangnang:{la:'香囊',cn:'茱萸纹香囊',cat:'杂物',slot:'',ic:'pouch'},
-  sipa:{la:'絲帕',cn:'素丝帕',cat:'杂物',slot:'',ic:'kerchief',stack:1},
-  zhenzhi:{la:'針黹',cn:'铜针与麻线',cat:'杂物',slot:'',ic:'needle'},
-  yuedai:{la:'月帶',cn:'月事布带',cat:'消耗',slot:'',ic:'pad',stack:1},
-  jiao:{la:'椒',cn:'花椒一裹',cat:'消耗',slot:'',ic:'herb',stack:1},
-  siyin:{la:'私印',cn:'铜私印',cat:'杂物',slot:'',ic:'seal'},
-  taowan:{la:'陶碗',cn:'灰陶碗',cat:'杂物',slot:'',ic:'bowl'}
+  ruqun:{la:'襦裙',cn:'短襦长裙',cat:'衣物',price:55,slot:'corp',ic:'skirt'},
+  cuqun:{la:'粗襦',cn:'官给粗布襦裙',cat:'衣物',nomkt:'官给之物·不入市',slot:'corp',ic:'skirt'},
+  quju:{la:'曲裾',cn:'绕襟曲裾深衣',cat:'衣物',price:240,slot:'corp',ic:'robe'},
+  zhongdan:{la:'中單',cn:'素帛中单',cat:'衣物',price:180,slot:'corp',ic:'tunic'},
+  bopi:{la:'帛帔',cn:'素帛披帛',cat:'衣物',price:120,slot:'hum',ic:'veil'},
+  jipao:{la:'罽袍',cn:'毛罽夹袍',cat:'衣物',price:600,slot:'hum',ic:'cloak'},
+  sixie:{la:'絲履',cn:'绣面丝履',cat:'衣物',price:300,slot:'ped',ic:'slipper'},
+  muji:{la:'木屐',cn:'高齿木屐',cat:'衣物',price:22,slot:'ped',ic:'clog'},
+  zili:{la:'緇纚',cn:'缁帛束发',cat:'衣物',price:30,slot:'cap',ic:'wrap'},
+  yuji:{la:'玉笄',cn:'白玉笄',cat:'衣物',price:800,slot:'cap',ic:'pin'},
+  sitao:{la:'絲絛',cn:'织锦丝绦',cat:'衣物',price:90,slot:'cing',ic:'sash'},
+  zushou:{la:'組綬',cn:'铜印组绶',cat:'杂物',nomkt:'官物·不入市',slot:'cing',ic:'ribbon'},
+  bianmian:{la:'便面',cn:'竹柄便面',cat:'器物',price:8,slot:'dext',ic:'fan'},
+  tongjing:{la:'銅鏡',cn:'四乳四虺铜镜',cat:'器物',price:400,slot:'sin',ic:'mirror'},
+  zhusi:{la:'竹笥',cn:'方竹笥',cat:'器物',price:30,slot:'terg',ic:'chest'},
+  daishi:{la:'黛石',cn:'画眉青黛',cat:'杂物',price:35,slot:'',ic:'stone'},
+  yanzhi:{la:'燕支',cn:'燕支绵',cat:'杂物',price:28,slot:'',ic:'rouge'},
+  qianfen:{la:'鉛粉',cn:'铅粉一奁',cat:'杂物',price:45,slot:'',ic:'powder'},
+  mushu:{la:'木梳',cn:'木梳与篦',cat:'杂物',price:12,slot:'',ic:'comb'},
+  tongnie:{la:'銅鑷',cn:'铜镊',cat:'杂物',price:18,slot:'',ic:'tweezer'},
+  xiangnang:{la:'香囊',cn:'茱萸纹香囊',cat:'杂物',price:24,slot:'',ic:'pouch'},
+  sipa:{la:'絲帕',cn:'素丝帕',cat:'杂物',price:16,slot:'',ic:'kerchief',stack:1},
+  zhenzhi:{la:'針黹',cn:'铜针与麻线',cat:'杂物',price:9,slot:'',ic:'needle'},
+  yuedai:{la:'月帶',cn:'月事布带',cat:'消耗',price:5,slot:'',ic:'pad',stack:1},
+  jiao:{la:'椒',cn:'花椒一裹',cat:'消耗',price:12,slot:'',ic:'herb',stack:1},
+  siyin:{la:'私印',cn:'铜私印',cat:'杂物',nomkt:'私刻之物·不入市',slot:'',ic:'seal'},
+  taowan:{la:'陶碗',cn:'灰陶碗',cat:'杂物',price:2,slot:'',ic:'bowl'}
 };
 var ARMICONS={
   crossbow:'M12 2 V15 M4 7 Q12 4 20 7 M4 7 L6.5 10 M20 7 L17.5 10 M8 15 H16 V18 H8 Z M12 18 V22',
@@ -4830,6 +4864,80 @@ function walletWrite(n){
 }
 function walletAdd(d){return walletWrite(walletRead()+d);}
 
+/* ── MERCATVS · 咸阳市 ────────────────────────────────────────
+   第三个抽屉，跟地图、装备并排。货是 ARMDB 里带 price 的那些，按 cat 分肆摆；
+   带 ban 的（弩、戈、戟、甲、胄这一路官造禁物）照摆不误但买不了——
+   摆出来是为了让人知道这世上有这么一条规矩。带 nomkt 的（金链、木传、官印、
+   官给襦裙、私印、还有钱本身）连摆都不摆。
+   买卖走的是跟 ARMA 详情卡同一套：walletAdd 当场改 GAME.lastPanel，
+   再用 sendText 推一条真回合出去，把改后的数写死给模型。 */
+var SHOP_SEC=['吃食','药','荤忌','衣物','杂物','器物','消耗','武器','防具'];
+function shopGoods(){
+  var out={},k;
+  for(k in ARMDB){
+    var it=ARMDB[k];
+    if(!it||it.nomkt)continue;
+    if(it.price==null&&!it.ban)continue;
+    var c=it.cat||'杂物';
+    (out[c]=out[c]||[]).push(k);
+  }
+  return out;
+}
+function shopRender(){
+  var host=$('#shopWrap');if(!host)return;
+  var cash=walletRead(),g=shopGoods();
+  var h='<div class="shHead"><b>现钱&nbsp;'+cash+'&nbsp;钱</b>'
+    +'<span>半两钱&nbsp;·&nbsp;粟一石三十钱&nbsp;·&nbsp;布一匹十一钱&nbsp;·&nbsp;居赀日八钱</span></div>';
+  var any=false;
+  for(var si=0;si<SHOP_SEC.length;si++){
+    var sec=SHOP_SEC[si],ks=g[sec];
+    if(!ks||!ks.length)continue;
+    any=true;
+    h+='<div class="shSec">'+esc2(sec)+'</div>';
+    ks.sort(function(a,b){return (ARMDB[a].price==null?1e9:ARMDB[a].price)
+                               -(ARMDB[b].price==null?1e9:ARMDB[b].price);});
+    for(var i=0;i<ks.length;i++){
+      var k=ks[i],it=ARMDB[k];
+      var banned=!!it.ban, poor=(!banned&&it.price>cash);
+      h+='<div class="shRow'+((banned||poor)?' no':'')+'" data-buy="'+k+'">'
+        +'<span class="ic">'+armIcon(it.ic,22)+'</span>'
+        +'<span class="nm">'+esc2(it.cn)+'<i>'+esc2(it.la||'')+'</i></span>'
+        +'<span class="pr">'+(banned?esc2(it.ban):(it.price+'&nbsp;钱'))+'</span>'
+        +'<span class="bu">'+(banned?'禁':(poor?'钱不够':'买&nbsp;入'))+'</span>'
+        +'</div>';
+    }
+  }
+  if(!any)h+='<div class="shNote">市上今日无货。</div>';
+  h+='<div class="shNote">'
+    +'秦市有市亭、有市籍，物勒工名，贾人立于肆中。价钱随年成走，'
+    +'这里列的是平年咸阳市的常价。<br>'
+    +'买进的东西当场进行囊，钱当场从◆钱那一栏扣掉；'
+    +'卖出去要在装备里点开那一件，只作价一半。<br>'
+    +'官造的兵甲市上不卖，私藏要坐罪。'
+    +'</div>';
+  host.innerHTML=h;
+}
+$('#shopWrap').addEventListener('click',function(e){
+  var row=e.target;
+  while(row&&row!==this&&!row.getAttribute('data-buy'))row=row.parentNode;
+  if(!row||row===this)return;
+  var k=row.getAttribute('data-buy'),it=ARMDB[k];
+  if(!it)return;
+  if(it.ban){invSys(it.cn+'&nbsp;是官造之物，市上买不着；私藏要坐罪');return;}
+  var cash=walletRead();
+  if(it.price>cash){invSys('钱不够。'+it.cn+'&nbsp;要&nbsp;'+it.price
+    +'&nbsp;钱，手上只有&nbsp;'+cash+'&nbsp;钱');shopRender();return;}
+  /* 守卫要在扣钱之前：局没开或者正在出文的时候，钱扣了而效用一次都没送出去，
+     等于凭空吃掉玩家的钱——ARMA 那边踩过一次同样的坑。 */
+  if(BUSY||!GAME.on){invSys('这会儿买不成（正在出文或尚未入局）');return;}
+  var left=walletAdd(-it.price);
+  bagAdd(k,1);invStore();invRender();shopRender();
+  invSys('市上买下&nbsp;'+it.cn+'&nbsp;×1，付&nbsp;'+it.price+'&nbsp;钱，余&nbsp;'+left+'&nbsp;钱');
+  sendText('【ARMA·市】在市上买下'+it.cn+'一件，付钱'+it.price
+    +'。手上的现钱由'+(left+it.price)+'减到'+left+'。'
+    +'面板上◆钱这一栏本回合必须写作'+left+'，不许改成别的数、不许写成模糊的说法。'
+    +'正文里写这一笔买卖是在哪一肆、经谁的手、旁边有谁看见。');
+});
 function invSys(msg){narrAdd('sys','【ARMA·装备】'+msg);}
 $('#armWrap').addEventListener('click',function(e){
   var sel=e.target.closest?e.target.closest('[data-sel]'):null;
