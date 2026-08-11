@@ -11342,12 +11342,19 @@ function mvBind(){
      底条的 ▲▼ 与右侧刻度照旧能翻。 */
   /* 缩略窗改成「鼠标放上去就切」。它们是一叠平铺的窗，不是按钮，
      指过去看哪一扇就该是哪一扇，中间不该再隔一次点按。
-     用 pointerover（会冒泡）而不是 pointerenter（不冒泡，得逐张挂）。
-     触屏没有悬停这回事，pointerType==='touch' 一律放过，交给下面的 click。
-     不怕「切过去之后光标底下换了张卡再触发一次」——被选中那张离开格子飘上台，
-     其余各张的格子是钉死的（y=y0+i*STEP，与 pos 无关），不会顶上来补位。 */
-  st.addEventListener('pointerover',function(e){
+     必须用 pointermove，不能用 pointerover——差别是致命的：
+     pointerover 认的是「光标底下换了个元素」，元素自己动过来也算。
+     刚被顶下台的那张要飞回自己的格子，路上从静止的光标底下穿过，
+     浏览器就补一发 pointerover，于是换回它；换回它，原先那张又要回程，
+     又从光标底下穿过……两张卡隔着光标无限对撞，看着就是疯狂乱切。
+     pointermove 只在指针自己动时才发，再加一道 3px 位移闸：
+     和「上一次处理过的坐标」比，没挪够就不算一次新的悬停。
+     触屏没有悬停这回事，pointerType==='touch' 一律放过，交给下面的 click。 */
+  var hvX=-1e9,hvY=-1e9;
+  st.addEventListener('pointermove',function(e){
     if(e.pointerType==='touch')return;
+    if(Math.abs(e.clientX-hvX)<3&&Math.abs(e.clientY-hvY)<3)return;
+    hvX=e.clientX;hvY=e.clientY;
     var c=e.target&&e.target.closest?e.target.closest('.mvCard'):null;
     if(!c||c.classList.contains('on'))return;
     MV.tgt=mvNear(parseInt(c.getAttribute('data-i'),10)||0);
