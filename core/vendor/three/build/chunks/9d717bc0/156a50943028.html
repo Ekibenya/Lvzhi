@@ -322,14 +322,18 @@ canvas{display:block}
 /* 这一层原来是给背后那根粒子罗马柱加毛玻璃用的。柱子已经撤掉，背后只剩一块纯黑，
    模糊没有任何可模糊的东西，却要常驻一整屏的合成缓冲 + 背景快照
    （will-change:backdrop-filter 还把它钉死在显存里）。只留同样的压暗色。 */
+/* 原先是一层平铺的 31% 黑。背后是纯黑时它看不出来，铺上山脉之后
+   就成了盖在山上的一张灰纸——颜色深度全没了。换成选局用的那条暗角
+   （#vig 的同一句），中间一寸不压，四角照旧收下去。 */
 #game::before{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
-      background:rgba(5,5,5,.31)}
+      background:radial-gradient(ellipse 90% 80% at 50% 42%,transparent 55%,rgba(0,0,0,.55) 100%)}
 /* 选局那张粒子山脉底，铺满整个对局界面（正文底下也铺）。
    必须挂在 #game 里面：#game 是 isolation:isolate 的独立层，
    毛玻璃取的背景只到这一层为止——铺在外面的 #terrain 它根本采不到，
-   糊出来仍旧是一片黑。z-index:-1 让它落在压暗层之下，先被压暗再当背景。 */
+   糊出来仍旧是一片黑。z-index:-1 让它落在 #game 自己那层底色之上、压暗层之下。
+   不加 opacity：选局那张就是满色出的，这里再压半透明，山就成了一层灰雾。 */
 #game #gTerr{position:absolute;inset:0;width:100%;height:100%;z-index:-1;
-      pointer-events:none;opacity:.55}
+      pointer-events:none}
 #menu.gbg{opacity:1;pointer-events:none;transition:none}
 #menu canvas{transform:translateZ(0)}
 #menu.gbg .mItems,#menu.gbg .mFoot,#menu.gbg #eraHud{display:none}
@@ -7177,7 +7181,10 @@ function setStore(){lsSet('rome_set',JSON.stringify(SET))}
 var glassCss=document.createElement('style');document.head.appendChild(glassCss);
 function applyGlass(){
   var a=SET.glass/100;
-  glassCss.textContent='#game::before{background:rgba(5,5,5,'+(.04+.34*a).toFixed(2)+') !important}'
+  /* 这一层跟着 CSS 里那条改成暗角：平铺的黑会把山脉盖成灰纸。
+     拉杆只调四角收多深，中间那 55% 一律不压。 */
+  glassCss.textContent='#game::before{background:radial-gradient(ellipse 90% 80% at 50% 42%,'
+    +'transparent 55%,rgba(0,0,0,'+(.20+.42*a).toFixed(2)+') 100%) !important}'
     +'#game .gMfd{background:rgba(8,8,8,'+(.06+.25*a).toFixed(2)+') !important}'
     +'#game .gInput{background:linear-gradient(0deg,rgba(6,6,6,'+(.55+.4*a).toFixed(2)+') 0%,rgba(6,6,6,'+(.35+.35*a).toFixed(2)+') 55%,rgba(6,6,6,0) 100%) !important}'
     +'#game .gTop{background:rgba(6,6,6,'+(.05+.22*a).toFixed(2)+') !important}'
@@ -11752,17 +11759,17 @@ try{if(mvOn())mvRingMount();}catch(_){}      /* 模块就位后补挂一次：�
    真面板的渲染与点击当场全失灵。
    地图是画布，innerHTML 搬过去只是一张空画布，改用 drawImage 拷贝像素。 */
 var _railT=0;
-/* 对局里的全场底。山脉本身几乎不动（只有 t*.022 的缓慢漂移），
-   没必要跟着满帧重画：约 10Hz，密度也降到八成。 */
-var _gtT=0;
+/* 对局里的全场底：照搬 terrainDraw 那一行，一个参数不改——
+   同一个 DPR（tc 多大就多大）、同样每帧的视差插值、同样 q=1 的密度。
+   先前那版自作主张：降到 10Hz、密度打八折、DPR 封到 1.5，
+   于是缓慢前推的 zoff 变成一跳一跳（没动感）、山脊少了两成线（没纵深）、
+   再叠半透明（没颜色）。三样毛病都出在「省」上，这里一样都不省。 */
 function gTerrDraw(t){
   var c=document.getElementById('gTerr');if(!c)return;
-  if(t-_gtT<96)return;_gtT=t;
-  var d=Math.min(devicePixelRatio||1,1.5);
-  var w=Math.max(1,Math.round(innerWidth*d)),h=Math.max(1,Math.round(innerHeight*d));
-  if(c.width!==w||c.height!==h){c.width=w;c.height=h;}
+  if(c.width!==tc.width||c.height!==tc.height){c.width=tc.width;c.height=tc.height;}
   var g=c.getContext('2d');if(!g)return;
-  try{terrainPaint(g,w,h,t,pos*230,parX,.8);}catch(_){}
+  parX=lerp(parX,mouseX*46,.04);                        /* 鼠标视差：对局里也要跟着推 */
+  try{terrainPaint(g,c.width,c.height,t,pos*230,parX,1);}catch(_){}
 }
 function railThumb(arrId,srcId){
   var mw=document.querySelector('#'+arrId+' .mw'),src=document.getElementById(srcId);
