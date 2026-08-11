@@ -11343,11 +11343,12 @@ function mvSize(){
   MV.tgap=6;
   var _cn=Math.max(1,MV.cards.length);
   while(_cn*(MV.th+MV.tgap)>H-20&&MV.th>22){MV.tw-=3;MV.th=Math.round(MV.tw*.70);}
-  /* 让出来那一条＝原来情报台那一栏，还是 322，一寸不多要。
-     窗与缩略列在这条里紧贴着排，缝只留 2px；三维与正文照这条线收边，
-     稍微收一点就正好放得下。 */
+  /* 让出来那一条：窗 + 缩略列 + 三道 2px 的缝，紧贴着排，一寸不空着。
+     缩略列吃掉四十来像素，光靠原来那 322 的话窗只剩 268——比原来那一栏的
+     可读宽度还窄。所以这一条比原来宽 30px，这 30px 就是三维与正文让出来的：
+     三维右缘从 1118 收到 1088，窗回到 300 出头。 */
   MV.marg=2;
-  MV.gut=Math.max(240,Math.min(322,W-24));
+  MV.gut=Math.max(240,Math.min(352,W-24));
   try{gEl.style.setProperty('--mvGut',MV.gut+'px');}catch(_){}
   /* 整扇窗在台上，缩略列不再从它头上占位：上限只受台高约束。 */
   var maxH=(mvMode()===2)?Math.max(150,Math.round(H*.68)):Math.max(180,H-12);
