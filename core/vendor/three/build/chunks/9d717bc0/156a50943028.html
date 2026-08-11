@@ -1107,10 +1107,20 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
       opacity .26s ease}
 .gMfd.mvDeck .mvGhost{transition:opacity .26s ease}
 .gMfd.mvDeck .cshade{transition:background .26s ease}
-/* 收成小窗的那几段：正文只看不点，标题挪到窗下面一行 */
+/* 收成小窗的那几段，与左边地图／装备／商店那三枚是同一个零件：
+   同样的底、同样那一道 .30 的边、同样不带投影，左下角同样探出一枚方片，
+   名字同样写在窗外下面一行。上了台的那扇窗才用 .gPanel 那一套（带投影的玻璃）。 */
 .mvCard.thumb .mvBody{overflow:hidden;pointer-events:none}
 .mvCard.thumb .ftag,.mvCard.thumb .fnum{display:none}
-.mvCard.thumb .mvGhost{left:1px;right:auto;bottom:-14px;text-align:left}
+.gMfd.mvDeck .mvCard.thumb .cfr{background:rgba(6,6,6,.80) !important;
+      border-color:rgba(236,236,232,.30);box-shadow:none}
+.mvCard .ic{position:absolute;left:-11px;bottom:-7px;width:22px;height:22px;z-index:5;
+      background:#0a0a0a;border:1px solid rgba(236,236,232,.34);opacity:0;
+      display:flex;align-items:center;justify-content:center;
+      font-size:8.5px;letter-spacing:.02em;color:var(--gold-hi);
+      transition:opacity .26s ease,border-color .22s,color .22s}
+.mvCard.thumb .ic{opacity:1}
+.mvCard.thumb .mvGhost{left:15px;right:auto;bottom:-15px;text-align:left}
 .mvCard.thumb .mvGhost .g1,.mvCard.thumb .mvGhost .g2{display:none}
 .mvCard.thumb .mvGhost .g3{margin-top:0;font-size:7.5px;letter-spacing:.26em;color:var(--mut)}
 #game .gMfd.mvDeck{overflow:visible}
@@ -11275,7 +11285,7 @@ function mvRingMount(){
     var fr=document.createElement('div');fr.className='cfr';
     fr.innerHTML='<span class="ftag"></span><span class="fnum"></span>'
       +'<div class="mvGhost"><span class="g1"></span><div class="g2"></div><div class="g3"></div></div>'
-      +'<div class="mvBody"></div><div class="cshade"></div>'
+      +'<div class="mvBody"></div><div class="cshade"></div><div class="ic"></div>'
       +'<svg class="cedge" preserveAspectRatio="none"><path class="ce1"></path><path class="ce2"></path></svg>';
     var tag=mvTag(ttl);
     fr.querySelector('.ftag').textContent=tag+' SECTIO // '+pad(k+1);
@@ -11283,6 +11293,7 @@ function mvRingMount(){
     fr.querySelector('.g1').textContent=tag;
     fr.querySelector('.g2').textContent=pad(k+1);
     fr.querySelector('.g3').textContent=ttl;
+    fr.querySelector('.ic').textContent=pad(k+1);
     var body=fr.querySelector('.mvBody');
     if(sec.shell){var sh=document.createElement('div');sh.className='zjP';sh.appendChild(sec.el);body.appendChild(sh);}
     else body.appendChild(sec.el);
@@ -11352,19 +11363,18 @@ function mvSize(){
      正前那张放开到 0.70 台高（够读，超出的才滚），转开的那几张收到 0.26 台高，
      于是它们贴得近、斜得狠、还看得见内容，环的形状一眼就出来了。
      高度按离正前的距离连续插值，不是到位才跳：转的过程本身就是伸缩的过程。 */
-  /* 缩略窗尺寸：竖排 n 枚要在台高之内站得下，同时封在 40~50px 之间。
-     它是「让出来那一条」的一部分，占宽越小，留给正文窗的越多。 */
-  MV.tw=Math.max(40,Math.min(50,Math.round(W*.07)));
-  MV.th=Math.round(MV.tw*.70);
-  MV.tgap=6;
+  /* 缩略窗尺寸与间距照搬左边那一列：64×44、隔 20px。
+     原来隔 6px 太挤——名字写在窗外下面一行，缝比字还窄就被下一枚压住了。
+     台高站不下时再逐档缩，缩到 24px 高为止。 */
+  MV.tw=64;MV.th=44;MV.tgap=20;
   var _cn=Math.max(1,MV.cards.length);
-  while(_cn*(MV.th+MV.tgap)>H-20&&MV.th>22){MV.tw-=3;MV.th=Math.round(MV.tw*.70);}
+  while(_cn*(MV.th+MV.tgap)>H-20&&MV.th>24){MV.tw-=4;MV.th=Math.round(MV.tw*.69);MV.tgap=Math.max(12,MV.tgap-1);}
   /* 让出来那一条：外缝 + 窗 + 内缝 + 缩略列 + 内缝。
      外缝是三维／正文与情报台之间那道界，给足 14px——2px 那一版贴得死紧，
      两块内容像糊在一起。内缝 6px：窗与缩略列本来就是一件东西，不必分那么开。
      这一条总宽因此到 368，比原来那一栏（322）宽 46px，全是三维与正文让的。 */
   MV.mo=14;MV.mi=6;
-  MV.gut=Math.max(240,Math.min(368,W-24));
+  MV.gut=Math.max(240,Math.min(384,W-24));
   try{gEl.style.setProperty('--mvGut',MV.gut+'px');}catch(_){}
   /* 整扇窗在台上，缩略列不再从它头上占位：上限只受台高约束。 */
   var maxH=(mvMode()===2)?Math.max(150,Math.round(H*.68)):Math.max(180,H-12);
@@ -11405,7 +11415,10 @@ function mvSize(){
   }
   MV.stage.style.perspective=MV.P+'px';
   MV.track.style.transform=(MV.mode===2?'translateZ('+MV.R.toFixed(1)+'px)':'none');
-  for(i=0;i<C.length;i++)C[i].k='';                 /* 换排法＝外框重描 */
+  /* 换排法／改尺寸＝所有缓存作废。这里必须连 w/h/bk 一起清：
+     上面刚把每张卡的宽度按 cw 写过一遍，而 mvDeck 是「值没变就不写」的，
+     不清缓存它就以为自己写过了，卡会一直挂着 cw 那个宽度不动。 */
+  for(i=0;i<C.length;i++){C[i].k='';C[i].w=-1;C[i].h=-1;C[i].bk='';}
   if(MV.mode===2)mvHeights();else mvHeightsDeck();
   var d=Math.min(devicePixelRatio||1,2);
   MV.bg.width=Math.max(1,Math.round(MV.box.clientWidth*d));
