@@ -510,7 +510,8 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
 
 #game.mapOpen #pnMap{transform:translateZ(0)}
 #game.armOpen #pnArm{transform:translateZ(0)}
-#game.shopOpen #pnShop{transform:translateZ(0)}
+#game.shopOpen #pnShop{transform:translateZ(0);z-index:33}
+#game.shopOpen #arrShop{z-index:34}
 #arrShop{top:37%}
 #pnShop{top:46px;bottom:0}
 #game.mapOpen #arrMap{left:min(46vw,560px)}
@@ -528,9 +529,13 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
 .shRow .bu:hover{color:var(--gold-hi);border-color:var(--gold)}
 .shRow.no .pr{color:var(--mut)}
 .shRow.no .bu{opacity:.38;cursor:not-allowed}
-.shHead{position:sticky;top:0;z-index:3;padding:10px 12px 8px;background:rgba(6,6,6,.92);border-bottom:1px solid rgba(236,236,232,.14)}
+.shHead{padding:10px 12px 8px;background:rgba(6,6,6,.92);border-bottom:1px solid rgba(236,236,232,.14)}
 .shHead b{font-size:15px;color:var(--gold2);letter-spacing:.04em}
 .shHead span{font-size:9px;color:var(--mut);letter-spacing:.2em;display:block;margin-top:3px}
+.shTabs{position:sticky;top:0;z-index:4;display:flex;flex-wrap:wrap;gap:0;background:rgba(6,6,6,.94);border-bottom:1px solid rgba(236,236,232,.14)}
+.shTabs span{flex:1 1 auto;text-align:center;padding:8px 4px;font-size:10px;letter-spacing:.22em;color:var(--mut);cursor:pointer;border-bottom:1px solid transparent;transition:color .2s,border-color .2s}
+.shTabs span:hover{color:var(--txt)}
+.shTabs span.on{color:var(--gold-hi);border-bottom-color:var(--gold)}
 .shSec{padding:9px 12px 4px;font-size:9px;letter-spacing:.34em;color:var(--gold);border-bottom:1px solid rgba(236,236,232,.10)}
 .shWrap{position:absolute;inset:34px 0 0;overflow-y:auto;overflow-x:hidden}
 .shNote{padding:10px 12px 22px;font-size:10px;line-height:1.85;color:var(--mut);letter-spacing:.04em}
@@ -1206,7 +1211,7 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
 
   <div class="gArr" id="arrMap"><span class="a">▸</span><span class="t">TABVLA&nbsp;地图</span></div>
   <div class="gArr" id="arrArm"><span class="a">▸</span><span class="t">ARMA&nbsp;装备</span></div>
-  <div class="gArr" id="arrShop"><span class="a">▸</span><span class="t">MERCATVS&nbsp;市</span></div>
+  <div class="gArr" id="arrShop"><span class="a">▸</span><span class="t">MERCATVS&nbsp;商店</span></div>
 
   <div id="pnTx"><div id="zjScene3D" style="position:absolute;inset:0"></div><div id="mdScene3D" style="position:absolute;inset:0;display:none;outline:none"></div><div id="modScene3D" style="position:absolute;inset:0;display:none;background:#030303"><canvas id="mcGl" style="position:absolute;inset:0;width:100%;height:100%"></canvas><canvas id="mcOv" style="position:absolute;inset:0;width:100%;height:100%;touch-action:none"></canvas></div>
     <div id="txHint"></div>
@@ -1223,7 +1228,7 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
     <div class="pFade"></div>
   </div>
   <div class="gPanel" id="pnShop">
-    <div class="pnTitle"><i>◆</i>&nbsp;MERCATVS&nbsp;·&nbsp;咸阳市</div>
+    <div class="pnTitle"><i>◆</i>&nbsp;MERCATVS&nbsp;·&nbsp;商店</div>
     <div class="shWrap" id="shopWrap"></div>
     <div class="pFade"></div>
   </div>
@@ -4871,7 +4876,16 @@ function walletAdd(d){return walletWrite(walletRead()+d);}
    官给襦裙、私印、还有钱本身）连摆都不摆。
    买卖走的是跟 ARMA 详情卡同一套：walletAdd 当场改 GAME.lastPanel，
    再用 sendText 推一条真回合出去，把改后的数写死给模型。 */
+/* 分类摆在最顶上，一点就切。九个 cat 归成六档——五百六十像素宽的抽屉里
+   摆十个标签会挤成两行，反而不好点。 */
+var SHOP_TABS=[['全部',null],
+               ['吃食',['吃食','荤忌']],
+               ['药',['药']],
+               ['衣物',['衣物']],
+               ['器用',['杂物','器物','消耗']],
+               ['兵甲',['武器','防具']]];
 var SHOP_SEC=['吃食','药','荤忌','衣物','杂物','器物','消耗','武器','防具'];
+var SHOPTAB=0;
 function shopGoods(){
   var out={},k;
   for(k in ARMDB){
@@ -4886,12 +4900,23 @@ function shopGoods(){
 function shopRender(){
   var host=$('#shopWrap');if(!host)return;
   var cash=walletRead(),g=shopGoods();
-  var h='<div class="shHead"><b>现钱&nbsp;'+cash+'&nbsp;钱</b>'
+  var pick=SHOP_TABS[SHOPTAB]||SHOP_TABS[0],want=pick[1];
+  var h='<div class="shTabs">';
+  for(var ti=0;ti<SHOP_TABS.length;ti++){
+    var t=SHOP_TABS[ti],cnt=0;
+    if(t[1]==null){for(var kk in g)cnt+=g[kk].length;}
+    else for(var ci=0;ci<t[1].length;ci++)cnt+=(g[t[1][ci]]||[]).length;
+    h+='<span data-tab="'+ti+'"'+(ti===SHOPTAB?' class="on"':'')+'>'
+      +esc2(t[0])+'&nbsp;'+cnt+'</span>';
+  }
+  h+='</div>';
+  h+='<div class="shHead"><b>现钱&nbsp;'+cash+'&nbsp;钱</b>'
     +'<span>半两钱&nbsp;·&nbsp;粟一石三十钱&nbsp;·&nbsp;布一匹十一钱&nbsp;·&nbsp;居赀日八钱</span></div>';
   var any=false;
   for(var si=0;si<SHOP_SEC.length;si++){
     var sec=SHOP_SEC[si],ks=g[sec];
     if(!ks||!ks.length)continue;
+    if(want&&want.indexOf(sec)<0)continue;
     any=true;
     h+='<div class="shSec">'+esc2(sec)+'</div>';
     ks.sort(function(a,b){return (ARMDB[a].price==null?1e9:ARMDB[a].price)
@@ -4907,7 +4932,7 @@ function shopRender(){
         +'</div>';
     }
   }
-  if(!any)h+='<div class="shNote">市上今日无货。</div>';
+  if(!any)h+='<div class="shNote">这一类今日无货。</div>';
   h+='<div class="shNote">'
     +'秦市有市亭、有市籍，物勒工名，贾人立于肆中。价钱随年成走，'
     +'这里列的是平年咸阳市的常价。<br>'
@@ -4918,10 +4943,12 @@ function shopRender(){
   host.innerHTML=h;
 }
 $('#shopWrap').addEventListener('click',function(e){
-  var row=e.target;
-  while(row&&row!==this&&!row.getAttribute('data-buy'))row=row.parentNode;
-  if(!row||row===this)return;
-  var k=row.getAttribute('data-buy'),it=ARMDB[k];
+  var t=e.target;
+  while(t&&t!==this&&!t.getAttribute('data-tab')&&!t.getAttribute('data-buy'))t=t.parentNode;
+  if(!t||t===this)return;
+  var tab=t.getAttribute('data-tab');
+  if(tab!=null){SHOPTAB=parseInt(tab,10)||0;shopRender();this.scrollTop=0;return;}
+  var k=t.getAttribute('data-buy'),it=ARMDB[k];
   if(!it)return;
   if(it.ban){invSys(it.cn+'&nbsp;是官造之物，市上买不着；私藏要坐罪');return;}
   var cash=walletRead();
@@ -4930,8 +4957,9 @@ $('#shopWrap').addEventListener('click',function(e){
   /* 守卫要在扣钱之前：局没开或者正在出文的时候，钱扣了而效用一次都没送出去，
      等于凭空吃掉玩家的钱——ARMA 那边踩过一次同样的坑。 */
   if(BUSY||!GAME.on){invSys('这会儿买不成（正在出文或尚未入局）');return;}
+  var sc=this.scrollTop;
   var left=walletAdd(-it.price);
-  bagAdd(k,1);invStore();invRender();shopRender();
+  bagAdd(k,1);invStore();invRender();shopRender();this.scrollTop=sc;
   invSys('市上买下&nbsp;'+it.cn+'&nbsp;×1，付&nbsp;'+it.price+'&nbsp;钱，余&nbsp;'+left+'&nbsp;钱');
   sendText('【ARMA·市】在市上买下'+it.cn+'一件，付钱'+it.price
     +'。手上的现钱由'+(left+it.price)+'减到'+left+'。'
