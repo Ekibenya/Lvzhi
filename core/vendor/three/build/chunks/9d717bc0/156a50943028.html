@@ -1025,22 +1025,27 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
 .mvVig{position:absolute;inset:0;pointer-events:none;
        background:radial-gradient(ellipse 92% 76% at 50% 46%,transparent 48%,rgba(0,0,0,.66) 100%)}
 .mvStage{position:absolute;left:0;right:16px;top:0;bottom:calc(var(--mvNav,0px) + 34px);
-         perspective:1300px;perspective-origin:50% 48%;touch-action:pan-y;overflow:hidden}
+         perspective:520px;perspective-origin:50% 48%;touch-action:pan-y;overflow:hidden}
 .mvTrack{position:absolute;inset:0;transform-style:preserve-3d;pointer-events:none}
 .mvCard{position:absolute;left:50%;top:50%;pointer-events:auto;cursor:pointer;touch-action:none;
         will-change:transform,opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden}
-.mvCard .cfr{position:absolute;inset:0;border:1px solid rgba(236,236,232,.5);background:rgba(6,6,6,.60)}
+/* 面板不是平板，是轮圈上的一段弧。CSS 的 3D 变换只会把矩形整体旋转，弯不了面，
+   所以外框改由 SVG 逐帧描：一段弧的上下两条边是平行于轮轴的直线（照旧是直的），
+   左右两条边才是弧——中线离眼最近、最宽，往上下两端退后去，于是收窄。
+   同一条轮廓再当作 clip-path 扣在卡上，正文被这条弧裁住，整块才读得出是弯的。 */
+.mvCard .cfr{position:absolute;inset:0;background:rgba(6,6,6,.60)}
 /* 毛玻璃只给正前那张：六张卡同时糊背景，在三维变换里是实打实的六层离屏合成。 */
 .mvCard.on .cfr{background:rgba(6,6,6,.66);
        -webkit-backdrop-filter:blur(7px) saturate(140%);backdrop-filter:blur(7px) saturate(140%)}
-.mvCard .cfr::before,.mvCard .cfr::after{content:'';position:absolute;width:7px;height:7px;border:1px solid var(--paper)}
-.mvCard .cfr::before{left:-4px;top:-4px;border-right:0;border-bottom:0}
-.mvCard .cfr::after{right:-4px;bottom:-4px;border-left:0;border-top:0}
-.mvCard .ftag{position:absolute;left:10px;top:8px;z-index:2;
+.mvCard .cedge{position:absolute;inset:0;width:100%;height:100%;overflow:visible;
+       pointer-events:none;z-index:4;fill:none}
+/* 顶沿与底沿是弧最宽的地方，小字贴边写没问题；细的是腰，让正文去躲。 */
+.mvCard .ftag{position:absolute;left:11px;top:8px;z-index:2;
               font-size:8px;letter-spacing:.34em;color:var(--mut);white-space:nowrap}
-.mvCard .fnum{position:absolute;right:10px;top:8px;z-index:2;
+.mvCard .fnum{position:absolute;right:11px;top:8px;z-index:2;
               font-size:8px;letter-spacing:.2em;color:var(--mut)}
-.mvBody{position:absolute;inset:1px;overflow-y:auto;overflow-x:hidden;padding:26px 13px 15px;
+.mvBody{position:absolute;top:1px;bottom:1px;left:20px;right:20px;
+        overflow-y:auto;overflow-x:hidden;padding:26px 9px 15px;
         overscroll-behavior:contain;touch-action:pan-y}
 /* 轮圈内壁的明暗：光从正前来，转开的那一段整体压暗（brightness），
    同时在它「更远的那条边」上压一道渐深的影——上方的卡暗在顶沿，下方的卡暗在底沿。
@@ -1048,7 +1053,7 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
 .mvCard .cshade{position:absolute;inset:0;pointer-events:none;z-index:3}
 .mvBody::-webkit-scrollbar{width:3px}
 /* 侧卡的正文淡出、留下轮廓数字——与选局环边上那几张的读法一致 */
-.mvGhost{position:absolute;right:10px;bottom:8px;line-height:1;pointer-events:none;text-align:right}
+.mvGhost{position:absolute;right:12px;bottom:9px;line-height:1;pointer-events:none;text-align:right}
 .mvGhost .g1{display:block;font-size:8px;letter-spacing:.3em;color:var(--mut);margin-bottom:6px}
 .mvGhost .g2{font-size:44px;font-weight:700;color:transparent;line-height:.86;
              -webkit-text-stroke:1px rgba(236,236,232,.62);font-variant-numeric:tabular-nums}
@@ -11170,7 +11175,8 @@ function mvRingMount(){
     var fr=document.createElement('div');fr.className='cfr';
     fr.innerHTML='<span class="ftag"></span><span class="fnum"></span>'
       +'<div class="mvGhost"><span class="g1"></span><div class="g2"></div><div class="g3"></div></div>'
-      +'<div class="mvBody"></div><div class="cshade"></div>';
+      +'<div class="mvBody"></div><div class="cshade"></div>'
+      +'<svg class="cedge" preserveAspectRatio="none"><path class="ce1"></path><path class="ce2"></path></svg>';
     var tag=mvTag(ttl);
     fr.querySelector('.ftag').textContent=tag+' SECTIO // '+pad(k+1);
     fr.querySelector('.fnum').textContent='SIG_'+pad(k+1)+'/'+pad(secs.length);
@@ -11182,7 +11188,10 @@ function mvRingMount(){
     else body.appendChild(sec.el);
     if(keep[k])body.scrollTop=keep[k];
     card.appendChild(fr);track.appendChild(card);
-    cards.push({el:card,fr:fr,body:body,ghost:fr.querySelector('.mvGhost'),shade:fr.querySelector('.cshade')});
+    cards.push({el:card,fr:fr,body:body,ghost:fr.querySelector('.mvGhost'),
+                shade:fr.querySelector('.cshade'),
+                svg:fr.querySelector('.cedge'),
+                p1:fr.querySelector('.ce1'),p2:fr.querySelector('.ce2'),k:''});
   }
   box.innerHTML='';
   box.appendChild(bg);box.appendChild(vig);box.appendChild(stage);
@@ -11293,6 +11302,7 @@ function mvSize(){
   MV.small=Math.max(74,Math.round(H*.115));
   MV.gap=-6;                                   /* 负值：让邻卡的顶沿贴上来，中间那道缝才收得住 */
   var C=MV.cards,i;
+  MV.cw=cw;
   for(i=0;i<C.length;i++)C[i].el.style.width=cw+'px';
   /* 量的是内容自身的高度，不能量 .mvBody.scrollHeight——正文是 inset:1px 撑满整卡的，
      scrollHeight 永远不小于 clientHeight，一量就是当前卡高，每张卡都会顶到上限。
@@ -11308,6 +11318,13 @@ function mvSize(){
      半径越小弧越急：小到这一步，六段的总弧长约合 145°，绕过去正好在视野边缘接上，
      环因此是闭合的——转到末段，第一段就从另一头转进来。 */
   MV.R=Math.max(160,Math.round(1.46*Math.max(90,(mean+MV.small)/2+MV.gap)));
+  /* 眼睛必须待在轮胎里面。轨道整体前移 R（保正前那张 1:1），眼睛到轮轴的距离就是
+     e = P − R；要在里面就得 e < R，也就是 P < 2R。之前 P=1300、R≈380，e≈920 是半径的
+     两倍半——那是站在鼓外面看鼓，所以转开的面越来越小、卡的两端越收越窄，整个反了。
+     取 P = 1.30R，眼睛落在轴心到内壁的三成处：转开的面反而越来越大，卡的上下两端
+     离眼更近因而更宽——腰细端宽，这才是从胎内看胎壁。 */
+  MV.P=Math.max(120,Math.round(MV.R*1.30));
+  MV.stage.style.perspective=MV.P+'px';
   mvHeights();
   MV.track.style.transform='translateZ('+MV.R.toFixed(1)+'px)';
   var d=Math.min(devicePixelRatio||1,2);
@@ -11349,6 +11366,56 @@ function mvPosFromRot(r){                          /* 反解：拖动按角度�
   for(var i=n-1;i>=0;i--)if(q>=A[i])return i+(q-A[i])/mvSeg(i);
   return 0;
 }
+/* 把一张卡当作轮圈上的一段弧来描。
+     th   这张卡占的弧角（卡高 ÷ 半径）
+     sag  上下两端比中线退后多少   = R(1-cos(th/2))
+     f    退后之后端部收窄到中线的几成 = P / (P+sag)
+   端部的收窄是真透视：同一块面，退后的地方在屏幕上就是窄。
+   矮的侧卡占弧小、sag 近乎零，本来就该几乎是平的——这是对的，不是没生效。 */
+function mvShell(C,w,h,R,P,a){
+  var th=h/R, e=P-R;
+  /* 站在胎内：卡的上下两端沿着内壁绕过来，离眼比中线更近，投影因此更宽。
+     f = 端宽 / 腰宽 = (e+R) / (e + R·cos(θ/2)) > 1 —— 腰细端宽。
+     实算只有百分之几，肉眼到不了分辨门槛，所以夸张 1.6 倍并封顶。 */
+  var f=(e+R)/(e+R*Math.cos(th/2));
+  f=Math.max(1.014,Math.min(1.26,1+(f-1)*1.6));
+  /* 腰收进去多少是按半宽算的，面板越宽收得越狠：手机上一张 372px 的卡能收掉 31px，
+     正文贴着边就被弧切掉半个字。绝对量封在 26px 以内。 */
+  f=Math.min(f,1+26/Math.max(40,w/2-1));
+  var key=(w|0)+'x'+(h|0)+'x'+f.toFixed(4);
+  if(C.k===key)return;
+  C.k=key;
+  var cx=w/2, hw1=w/2-1, hw0=hw1/f, y0=.5, y1=h-.5, ym=h/2;   /* hw1＝端宽，hw0＝腰宽 */
+  /* 正文左右各让开「腰比端窄的那一截」，字才不会被弧啃掉 */
+  var pad=Math.round(hw1-hw0)+3;
+  if(C.pad!==pad){C.pad=pad;C.body.style.left=pad+'px';C.body.style.right=pad+'px';}
+  var qx=2*hw0-hw1;                                  /* 二次贝塞尔控制点：让中点正好落在 hw0 */
+  var d='M'+(cx-hw1).toFixed(1)+' '+y0.toFixed(1)
+       +'H'+(cx+hw1).toFixed(1)
+       +'Q'+(cx+qx).toFixed(1)+' '+ym.toFixed(1)+' '+(cx+hw1).toFixed(1)+' '+y1.toFixed(1)
+       +'H'+(cx-hw1).toFixed(1)
+       +'Q'+(cx-qx).toFixed(1)+' '+ym.toFixed(1)+' '+(cx-hw1).toFixed(1)+' '+y0.toFixed(1)+'Z';
+  C.p1.setAttribute('d',d);
+  C.p1.setAttribute('stroke','rgba(236,236,232,.5)');
+  C.p1.setAttribute('stroke-width','1');
+  /* 四角括号：跟着弧走，钉在轮廓的四个角上 */
+  var b=7;
+  C.p2.setAttribute('d',
+     'M'+(cx-hw1).toFixed(1)+' '+(y0+b)+'V'+y0.toFixed(1)+'H'+(cx-hw1+b).toFixed(1)
+    +'M'+(cx+hw1-b).toFixed(1)+' '+y0.toFixed(1)+'H'+(cx+hw1).toFixed(1)+'V'+(y0+b)
+    +'M'+(cx+hw1).toFixed(1)+' '+(y1-b)+'V'+y1.toFixed(1)+'H'+(cx+hw1-b).toFixed(1)
+    +'M'+(cx-hw1+b).toFixed(1)+' '+y1.toFixed(1)+'H'+(cx-hw1).toFixed(1)+'V'+(y1-b));
+  C.p2.setAttribute('stroke','var(--paper)');
+  C.p2.setAttribute('stroke-width','1');
+  C.svg.setAttribute('viewBox','0 0 '+w.toFixed(1)+' '+h.toFixed(1));
+  /* 同一条弧扣成 clip-path，正文被弧裁住——弯的是整块面，不只是一圈线 */
+  var pts=[],k,pp,hw,N=9;
+  for(k=0;k<=N;k++){pp=-1+2*k/N;hw=hw0+(hw1-hw0)*pp*pp;
+    pts.push((cx+hw).toFixed(1)+'px '+(ym+pp*(h/2-.5)).toFixed(1)+'px');}
+  for(k=N;k>=0;k--){pp=-1+2*k/N;hw=hw0+(hw1-hw0)*pp*pp;
+    pts.push((cx-hw).toFixed(1)+'px '+(ym+pp*(h/2-.5)).toFixed(1)+'px');}
+  C.fr.style.clipPath='polygon('+pts.join(',')+')';
+}
 function mvLayout(){
   mvHeights();
   var R=MV.R,rot=mvRot(),DEG=180/Math.PI,T=MV.tot||6.283;
@@ -11360,18 +11427,33 @@ function mvLayout(){
        所以转到末段时，第一段是从另一头转进来的，不会走到头就空掉。 */
     a=((a%(half*2))+half*3)%(half*2)-half;
     var aa=Math.abs(a),c=Math.cos(a*Math.PI/180);
-    var hid=(aa>=half-.5);
+    var hid=(aa>=half-.5||aa>78);   /* 78° 往后离眼太近，投影要炸 */
     C.el.style.transform=hid?'translate(-50%,-50%) scale(0)'
       :('translate(-50%,-50%) rotateX('+a.toFixed(2)+'deg) translateZ('+(-R).toFixed(1)+'px)');
     C.el.style.opacity=(hid?0:clamp01((half-aa)/fade)).toFixed(3);
     C.el.style.visibility=hid?'hidden':'visible';
     C.el.style.pointerEvents=hid?'none':'auto';
-    /* 明暗：整体亮度按 cos 落，另加一道压在「更远那条边」上的影。
-       上方的卡远的是顶沿，下方的卡远的是底沿——影随之翻向。 */
-    C.fr.style.filter='brightness('+(.22+.78*Math.pow(clamp01(c),.85)).toFixed(3)+')';
-    C.shade.style.background='linear-gradient('+(a>0?'to top':'to bottom')
-      +',rgba(0,0,0,.92) 0%,rgba(0,0,0,.36) 44%,rgba(0,0,0,0) 86%)';
-    C.shade.style.opacity=clamp01(aa/(half*.85)).toFixed(3);
+    /* 转开的那几段离眼更近，投影会放大；宽度不补一下就要横着挤出面板，
+       段名当场被切掉半截。按放大率的 0.8 次方回缩：仍然比正前那张宽一点
+       （「贴着脸擦过去」的感觉留着），但不会溢出。 */
+    if(!hid){
+      var P0=MV.P||(R*1.3);
+      var mag=P0/Math.max(1,P0-R*(1-c));
+      var wq=Math.max(60,Math.round((MV.cw||C.el.clientWidth)/Math.pow(mag,.8)/2)*2);
+      if(C.w!==wq){C.w=wq;C.el.style.width=wq+'px';}
+      mvShell(C,wq,C.h||1,R,P0,a);
+    }
+    /* 明暗按曲面算，不是给平板糊一层渐变：光从轮心来，面上某一点的明暗取决于
+       那一点的法线偏离视线多少，也就是 cos(卡的角度 + 该点在卡内的弧偏移)。
+       于是最亮的那道横带并不钉在卡中间——卡一转，它就顺着弧面往近的一端滑。 */
+    var th=(C.h||1)/R, lum=[], q;
+    for(q=0;q<=4;q++){
+      var dl=(q/4-.5)*th*180/Math.PI;
+      lum.push('rgba(0,0,0,'+(0.94*(1-Math.pow(clamp01(Math.cos((a+dl)*Math.PI/180)),.9))).toFixed(3)+') '+(q*25)+'%');
+    }
+    C.fr.style.filter='brightness('+(.46+.54*Math.pow(clamp01(c),.7)).toFixed(3)+')';
+    C.shade.style.background='linear-gradient(to bottom,'+lum.join(',')+')';
+    C.shade.style.opacity='1';
     /* 侧卡留住正文：斜过去的那几行字是立体感真正的来源，只剩一只空框就又平回去了。 */
     C.ghost.style.opacity=clamp01(aa/22-.5).toFixed(3);
     C.body.style.opacity=clamp01(1-aa/(half*1.25)).toFixed(3);
