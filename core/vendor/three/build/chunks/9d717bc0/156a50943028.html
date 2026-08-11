@@ -1039,6 +1039,10 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
        -webkit-backdrop-filter:blur(7px) saturate(140%);backdrop-filter:blur(7px) saturate(140%)}
 .mvCard .cedge{position:absolute;inset:0;width:100%;height:100%;overflow:visible;
        pointer-events:none;z-index:4;fill:none}
+/* 卡叠是一张压一张，卡面必须挡得住后面那张：环那边的卡是转开的、彼此错着，
+   六成不透明够用；叠起来之后同样的六成就成了「后一张的字透到前一张上」。 */
+.gMfd.mvDeck .mvCard .cfr{background:rgba(7,7,7,.96)}
+.gMfd.mvDeck .mvCard.on .cfr{background:rgba(8,8,8,.93)}
 /* 顶沿与底沿是弧最宽的地方，小字贴边写没问题；细的是腰，让正文去躲。 */
 .mvCard .ftag{position:absolute;left:11px;top:8px;z-index:2;
               font-size:8px;letter-spacing:.34em;color:var(--mut);white-space:nowrap}
@@ -1322,8 +1326,8 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
       <div class="sub">透明度：拖动即时生效——拉到最左＝完全透明（直接看穿到后面的动态背景）；拉到最右＝完全不透明（纯色纸底，彻底看不穿）。开低配模式时模糊被关闭。版式：自动依屏幕宽窄选择版式，也可强制使用电脑或手机布局。</div>
       <div class="sRow"><span>OBSCVRITAS&nbsp;·&nbsp;面板透明度</span><input type="range" id="cfgGlass" min="0" max="100" value="80"></div>
       <div class="sRow"><span>FORMA&nbsp;·&nbsp;版式</span><span class="sSeg" id="sgForma"><span class="on">自动</span><span>桌面</span><span>手机</span></span></div>
-      <div class="sRow"><span>TABVLARIVM&nbsp;·&nbsp;情报台</span><span class="sSeg" id="sgMvu"><span class="on">列表</span><span>环&nbsp;·&nbsp;三维</span></span></div>
-      <div class="sub">情报台的排法。「列表」是一栏到底的老样子；「环·三维」把每一段立成一张卡，用选局那套外框与山脉底，围成一圈绕横轴转——上下拖动、滚轮、右侧刻度或底条的&nbsp;▲▼&nbsp;都能翻，点侧边那张也会转到正前。正文能滚的时候按在正文上照旧是滚正文。底条上的「列表」可随时切回。</div>
+      <div class="sRow"><span>TABVLARIVM&nbsp;·&nbsp;情报台</span><span class="sSeg" id="sgMvu"><span>列表</span><span class="on">卡叠</span><span>环</span></span></div>
+      <div class="sub">情报台的排法。「列表」是一栏到底的老样子。「卡叠」把每一段立成一张卡，正前那张平着摊开，其余的往后一层层压住、只露出各自的抬头，像切换视窗——面是平的，不歪不弯。「环」是围成一圈绕横轴转的那一版，面会随角度斜过去，晕的话别选。三档都能上下拖动、滚轮、点右侧刻度或底条的&nbsp;▲▼&nbsp;翻，点旁边那张也会翻到正前；正文能滚的时候按在正文上照旧是滚正文。底条上的「列表」可随时切回。</div>
       <div class="sRow"><span>字体</span><span style="display:flex;gap:8px;align-items:center"><span class="sSeg" id="sgFace"><span class="on">等宽</span><span>衬线</span><span>系统</span></span><span class="gt" id="fontUp">自定义字体</span><input type="file" id="fontFile" accept=".ttf,.otf,.woff,.woff2" style="display:none"></span></div>
       <div class="sub" id="dispMsg" style="margin-top:8px"></div>
     </div>
@@ -11095,7 +11099,8 @@ if('serviceWorker' in navigator&&!/[?&]dev=1/.test(location.search))addEventList
 var MV={pos:0,tgt:null,drag:null,n:0,cards:[],raf:0,R:600,ang:[],maxH:600,
         box:null,stage:null,track:null,bg:null,bgx:null,rail:null,railx:null,foot:null,
         bgT:0,w:0,h:0,scroll:{}};
-function mvOn(){try{return SET&&SET.mvuRing===1;}catch(_){return false;}}
+function mvOn(){try{return SET&&SET.mvuRing>0;}catch(_){return false;}}
+function mvMode(){try{return SET.mvuRing===2?2:1;}catch(_){return 1;}}   /* 1＝卡叠　2＝环 */
 function mvWrap(x){var n=MV.n||1;return ((x%n)+n)%n;}      /* 段号绕圈 */
 function mvNear(t){                                        /* 取绕得最近的那个目标，别横穿整圈 */
   var n=MV.n||1,d=mvWrap(t)-mvWrap(MV.pos);
@@ -11219,7 +11224,7 @@ function mvBind(){
   var DEAD=9;
   st.addEventListener('pointerdown',function(e){
     if(bodyScrollable(e.target))return;
-    MV.drag={y:e.clientY,rot:mvRot(),p0:MV.pos,live:false,moved:0};MV.tgt=null;
+    MV.drag={y:e.clientY,rot:(MV.mode===2?mvRot():0),p0:MV.pos,live:false,moved:0};MV.tgt=null;
     try{st.setPointerCapture(e.pointerId);}catch(_){}
   });
   st.addEventListener('pointermove',function(e){
@@ -11232,6 +11237,10 @@ function mvBind(){
       MV.drag.y=e.clientY;dy=0;                  /* 抵掉死区，接手那一下不跳 */
     }
     /* 拖动走的是角度：手指下移 dy 像素，环就转 dy/R 弧度，跟手一比一。 */
+    if(MV.mode!==2){                     /* 卡叠：一段走一段的距离，按像素算 */
+      MV.pos=MV.drag.p0-dy/Math.max(60,MV.stepPix||240);
+      return;
+    }
     /* 闭环下 mvPosFromRot 只回 [0,n)，直接赋值会在绕圈处跳一整圈；
        改成在上一帧的基础上取最近的等价值，连续。 */
     var np=mvPosFromRot(MV.drag.rot-dy/MV.R),n2=MV.n,k=Math.round((MV.pos-np)/n2);
@@ -11323,10 +11332,20 @@ function mvSize(){
      两倍半——那是站在鼓外面看鼓，所以转开的面越来越小、卡的两端越收越窄，整个反了。
      取 P = 1.30R，眼睛落在轴心到内壁的三成处：转开的面反而越来越大，卡的上下两端
      离眼更近因而更宽——腰细端宽，这才是从胎内看胎壁。 */
-  MV.P=Math.max(120,Math.round(MV.R*1.30));
+  MV.mode=mvMode();
+  MV.box.classList.toggle('mvDeck',MV.mode!==2);
+  if(MV.mode===2){
+    MV.P=Math.max(120,Math.round(MV.R*1.30));
+  }else{
+    /* 卡叠：面一律正对镜头，纵深只靠「往后退＋压暗」。透视给得远一点，
+       退到后面的卡才只是小一圈，不会像广角镜头那样把边上的东西抻歪。 */
+    MV.P=1500;MV.peek=Math.max(24,Math.round(H*.042));MV.dz=Math.round(H*.16);
+    MV.stepPix=Math.max(120,Math.round(H*.34));   /* 拖一段要走的距离 */
+  }
   MV.stage.style.perspective=MV.P+'px';
-  mvHeights();
-  MV.track.style.transform='translateZ('+MV.R.toFixed(1)+'px)';
+  MV.track.style.transform=(MV.mode===2?'translateZ('+MV.R.toFixed(1)+'px)':'none');
+  for(i=0;i<C.length;i++)C[i].k='';                 /* 换排法＝外框重描 */
+  if(MV.mode===2)mvHeights();else mvHeightsDeck();
   var d=Math.min(devicePixelRatio||1,2);
   MV.bg.width=Math.max(1,Math.round(MV.box.clientWidth*d));
   MV.bg.height=Math.max(1,Math.round(MV.box.clientHeight*d));
@@ -11351,6 +11370,15 @@ function mvHeights(){
   /* 闭合：最后一段绕回第一段的那一节弧也要算进去，总角 TOT 就是这只轮子的一整圈。 */
   MV.tot=MV.ang[n-1]+((hs[n-1]+hs[0])/2+MV.gap)/MV.R;
 }
+/* 卡叠：每张卡都按自己的内容量高（不再拉手风琴——压在后面的只露一条抬头，
+   伸缩没人看得见，反倒让翻页时高度一直在动）。 */
+function mvHeightsDeck(){
+  var C=MV.cards,n=C.length;if(!n||!MV.full||MV.full.length!==n)return;
+  for(var i=0;i<n;i++){
+    var h=MV.full[i];
+    if(Math.abs((C[i].h||0)-h)>=1){C[i].el.style.height=h+'px';C[i].h=h;}
+  }
+}
 function mvSeg(i){                                 /* 第 i 段到下一段的弧角（闭环，末段接回首段） */
   var A=MV.ang,n=MV.n;
   return (i<n-1?A[i+1]-A[i]:MV.tot-A[n-1])||1e-6;
@@ -11372,7 +11400,24 @@ function mvPosFromRot(r){                          /* 反解：拖动按角度�
      f    退后之后端部收窄到中线的几成 = P / (P+sag)
    端部的收窄是真透视：同一块面，退后的地方在屏幕上就是窄。
    矮的侧卡占弧小、sag 近乎零，本来就该几乎是平的——这是对的，不是没生效。 */
-function mvShell(C,w,h,R,P,a){
+function mvShell(C,w,h,R,P,a,curve){
+  if(!curve){                                   /* 卡叠：面是平的，一只规规矩矩的方框 */
+    var k0=(w|0)+'x'+(h|0)+'-flat';
+    if(C.k===k0)return;
+    C.k=k0;
+    var x0=.5,x1=w-.5,t0=.5,t1=h-.5,bb=7;
+    C.p1.setAttribute('d','M'+x0+' '+t0+'H'+x1.toFixed(1)+'V'+t1.toFixed(1)+'H'+x0+'Z');
+    C.p1.setAttribute('stroke','rgba(236,236,232,.5)');C.p1.setAttribute('stroke-width','1');
+    C.p2.setAttribute('d','M'+x0+' '+(t0+bb)+'V'+t0+'H'+(x0+bb)
+      +'M'+(x1-bb).toFixed(1)+' '+t0+'H'+x1.toFixed(1)+'V'+(t0+bb)
+      +'M'+x1.toFixed(1)+' '+(t1-bb).toFixed(1)+'V'+t1.toFixed(1)+'H'+(x1-bb).toFixed(1)
+      +'M'+(x0+bb)+' '+t1.toFixed(1)+'H'+x0+'V'+(t1-bb).toFixed(1));
+    C.p2.setAttribute('stroke','var(--paper)');C.p2.setAttribute('stroke-width','1');
+    C.svg.setAttribute('viewBox','0 0 '+w.toFixed(1)+' '+h.toFixed(1));
+    C.fr.style.clipPath='none';
+    if(C.pad!==10){C.pad=10;C.body.style.left='10px';C.body.style.right='10px';}
+    return;
+  }
   var th=h/R, e=P-R;
   /* 站在胎内：卡的上下两端沿着内壁绕过来，离眼比中线更近，投影因此更宽。
      f = 端宽 / 腰宽 = (e+R) / (e + R·cos(θ/2)) > 1 —— 腰细端宽。
@@ -11416,7 +11461,46 @@ function mvShell(C,w,h,R,P,a){
     pts.push((cx-hw).toFixed(1)+'px '+(ym+pp*(h/2-.5)).toFixed(1)+'px');}
   C.fr.style.clipPath='polygon('+pts.join(',')+')';
 }
+/* 卡叠：正前那张平摊在最前，其余的按远近一层层往后退，各自只露出抬头的一条。
+   没有任何旋转——面是平的，纵深全由「退后＋缩小＋压暗」给。翻页就是这一叠往上或
+   往下走一格，和切换视窗一个道理。 */
+function mvDeck(){
+  mvHeightsDeck();
+  var n=MV.n,P=MV.P||1500,DZ=MV.dz||120,PEEK=MV.peek||34,C0=MV.cards;
+  var ia=((Math.floor(MV.pos)%n)+n)%n, ib=(ia+1)%n, fr=MV.pos-Math.floor(MV.pos);
+  var hF=(C0[ia].h||1)*(1-fr)+(C0[ib].h||1)*fr;      /* 正前那张此刻的高度 */
+  for(var i=0;i<n;i++){
+    var C=C0[i],d=i-MV.pos;
+    if(d>n/2)d-=n;else if(d<-n/2)d+=n;               /* 环是闭的，取绕得近的那一边 */
+    /* 六段的时候「正对面」那一张恰好落在 k=n/2 的翻边上：pos 抖动千分之一，
+       它就在最上和最下之间来回跳。收卡阈值压到 2.55，让它在跳之前就已经淡没了。 */
+    var k=Math.abs(d),hid=(k>2.55);
+    if(hid){C.el.style.visibility='hidden';C.el.style.opacity='0';
+      C.el.style.transform='translate(-50%,-50%) scale(0)';C.el.style.pointerEvents='none';continue;}
+    var z=-DZ*k, S=P/(P+DZ*k), h=C.h||1;
+    /* 露头的那条边：k=0 居中，k=1 退到正前那张的上／下沿外，再往后每张挪 PEEK。 */
+    var edge=(d>0?(hF/2-4):(-hF/2-PEEK+4));
+    var t=Math.min(1,k);
+    var Tr=(-h*S/2)*(1-t)+edge*t+PEEK*Math.max(0,k-1)*(d>0?1:-1);
+    var y=(Tr+h*S/2)/S;                              /* 由渲染后的上沿反解世界坐标的卡心 */
+    if(C.w!==MV.cw){C.w=MV.cw;C.el.style.width=MV.cw+'px';}
+    mvShell(C,MV.cw||1,h,MV.R,P,0,false);
+    C.el.style.transform='translate(-50%,-50%) translateY('+y.toFixed(1)+'px) translateZ('+z.toFixed(1)+'px)';
+    C.el.style.visibility='visible';
+    C.el.style.opacity=clamp01((2.55-k)/1.15).toFixed(3);
+    C.el.style.pointerEvents=(k<2.4)?'auto':'none';
+    C.fr.style.filter='brightness('+(1-Math.min(.42,k*.15)).toFixed(3)+')';
+    C.shade.style.background='rgba(0,0,0,'+Math.min(.5,k*.17).toFixed(3)+')';
+    C.shade.style.opacity='1';
+    C.ghost.style.opacity=clamp01(k*1.6-.55).toFixed(3);
+    /* 压在后面那几张只当「抬头」看，正文淡下去——不然底下那张露出的两百像素正文
+       和正前这张的正文混在一起，一眼分不清哪段是哪段。 */
+    C.body.style.opacity=clamp01(1.02-k*.66).toFixed(3);
+    C.el.classList.toggle('on',k<.5);
+  }
+}
 function mvLayout(){
+  if(MV.mode!==2)return mvDeck();
   mvHeights();
   var R=MV.R,rot=mvRot(),DEG=180/Math.PI,T=MV.tot||6.283;
   var half=T*DEG/2;                       /* 环的半圈：绕过这里就该从另一头接上了 */
@@ -11441,7 +11525,7 @@ function mvLayout(){
       var mag=P0/Math.max(1,P0-R*(1-c));
       var wq=Math.max(60,Math.round((MV.cw||C.el.clientWidth)/Math.pow(mag,.8)/2)*2);
       if(C.w!==wq){C.w=wq;C.el.style.width=wq+'px';}
-      mvShell(C,wq,C.h||1,R,P0,a);
+      mvShell(C,wq,C.h||1,R,P0,a,true);
     }
     /* 明暗按曲面算，不是给平板糊一层渐变：光从轮心来，面上某一点的明暗取决于
        那一点的法线偏离视线多少，也就是 cos(卡的角度 + 该点在卡内的弧偏移)。
@@ -11486,7 +11570,7 @@ function mvRailDraw(){
 function mvBgDraw(now){
   if(!MV.bgx)return;
   var W=MV.bg.width,H=MV.bg.height;if(!(W>1&&H>1))return;
-  try{terrainPaint(MV.bgx,W,H,now,mvRot()*420,0,.55);}catch(_){}
+  try{terrainPaint(MV.bgx,W,H,now,(MV.mode===2?mvRot()*420:MV.pos*230),0,.55);}catch(_){}
 }
 function mvTick(){
   MV.raf=0;
