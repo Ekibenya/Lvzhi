@@ -374,7 +374,12 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
 /* 正文区顶到 0：让文字从毛玻璃顶栏底下滚过去。若仍从 46px 开始，顶栏后面永远是空的，
    毛玻璃就没有任何东西可以模糊，等于白做。首行由 .gNarr 自己的 padding-top 推开。 */
 #game .gMain{position:absolute;left:64px;right:calc(322px*var(--ui));top:0;bottom:0;display:flex;flex-direction:column}
-#game.mvFree .gMain{right:calc(104px*var(--ui))}   /* 情报台摊开成台前调度：正文只让最右那一列 */
+/* 情报台摊开成台前调度之后，正文让出的这一条就是「窗 + 缩略列」正好占满的那一块。
+   宽度由 JS 按当下的窗宽算出来写进 --mvGut：三维与正文都在这条线左边收住，
+   窗与缩略列都在这条线右边站着，谁也不压谁。 */
+#game.mvFree .gMain{right:calc(var(--mvGut,322px)*var(--ui))}
+#game.mvFree #pnTx{right:calc(var(--mvGut,322px)*var(--ui))}
+#game.mvFree #arrTx{right:calc(var(--mvGut,322px)*var(--ui) + 10px)}
 #game .gNarr{flex:1;overflow-y:auto;padding:calc(46px*var(--ui) + 36px) 7% 118px;font-size:13px;line-height:2.2;
       letter-spacing:.06em;color:#c8c8c2;background:transparent}
 #game .gNarr p{margin-bottom:1.5em}
@@ -1076,7 +1081,7 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
    .gMfd 只当一层透明的容器，山脉底与暗角也停掉（它们会盖住正文）。
    容器本身不接点击（pointer-events:none），只有卡自己接——不然一大片透明层
    会把正文的选字、点按全吃掉。 */
-#game .gMfd.mvDeck{background:transparent !important;border-left:0;width:min(52vw,660px);
+#game .gMfd.mvDeck{background:transparent !important;border-left:0;width:min(56vw,680px);
       overflow:visible;padding:0;pointer-events:none}
 .gMfd.mvDeck .mvBg,.gMfd.mvDeck .mvVig,.gMfd.mvDeck .mvRail{display:none}
 .gMfd.mvDeck .mvStage{left:0;right:0;overflow:visible;pointer-events:none}
@@ -11331,14 +11336,21 @@ function mvSize(){
      正前那张放开到 0.70 台高（够读，超出的才滚），转开的那几张收到 0.26 台高，
      于是它们贴得近、斜得狠、还看得见内容，环的形状一眼就出来了。
      高度按离正前的距离连续插值，不是到位才跳：转的过程本身就是伸缩的过程。 */
-  /* 缩略窗尺寸：竖排 n 枚要在台高之内站得下，同时封在 46~76px 之间。 */
-  MV.tw=Math.max(46,Math.min(76,Math.round(W*.19)));
-  MV.th=Math.round(MV.tw*.68);
-  MV.tgap=8;
+  /* 缩略窗尺寸：竖排 n 枚要在台高之内站得下，同时封在 40~50px 之间。
+     它是「让出来那一条」的一部分，占宽越小，留给正文窗的越多。 */
+  MV.tw=Math.max(40,Math.min(50,Math.round(W*.07)));
+  MV.th=Math.round(MV.tw*.70);
+  MV.tgap=6;
   var _cn=Math.max(1,MV.cards.length);
-  while(_cn*(MV.th+MV.tgap)>H-24&&MV.th>26){MV.tw-=3;MV.th=Math.round(MV.tw*.68);}
+  while(_cn*(MV.th+MV.tgap)>H-20&&MV.th>22){MV.tw-=3;MV.th=Math.round(MV.tw*.70);}
+  /* 让出来那一条＝原来情报台那一栏，还是 322，一寸不多要。
+     窗与缩略列在这条里紧贴着排，缝只留 2px；三维与正文照这条线收边，
+     稍微收一点就正好放得下。 */
+  MV.marg=2;
+  MV.gut=Math.max(240,Math.min(322,W-24));
+  try{gEl.style.setProperty('--mvGut',MV.gut+'px');}catch(_){}
   /* 整扇窗在台上，缩略列不再从它头上占位：上限只受台高约束。 */
-  var maxH=(mvMode()===2)?Math.max(150,Math.round(H*.68)):Math.max(180,H-24);
+  var maxH=(mvMode()===2)?Math.max(150,Math.round(H*.68)):Math.max(180,H-12);
   var minH=104,PADY=43;   /* PADY＝正文上下内距＋两条 1px 内衬 */
   /* 侧卡收到一条边的高度：屏幕上下总共就这么点地方，侧卡越矮，同屏能站的段数越多，
      弧面上每寸屏幕转过的角度也越大——「在轮子里看轮圈」靠的就是这个。 */
@@ -11524,33 +11536,23 @@ function mvDeck(){
        · 被点的那一段离开自己的格子，飘到左边、长成一扇整窗（与左边三扇抽屉同一种「请到台上」）。
      它原来的格子就空着——那扇窗此刻在台上，本来就不该还在缩略列里。
      深度不靠 translateZ，靠「尺寸 + 倾角 + 压暗」，免得又变成广角哈哈镜。 */
-  var SW=MV.w||320,SH=MV.h||600,MARG=8;
-  var TW=MV.tw||60,TH=MV.th||42,STEP=TH+(MV.tgap==null?8:MV.tgap);
-  /* 上台那扇窗别把整个右半屏吃掉：宽度取台宽的六成二，并封在 340~470 之间，
-     比原来那一栏（322）宽一圈，读起来舒服，又不至于把三维和正文一起盖住。 */
-  var winW=Math.max(300,Math.min(470,Math.max(340,Math.round(SW*.62)),SW-TW-MARG*3-6));
-  /* 三维那一带与情报台互相让一点：窗顶落在三维画面的下沿之下，谁也不压谁。
-     三维收起／展开时高度会变，所以每帧照它当下的位置算，不写死。 */
-  var topPad=10;
-  try{
-    var _tx=document.getElementById('pnTx');
-    if(_tx&&MV.stage){
-      var _tr=_tx.getBoundingClientRect(),_sr=MV.stage.getBoundingClientRect();
-      if(_tr.height>4)topPad=Math.max(10,Math.min(SH*.6,Math.round(_tr.bottom-_sr.top)+10));
-    }
-  }catch(_){}
-  var winMax=Math.max(180,SH-topPad-10);
-  var thumbX=SW/2-TW/2-MARG;                       /* 缩略位：右缘 */
-  var winX=-SW/2+winW/2+MARG;                      /* 台上位：左缘 */
+  var SW=MV.w||320,SH=MV.h||600,MARG=MV.marg||6;
+  var TW=MV.tw||52,TH=MV.th||36,STEP=TH+(MV.tgap==null?7:MV.tgap);
+  var GUT=MV.gut||322;
+  /* 窗正好嵌进「让出来那一条」：右边挨着缩略列，左边挨着正文的收边线，
+     上下把这一条填满。三维与正文都在收边线左侧，所以一寸都不会被盖住。 */
+  var winW=Math.max(180,GUT-TW-MARG*3);
+  var winMax=Math.max(160,SH-MARG*2);
+  var thumbX=SW/2-TW/2-MARG;                       /* 缩略位：最右缘 */
+  var winX=SW/2-TW-MARG*2-winW/2;                  /* 台上位：紧挨缩略列左边 */
   var y0=-(n-1)*STEP/2;
   for(var i=0;i<n;i++){
     var C=C0[i],d=i-MV.pos,k=Math.abs(d),w=clamp01(1-k),thumb=(k>.5);
     var W=Math.round(TW+(winW-TW)*w);
-    var Hw=Math.min(MV.full[i],winMax);
+    var Hw=winMax;                                 /* 上台就把这一条填满，不按内容缩 */
     var H=Math.round(TH+(Hw-TH)*w);
     var x=thumbX+(winX-thumbX)*w;
-    var yWin=topPad+Hw/2-SH/2;                     /* 上台位：贴着三维下沿往下摆 */
-    var y=(y0+i*STEP)*(1-w)+yWin*w;
+    var y=(y0+i*STEP)*(1-w);                       /* 上台即归中 */
     var rot=17*(1-w);
     if(C.w!==W){C.w=W;C.el.style.width=W+'px';}
     if(Math.abs((C.h||0)-H)>=1){C.h=H;C.el.style.height=H+'px';}
