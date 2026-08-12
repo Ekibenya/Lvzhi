@@ -3113,7 +3113,8 @@ menuSize();
 function menuEnter(){MENU.gen=(MENU.gen||0)+1;MENU.exiting=false;MENU.on=true;MENU.t0=performance.now();menuScatter();
   /* 菜单期间把选局环 DOM 全部收起：淡入过程不再透出残留画面 */
   $('#stage').style.display='none';$('#rail').style.display='none';$('#mission').style.display='none';try{$('#luxTg').style.display='none';}catch(_){}
-  var mc=$('#miCont');if(mc)mc.style.display=(GAME.op?'':'none'); /* 有局在身才给「继续游戏」 */
+  /* 有局在身才给「继续游戏」——内存里的这一局，或本机存着的上一局，都算。 */
+  var mc=$('#miCont');if(mc)mc.style.display=((GAME.op||autoGet())?'':'none');
   mOv.classList.add('show');}
 function menuExit(){
   if(MENU.exiting)return;MENU.exiting=true;
@@ -4461,12 +4462,17 @@ function lsClose(){LS.on=false;cancelAnimationFrame(LS.raf);$('#lineSel').classL
 })();
 /* 网页版隐藏世界书里的艳后卷页签 */
 try{if(linesEnabled().indexOf('cleo')<0){var _tb=document.querySelector('.cxTab[data-side="cleo"]');if(_tb)_tb.style.display='none';}}catch(_){}
-$('#miCont').addEventListener('pointerup',function(e){e.stopPropagation();if(GAME.op)gameShow();});
+$('#miCont').addEventListener('pointerup',function(e){
+  e.stopPropagation();
+  if(GAME.op){gameShow();return;}      /* 本次会话里就有局：直接回去 */
+  var v=autoGet();if(!v)return;        /* 刷新过／重开过：从本机把上一局读回来 */
+  try{svLoad(v);}catch(_){}
+});
 $('#miOrac').addEventListener('pointerup',function(e){e.stopPropagation();apiOpen();});
 $('#miArch').addEventListener('pointerup',function(e){e.stopPropagation();svOpen();});
 
 /* ================= game stage: Ghost layout in ROME dress ================ */
-var BUILD=79;
+var BUILD=80;
 /* 地图初始朝向。原来是 15°E（罗马那边）——这是从罗马那一版继承下来的，
    在秦这一版里一打开地图看到的是欧洲，中国被挤在球体右缘。
    球心画在画布最左缘（cx=gmW*.04），所以可视带约是 lonC ~ lonC+90°，
@@ -4511,6 +4517,8 @@ function gameShow(){
   var gb=$('#game .gBrand');if(gb&&gb.textContent.indexOf('·B')<0)gb.textContent+='  ·B'+BUILD;
   /* 进局即乐起（首曲 Fons Vitae）；被浏览器拦截则首次点按时补放。玩家手动暂停过则不再自作主张 */
   try{if(typeof BGM!=='undefined'&&!BGM.a)bgmPlay(0);}catch(_){}
+  /* 进局即落一份：只看了开场就关掉页面，回来也还在这一局 */
+  setTimeout(function(){try{autoSave(1);}catch(_){}},1200);
   $('#stage').style.display='none';$('#rail').style.display='none';$('#mission').style.display='none';try{$('#luxTg').style.display='none';}catch(_){}
   setTimeout(gmapSize,80);
 }
@@ -11163,6 +11171,30 @@ function svSnap(){
     })(),
     turns:TURNS.slice(-200)};
 }
+/* ── 续局：正在玩的这一局连续写进本机 ──────────────────────────
+   「继续游戏」原来只认内存里的 GAME.op：退回菜单还在，一刷新／关掉重开就没了，
+   玩家只剩「开始」一条路，等于上一局白玩。这里按存档同一份快照（svSnap）落盘，
+   开菜单时若内存里没有局、本机有这一份，照样把「继续游戏」亮出来。
+   写入时机：每 20 秒一次（内容没变就不写）、页面隐藏／关闭时补一次、进局时先落一份。
+   BUSY（正文正在流式输出）时不写——半截的一幕不该成为回来时的起点。 */
+var AUTOK='rome_auto';
+function autoSave(force){
+  if(!GAME.on||!GAME.op)return;
+  if(BUSY&&!force)return;
+  var sig=TURNS.length+'|'+(TURNS.length?(TURNS[TURNS.length-1].t||0):-1);
+  if(!force&&autoSave._sig===sig)return;
+  var v;try{v=svSnap();}catch(_){return;}
+  if(!v||typeof v.html!=='string')return;
+  if(lsSet(AUTOK,JSON.stringify(v)))autoSave._sig=sig;
+}
+function autoGet(){
+  try{var v=JSON.parse(localStorage.getItem(AUTOK)||'null');
+      return (v&&typeof v==='object'&&typeof v.html==='string'&&Array.isArray(v.turns))?v:null;}
+  catch(_){return null;}
+}
+ivl(function(){autoSave();},20000);
+addEventListener('pagehide',function(){autoSave(1);});
+addEventListener('visibilitychange',function(){if(document.hidden)autoSave(1);});
 function svLoad(v){
   TYPE_GEN++;BUSY=false;
   try{GENIVS.reset();}catch(_){}      /* 换局＝换底：先把上一局的 carry-forward 清干净 */
