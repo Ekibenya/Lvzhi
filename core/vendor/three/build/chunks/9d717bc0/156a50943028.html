@@ -4001,6 +4001,9 @@ function linesEnabled(){
 var LS_META={
   luzhi:{tag:'LVZHI',name:'四丈之内 · 猫娘吕雉',sub:'前221–前210 · 咸阳 —— 她在四丈之内，他就不死',draw:'hall'}};
 var LS={on:false,raf:0,cards:[]};
+/* 聚形时长。原来 2600ms、粒子起步还各自随机拖 0~650ms，合计能到三秒多——
+   很多人一进来就点过去了，压根没看见楼起来。收到 1100ms，起步错开也收到 0~260ms。 */
+var LS_ASM=1100;
 /* 三座构筑物的 3D 点云——与选局环罗马柱（colPts/columnDraw）同一套语言：
    单位空间 y∈0..1，绕竖轴自转，透视 F=2.6，金尘配色，聚形-悬停两段式。 */
 function lsPts(kind){
@@ -4164,7 +4167,7 @@ function lsSeed(c){
   c.cur=[];
   for(var k=0;k<c.pts.length;k++){var p=c.pts[k];
     c.cur.push({x:p.x+(Math.random()-.5)*1.5,y:p.y+(Math.random()-.5)*1.5,
-                z:p.z+(Math.random()-.5)*1.5,delay:Math.random()*650});}
+                z:p.z+(Math.random()-.5)*1.5,delay:Math.random()*260});}
   c.t0=performance.now();
 }
 function lsLayout(){
@@ -4205,7 +4208,13 @@ function lsTick(){
     if(parseFloat(c.el.style.opacity)<=0)return;
     var g=c.g,W=c.cv.width,H=c.cv.height,cx=W/2,cy=H/2;
     var S=H*(c.kind==='pyramid'?.72:.80),F=2.6,dpr=c.dpr||1;
-    var rot=-c.d*.85+now*.00028;
+    /* 转角：正面起步，聚形完成之后才开始慢慢转。
+       原来写的是 now*.00028——now 是页面打开至今的绝对毫秒数，
+       于是聚形结束时停在哪个角度全看用户在前面停留了多久，多半停在侧面。
+       改成从这张卡自己的 t0 起算；再加一个 π——几何上正面（有陛那一面）在 +z，
+       而 rot=0 时 +z 是背对镜头的，转半圈才是正脸。 */
+    var asm0=now-c.t0,done0=asm0>LS_ASM;
+    var rot=Math.PI-c.d*.85+(done0?(asm0-LS_ASM)*.00022:0);
     var ca=Math.cos(rot),sa=Math.sin(rot);
     g.clearRect(0,0,W,H);
     var gy=cy+S*.50;
@@ -4214,10 +4223,10 @@ function lsTick(){
     g.beginPath();g.ellipse(cx,gy,S*.50,S*.115,0,0,Math.PI*2);g.stroke();
     g.setLineDash([]);
     g.globalCompositeOperation='lighter';
-    var asm=now-c.t0,settled=asm>2600;
+    var asm=asm0,settled=done0;
     for(var k=0;k<c.pts.length;k++){
       var p=c.pts[k],q=c.cur[k];
-      if(!settled){var kk=(asm>q.delay)?.085:.012;
+      if(!settled){var kk=(asm>q.delay)?.15:.02;      /* 归位速度从 .085 提到 .15 */
         q.x+=(p.x-q.x)*kk;q.y+=(p.y-q.y)*kk;q.z+=(p.z-q.z)*kk;}
       else{q.x=p.x;q.y=p.y;q.z=p.z;}
       var x=q.x+Math.sin(now*.0011+k*1.7)*.0022,y=q.y,z=q.z+Math.cos(now*.0009+k)*.0022;
