@@ -826,7 +826,30 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
 .sRow{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px 40px;
       border-bottom:1px solid rgba(236,236,232,.12);padding:13px 0;font-size:9px;
       letter-spacing:.24em;color:var(--mut)}
-.sRow input[type=range]{width:150px;accent-color:#c99b3f}
+.sRow /* 拉条：原来只给了一句 accent-color，其余全是浏览器默认——圆头胶囊、圆滑轨道，
+   跟全站这套直角冷线完全不是一路。自绘一套：1px 细轨、方头把手、走过的一段填金。
+   已走过那一段没有跨浏览器的伪元素可用（::-moz-range-progress 只有 Firefox 有），
+   所以用输入框自己的背景画一条渐变，分界点由 --rv（0–1）给，值变了就由脚本刷新。 */
+input[type=range]{-webkit-appearance:none;appearance:none;width:150px;height:16px;margin:0;
+      cursor:pointer;border:0;padding:0;
+      background:linear-gradient(90deg,var(--gold) 0 calc(var(--rv,0)*100%),
+                 rgba(236,236,232,.26) calc(var(--rv,0)*100%) 100%) no-repeat center/100% 1px}
+input[type=range]:focus{outline:none}
+input[type=range]::-webkit-slider-runnable-track{height:1px;background:transparent;border:0}
+input[type=range]::-moz-range-track{height:1px;background:transparent;border:0}
+input[type=range]::-moz-range-progress{height:1px;background:transparent}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+      width:8px;height:14px;margin-top:-6.5px;border:0;border-radius:0;
+      background:var(--gold);box-shadow:0 0 0 1px rgba(6,6,6,.85)}
+input[type=range]::-moz-range-thumb{width:8px;height:14px;border:0;border-radius:0;
+      background:var(--gold);box-shadow:0 0 0 1px rgba(6,6,6,.85)}
+input[type=range]:hover::-webkit-slider-thumb,
+input[type=range]:active::-webkit-slider-thumb{background:var(--gold-hi)}
+input[type=range]:hover::-moz-range-thumb,
+input[type=range]:active::-moz-range-thumb{background:var(--gold-hi)}
+input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var(--gold-hi)}
+input[type=range]:focus-visible::-moz-range-thumb{box-shadow:0 0 0 1px var(--gold-hi)}
+input[type=range]:disabled{opacity:.4;cursor:default}
 .sSeg{display:flex;flex-wrap:wrap;gap:4px} /* 选项多时换行，永不被右缘裁切 */
 .sSeg span{border:1px solid rgba(236,236,232,.2);padding:5px 12px 4px;cursor:pointer;font-size:9px;
       letter-spacing:.18em;color:var(--mut);transition:all .2s}
@@ -4443,7 +4466,7 @@ $('#miOrac').addEventListener('pointerup',function(e){e.stopPropagation();apiOpe
 $('#miArch').addEventListener('pointerup',function(e){e.stopPropagation();svOpen();});
 
 /* ================= game stage: Ghost layout in ROME dress ================ */
-var BUILD=78;
+var BUILD=79;
 /* 地图初始朝向。原来是 15°E（罗马那边）——这是从罗马那一版继承下来的，
    在秦这一版里一打开地图看到的是欧洲，中国被挤在球体右缘。
    球心画在画布最左缘（cx=gmW*.04），所以可视带约是 lonC ~ lonC+90°，
@@ -4673,6 +4696,7 @@ function gmapDraw(){
   if(gmW<4){gmapSize();if(gmW<4)return;}
   if(!GAME.drag){GAME.lon+=GAME.vel+((REDUCED||GAME.hov)?0:.00022);GAME.vel*=.94;}
   var cx=gmW*.04,cy=gmH*.5,R=Math.min(gmH*.72,gmW*.98)*(GAME.zoom||1);
+  GAME.gmGeo={cx:cx,cy:cy,R:R};        /* 缩略窗要照这个几何裁，不能整幅硬塞 */
   var lonC=GAME.lon,tilt=(GAME.tilt==null?.42:GAME.tilt),ctl=Math.cos(tilt),stl=Math.sin(tilt);
   var cs=Math.cos(lonC),sn=Math.sin(lonC);
   var eraRed=ERA.year>=-27&&ERA.year<=395;
@@ -7524,6 +7548,20 @@ function applyGlass(){
     +'{background:rgba(6,6,6,'+(.09+.19*a).toFixed(2)+') !important}';
 }
 applyGlass();
+/* 拉条走过的那一段是用背景渐变画的，分界点存在 --rv 里；这里统一喂值。
+   捕获期监听盖住全站所有 range（含三维营造台里现搭的那几条），
+   再定期补一遍——有些条的值是程序改的，不经过 input 事件。 */
+(function(){
+  function rv(el){
+    var mn=parseFloat(el.min)||0,mx=(el.max===''?100:parseFloat(el.max)),v=parseFloat(el.value)||0;
+    el.style.setProperty('--rv',(mx>mn?Math.max(0,Math.min(1,(v-mn)/(mx-mn))):0).toFixed(4));
+  }
+  function all(){try{var L=document.querySelectorAll('input[type=range]');for(var i=0;i<L.length;i++)rv(L[i]);}catch(_){}}
+  function hit(e){if(e.target&&e.target.tagName==='INPUT'&&e.target.type==='range')rv(e.target);}
+  document.addEventListener('input',hit,true);
+  document.addEventListener('change',hit,true);
+  all();ivl(all,1200);
+})();
 $('#cfgGlass').value=SET.glass;
 var glassRaf=0;
 $('#cfgGlass').addEventListener('input',function(){SET.glass=+this.value;
@@ -12307,7 +12345,22 @@ function railMapThumb(){
   if(!(src.width>1)||!(src.height>1))return;
   var g=c.getContext('2d');if(!g)return;
   g.clearRect(0,0,c.width,c.height);
-  try{g.drawImage(src,0,0,c.width,c.height);}catch(_){}
+  /* 原来是把整幅地图画布硬塞进 128×88。地图那块是竖的（面板 476×810 之类），
+     塞进一个 1.45:1 的框里，横向被拉开一倍多——地球就成了压扁的椭圆。
+     改成先按缩略窗的比例在源画布上裁一块（以地球心为中心、越界就贴边），
+     再等比画过去：两轴缩放系数相同，圆还是圆。 */
+  var ar=c.width/c.height,geo=GAME.gmGeo,sx,sy,sw,sh;
+  if(geo&&geo.R>1){
+    sh=Math.min(src.height,geo.R*2*1.18);
+    sw=sh*ar;
+    if(sw>src.width){sw=src.width;sh=sw/ar;}
+    sx=Math.max(0,Math.min(src.width-sw,geo.cx-sw/2));
+    sy=Math.max(0,Math.min(src.height-sh,geo.cy-sh/2));
+  }else{                                /* 还没画过：退回居中等比裁 */
+    var s=Math.max(c.width/src.width,c.height/src.height);
+    sw=c.width/s;sh=c.height/s;sx=(src.width-sw)/2;sy=(src.height-sh)/2;
+  }
+  try{g.drawImage(src,sx,sy,sw,sh,0,0,c.width,c.height);}catch(_){}
 }
 /* 三维那一枚的微缩。三维是 WebGL，宿主没开 preserveDrawingBuffer，
    合成一过缓冲就被清了——在主循环里 drawImage 过去多半是一片黑。
