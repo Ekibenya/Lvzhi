@@ -1088,21 +1088,12 @@ html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx
 #pnTx::after{content:'';position:absolute;inset:0;z-index:3;pointer-events:none;
       background:linear-gradient(180deg,rgba(6,6,6,.20) 0%,rgba(6,6,6,0) 40%,rgba(10,8,5,.22) 100%);
       box-shadow:inset 0 0 48px rgba(0,0,0,.30)}
-/* 画面里那几枚小片（地名、年号、营造、关闭）是引擎用内联样式写死的棕褐调，
-   和全站那副玻璃不是一套。按内联样式的子串精确接管——只认它默认那个底色，
-   不碰别的元素。引擎把底色改成金色高亮时，属性里这段就没了，规则自动让位，
-   它的激活反馈照旧生效。两个引擎各有一套底色，都列上。 */
-/* 子串要按「序列化之后」的写法来：浏览器读回 style 属性时会补空格、
-   把 .42 写成 0.42（rgba(24, 18, 11, 0.42)）。按源码里那种紧凑写法去匹配，
-   一条都命不中——这一版就是这么白改了一轮。两种写法都列上，谁在都能接住。 */
-#pnTx [style*="rgba(24, 18, 11"],#pnTx [style*="rgba(24,18,11"],
-#pnTx [style*="background: rgba(6, 6, 6"],#pnTx [style*="background:rgba(6,6,6"]{
-      background:rgba(6,6,6,.78) !important;
-      border-color:rgba(236,236,232,.20) !important;
-      -webkit-backdrop-filter:blur(9px) saturate(140%) !important;
-              backdrop-filter:blur(9px) saturate(140%) !important;
-      box-shadow:0 6px 18px rgba(0,0,0,.45) !important;
-      color:#d9d9d4 !important}
+/* 画面里那几枚小片（地名、年号、营造、关闭、营造台整套）以前是引擎自带的棕褐圆角，
+   和全站这副方角冷玻璃不是一套。上一版用内联样式子串在这里粗暴接管，一律压成
+   同一个底色，激活态、危险态也一并压平了。现在改成在引擎里按记号换色——
+   底色走 rgba(6,6,6,*)、边框走 rgba(236,236,232,.22)、激活走 rgba(201,155,63,*)、
+   圆角一律归零，与另一台引擎（8e2ad10c77b4）早先换好的那一套完全对齐。
+   源头对了，这里就不该再有覆盖规则——留着反而把引擎分好的层级又抹平。 */
 #game.tx2 #pnTx{height:min(58vh,540px)}
 /* 最大那一档是真全屏：左右各留 10px、上下也各留 10px，正文与情报台全盖住。
    小窗自己 z-index 34、画面 25，盖不着——退出全屏就靠再点它一下。
@@ -4398,7 +4389,7 @@ $('#miOrac').addEventListener('pointerup',function(e){e.stopPropagation();apiOpe
 $('#miArch').addEventListener('pointerup',function(e){e.stopPropagation();svOpen();});
 
 /* ================= game stage: Ghost layout in ROME dress ================ */
-var BUILD=68;
+var BUILD=69;
 /* 地图初始朝向。原来是 15°E（罗马那边）——这是从罗马那一版继承下来的，
    在秦这一版里一打开地图看到的是欧洲，中国被挤在球体右缘。
    球心画在画布最左缘（cx=gmW*.04），所以可视带约是 lonC ~ lonC+90°，
