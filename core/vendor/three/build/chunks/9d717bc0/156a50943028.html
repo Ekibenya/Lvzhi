@@ -599,6 +599,10 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
         padding-bottom:0 !important;pointer-events:none}
   #game .gMfd.mvDeck .mvWin.on{opacity:0;pointer-events:none}
   #game.mvOpen .gMfd.mvDeck .mvWin.on{opacity:1;pointer-events:auto}
+  /* 手机上金边＝「这一扇开着」。窗收起来之后 .on 还留在那一枚上（它仍是当前段），
+     金边就成了没有窗的空亮。收起时把边框退回常态，开着才亮。 */
+  #game:not(.mvOpen) .gMfd.mvDeck .mvCard.on .cfr{border-color:rgba(236,236,232,.30) !important}
+  #game:not(.mvOpen) .gMfd.mvDeck .mvCard.on .ic{border-color:rgba(236,236,232,.34) !important;background:#0a0a0a !important}
   /* ▲▼／列表那一条是分页时代留下的：现在点缩略窗就能切段，它只会和输入行打架。撤掉。 */
   .gMfd.mvDeck .mvFoot{display:none !important}
   /* 输入层原来为了让开底部胶囊留了 34px；胶囊已经撤了，这一段跟着收回来，
@@ -4394,7 +4398,7 @@ $('#miOrac').addEventListener('pointerup',function(e){e.stopPropagation();apiOpe
 $('#miArch').addEventListener('pointerup',function(e){e.stopPropagation();svOpen();});
 
 /* ================= game stage: Ghost layout in ROME dress ================ */
-var BUILD=66;
+var BUILD=67;
 /* 地图初始朝向。原来是 15°E（罗马那边）——这是从罗马那一版继承下来的，
    在秦这一版里一打开地图看到的是欧洲，中国被挤在球体右缘。
    球心画在画布最左缘（cx=gmW*.04），所以可视带约是 lonC ~ lonC+90°，
