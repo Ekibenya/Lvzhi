@@ -221,9 +221,11 @@ canvas{display:block}
 #eraHud b{display:block;font-weight:400;font-size:19px;letter-spacing:.5em;color:var(--txt)}
 #eraHud span{display:inline-block;margin-top:12px;font-size:9px;letter-spacing:.32em;color:var(--mut)}
 #eraBox,#persona,#psRes{position:fixed;inset:0;z-index:82;display:none;align-items:center;
-      justify-content:center;background:rgba(4,4,4,.86)}
+      justify-content:center;background:rgba(4,4,4,.58)}
 #eraBox .box,#persona .box,#psRes .box{border:1px solid rgba(236,236,232,.4);padding:38px 46px;
-      min-width:340px;max-width:540px;background:var(--ink)}
+      min-width:340px;max-width:540px;
+      background:rgba(6,6,6,.55);box-shadow:0 18px 48px rgba(0,0,0,.55);
+      -webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%)}
 /* 场面窗压在人物面板之上：返回时人物面板原样还在后头，填好的名字不必重打 */
 #psRes{z-index:84;background:rgba(4,4,4,.92)}
 #psRes .box{width:min(calc(94vw/var(--ui)),540px);max-height:calc(92vh/var(--ui));overflow-y:auto}
@@ -661,9 +663,16 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
 .genBar .gbStop{flex:none;cursor:pointer;font-size:9px;letter-spacing:.18em;padding:5px 11px;
   border:1px solid rgba(200,64,46,.45);color:#c8402e}
 .genBar .gbStop:hover{border-color:#c8402e;box-shadow:0 0 9px rgba(200,64,46,.3)}
+/* 遮罩从 .86 减到 .58：窗体要换成半透明毛玻璃，身后压一层近乎不透的黑，
+   糊出来还是一片黑，等于白换。减薄之后底下的对局界面透得出来，玻璃才成立。
+   遮罩本身不加 backdrop-filter——带了它就成了子元素的「背景采样根」，
+   窗体的毛玻璃反而只能采到这一层空壳（情报台那六扇就是栽在这上面）。 */
 .gDlg{position:fixed;inset:0;z-index:86;display:none;align-items:center;justify-content:center;
-      background:rgba(4,4,4,.86)}
-.gDlg .box{border:1px solid rgba(236,236,232,.4);background:var(--ink);padding:34px 42px;
+      background:rgba(4,4,4,.58)}
+.gDlg .box{border:1px solid rgba(236,236,232,.4);
+      background:rgba(6,6,6,.55);box-shadow:0 18px 48px rgba(0,0,0,.55);
+      -webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%);
+      padding:34px 42px;
       min-width:min(calc(92vw/var(--ui)),360px);max-width:min(calc(94vw/var(--ui)),680px);max-height:calc(92vh/var(--ui));overflow:auto}
 /* 设置窗尺寸锁死：12 个页签内容长短不一，原本外框跟着内容伸缩，每切一页窗就跳一次。
    改成外框定高、标题与页签钉住，只有内容区自己滚。scrollbar-gutter 让滚动条常驻留白，
@@ -750,9 +759,11 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
 .svhud i{font-style:normal;color:var(--gold)}
 #svField{position:absolute;inset:0;z-index:2}
 .svFold{position:absolute;display:flex;align-items:center;gap:7px;padding:5px 10px 5px 6px;cursor:pointer;
-  background:rgba(6,6,6,.72);border:1px solid rgba(236,236,232,.30);white-space:nowrap;
+  -webkit-backdrop-filter:blur(9px) saturate(140%);backdrop-filter:blur(9px) saturate(140%);
+  background:rgba(6,6,6,.55);border:1px solid rgba(236,236,232,.30);white-space:nowrap;
   transform:translate(-50%,-50%);will-change:transform;transition:border-color .18s,background .18s}
-.svFold .tab{position:absolute;left:-1px;top:-7px;width:38%;height:7px;background:rgba(6,6,6,.72);
+.svFold .tab{position:absolute;left:-1px;top:-7px;width:38%;height:7px;background:rgba(6,6,6,.55);
+  -webkit-backdrop-filter:blur(9px) saturate(140%);backdrop-filter:blur(9px) saturate(140%);
   border:1px solid rgba(236,236,232,.30);border-bottom:0}
 .svFold .num{font-size:14px;font-weight:400;letter-spacing:.04em;color:rgba(220,220,215,.55);
   border:1px solid rgba(236,236,232,.22);padding:1px 5px 0}
@@ -928,8 +939,11 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
 #zjGraphSvg g.gph-sel .fd-fold>rect:first-child{stroke:#ecc878;stroke-opacity:1;stroke-width:1.6}
 #zjGraphSvg g.gph-sel .gph-nm{fill:#ecc878}
 .fd-ov,.fd-ov *{border-radius:0!important}
-.fd-ov{position:fixed;inset:0;z-index:2147481300;display:flex;align-items:center;justify-content:center;background:rgba(4,4,4,.86);font-family:var(--mono)}
-.fd-win{border:1px solid rgba(236,236,232,.4);background:#060606;padding:30px 36px 24px;width:min(92vw,430px);max-height:80vh;overflow-y:auto;color:#d9d9d4;font-family:var(--mono)}
+.fd-ov{position:fixed;inset:0;z-index:2147481300;display:flex;align-items:center;justify-content:center;background:rgba(4,4,4,.58);font-family:var(--mono)}
+.fd-win{border:1px solid rgba(236,236,232,.4);
+  background:rgba(6,6,6,.55);box-shadow:0 18px 48px rgba(0,0,0,.55);
+  -webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%);
+  padding:30px 36px 24px;width:min(92vw,430px);max-height:80vh;overflow-y:auto;color:#d9d9d4;font-family:var(--mono)}
 .fd-win h2{font-size:14px;letter-spacing:.3em;font-weight:400;color:#ecece8;margin:18px 0 6px}
 .fd-row{display:flex;gap:22px;font-size:12px;line-height:1.8;padding:11px 0;border-bottom:1px solid rgba(236,236,232,.12);letter-spacing:.04em}
 .fd-k{flex:0 0 74px;font-size:10px;letter-spacing:.24em;color:#9c9c98;padding-top:3px;white-space:nowrap}
@@ -7347,7 +7361,10 @@ function applyGlass(){
        线全被压掉，看着就是六块不透的黑板。同一根拉杆，系数减半。 */
     +'.gMfd.mvDeck .mvWin{background:rgba(6,6,6,'+(.04+.20*a).toFixed(2)+') !important}'
     /* 全屏档背后被自己盖满，透太多只会把正文透出来糊成一片，单给一档更实的 */
-    +'#game.txBig #pnTx{background:rgba(6,6,6,'+(.62+.34*a).toFixed(2)+') !important}';
+    +'#game.txBig #pnTx{background:rgba(6,6,6,'+(.62+.34*a).toFixed(2)+') !important}'
+    /* 弹窗类：身后隔着一层遮罩，比贴着画面的那几扇给厚一档 */
+    +'.gDlg .box,#eraBox .box,#persona .box,#psRes .box,.fd-win,.svFold,.svFold .tab'
+    +'{background:rgba(6,6,6,'+(.22+.42*a).toFixed(2)+') !important}';
 }
 applyGlass();
 $('#cfgGlass').value=SET.glass;
