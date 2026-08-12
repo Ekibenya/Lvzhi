@@ -552,7 +552,15 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
       background:rgba(6,6,6,.78);border:1px solid rgba(236,236,232,.20);
       box-shadow:0 14px 34px rgba(0,0,0,.5);
       backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
-      transform-origin:0% 50%;transform:translateX(-26px) scale(.955);opacity:0;pointer-events:none;
+      /* 与右边情报台那扇窗镜像：那边 rotateY(-10deg)，这边 +10deg，
+         正好各自朝着自己那一列缩略窗（左列 +17°、右列 −17°）的方向收。
+         perspective 写在 transform 里而不是给 #game——给 #game 加 perspective
+         会让它变成 fixed 子元素的包含块，整屏定位全要跟着塌。
+         gpFit：近的那条边被透视放大约 7.5%，照旧给足高度会顶穿上下，先缩回去。 */
+      --gpTilt:10deg;--gpFit:.93;
+      transform-origin:50% 50%;
+      transform:perspective(620px) translateX(-26px) scale(.955) rotateY(var(--gpTilt)) scaleY(var(--gpFit));
+      opacity:0;pointer-events:none;
       transition:transform .34s cubic-bezier(.2,.85,.25,1),opacity .26s ease;overflow:hidden}
 #pnMap{top:56px;bottom:10px}
 #pnArm{top:56px;bottom:10px}
@@ -564,7 +572,8 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
           mask-image:linear-gradient(180deg,#000 44%,transparent 100%)}
 
 #game.mapOpen #pnMap,#game.armOpen #pnArm,#game.shopOpen #pnShop{
-      transform:none;opacity:1;pointer-events:auto;z-index:33}
+      transform:perspective(620px) rotateY(var(--gpTilt)) scaleY(var(--gpFit));
+      opacity:1;pointer-events:auto;z-index:33}
 #pnShop{top:56px;bottom:10px}
 
 .shRow{display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid rgba(236,236,232,.07)}
@@ -4222,9 +4231,12 @@ var GAME={on:false,mapOpen:false,armOpen:false,place:null,dest:null,lon:15*Math.
           lx:0,moved:0,mx:-1e4,my:-1e4,hit:[]};
 var gEl=$('#game'),gmCv=$('#gmapCv'),gmc=gmCv.getContext('2d');
 var gmW=0,gmH=0;
-function gmapSize(){var r=gmCv.getBoundingClientRect();
-  if(r.width<4)return;
-  var w=Math.round(r.width*DPR),h=Math.round(r.height*DPR);
+/* 面板斜了之后 getBoundingClientRect 给的是投影后的外接框，比真尺寸小一圈；
+   拿它定画布分辨率会让整张地图糊掉。clientWidth/Height 是布局值，不受变换影响。 */
+function gmapSize(){
+  var cw=gmCv.clientWidth,chh=gmCv.clientHeight;
+  if(cw<4)return;
+  var w=Math.round(cw*DPR),h=Math.round(chh*DPR);
   if(gmCv.width===w&&gmCv.height===h)return;
   gmW=gmCv.width=w;gmH=gmCv.height=h;}
 function buildActs(y){
@@ -4531,6 +4543,36 @@ var GMP={},gmPin0=0,gmZoom0=1,gmMid0=null;   /* 多指登记：双指=捏合缩�
 function gmPts(){return Object.keys(GMP);}
 function gmDist(){var k=gmPts();var a=GMP[k[0]],b=GMP[k[1]];return Math.hypot(a.x-b.x,a.y-b.y);}
 function gmMid(){var k=gmPts();var a=GMP[k[0]],b=GMP[k[1]];return {x:(a.x+b.x)/2,y:(a.y+b.y)/2};}
+/* 面板一斜，「clientX − rect.left」这个线性映射就废了：外接框是投影后的，
+   而画布上的点还被透视除过一道，边上能差二三十像素——城池点半径才八到十一，
+   悬停会高亮错、点击会点空。这里按元素自己的变换矩阵反解回本地坐标。
+     局部点 (u,v,0,1) 经矩阵 M 得 (X,Y,Z,W)，屏幕点是 (X/W, Y/W)。
+     展开成两个未知数的线性方程组，2×2 直接解：
+       (m11 − sx·m14)·u + (m21 − sx·m24)·v = sx·m44 − m41
+       (m12 − sy·m14)·u + (m22 − sy·m24)·v = sy·m44 − m42
+   不写死角度与透视值，改哪个数都不用回来同步。 */
+function gmLocal(e){
+  var pn=document.getElementById('pnMap');
+  if(!pn){var r0=gmCv.getBoundingClientRect();return {x:e.clientX-r0.left,y:e.clientY-r0.top};}
+  var tf='';
+  try{tf=getComputedStyle(pn).transform||'';}catch(_){}
+  if(!tf||tf==='none'||tf.indexOf('matrix')<0){
+    var r1=gmCv.getBoundingClientRect();return {x:e.clientX-r1.left,y:e.clientY-r1.top};
+  }
+  var m;
+  try{m=new DOMMatrix(tf);}catch(_){m=null;}
+  if(!m){var r2=gmCv.getBoundingClientRect();return {x:e.clientX-r2.left,y:e.clientY-r2.top};}
+  var gr=gEl.getBoundingClientRect();
+  var W=pn.offsetWidth,H=pn.offsetHeight;
+  var ox=gr.left+pn.offsetLeft+W/2,oy=gr.top+pn.offsetTop+H/2;   /* 变换原点：面板未变换时的中心 */
+  var sx=e.clientX-ox,sy=e.clientY-oy;
+  var a11=m.m11-sx*m.m14,a12=m.m21-sx*m.m24,b1=sx*m.m44-m.m41;
+  var a21=m.m12-sy*m.m14,a22=m.m22-sy*m.m24,b2=sy*m.m44-m.m42;
+  var det=a11*a22-a12*a21;
+  if(!det||!isFinite(det)){var r3=gmCv.getBoundingClientRect();return {x:e.clientX-r3.left,y:e.clientY-r3.top};}
+  var u=(b1*a22-a12*b2)/det,v=(a11*b2-b1*a21)/det;
+  return {x:u+W/2-gmCv.offsetLeft,y:v+H/2-gmCv.offsetTop};
+}
 gmCv.addEventListener('pointerdown',function(e){
   GMP[e.pointerId]={x:e.clientX,y:e.clientY};
   if(gmPts().length===2){
@@ -4547,8 +4589,8 @@ gmCv.addEventListener('wheel',function(e){
   GAME.zoom=Math.max(.7,Math.min(4,(GAME.zoom||1)*Math.exp(-e.deltaY*.0012)));
 },{passive:false});
 gmCv.addEventListener('pointermove',function(e){
-  var r=gmCv.getBoundingClientRect();
-  GAME.mx=e.clientX-r.left;GAME.my=e.clientY-r.top;GAME.hov=true;
+  var lp=gmLocal(e);
+  GAME.mx=lp.x;GAME.my=lp.y;GAME.hov=true;
   if(GMP[e.pointerId])GMP[e.pointerId]={x:e.clientX,y:e.clientY};
   if(gmPts().length>=2){                        /* 双指：捏合缩放 + 中点平移 */
     if(gmPin0>0)GAME.zoom=Math.max(.7,Math.min(4,gmZoom0*gmDist()/gmPin0));
@@ -4577,7 +4619,7 @@ gmCv.addEventListener('pointerup',function(e){
   if(!GAME.drag)return;GAME.drag=false;
   if(GAME.moved<5){
     GAME.vel=0;                                   /* 纯点击不留甩动惯性 */
-    var r=gmCv.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top,best=-1,bd=26;
+    var lp2=gmLocal(e),px=lp2.x,py=lp2.y,best=-1,bd=26;
     for(var i=0;i<GAME.hit.length;i++){var h=GAME.hit[i];
       if(h.b&&px>=h.b.x0&&px<=h.b.x1&&py>=h.b.y0&&py<=h.b.y1){best=h.i;break;}
       var d=Math.hypot(px-h.x,py-h.y);
