@@ -396,13 +396,14 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
   #game.mvFree .gMain{right:calc(var(--mvGut,322px)*var(--ui))}
   #game.mvFree #pnTx{right:calc(var(--mvGut,322px)*var(--ui))}
 }
-#game .gNarr{flex:1;overflow-y:auto;padding:calc(46px*var(--ui) + 36px) 7% 118px;font-size:13px;line-height:2.2;
-      letter-spacing:.06em;color:#c8c8c2;background:transparent}
+#game .gNarr{flex:1;overflow-y:auto;padding:calc(46px*var(--ui) + 36px) 7% 118px;font-size:17px;line-height:1.8;
+      letter-spacing:.03em;color:#c8c8c2;background:transparent}
 #game .gNarr p{margin-bottom:1.5em}
+#game .gNarr>*{max-width:750px;margin-left:auto;margin-right:auto}
 #game .gNarr .q{color:var(--gold-hi)}
-#game .gNarr .sys{font-size:10px;letter-spacing:.32em;color:var(--mut)}
+#game .gNarr .sys{font-size:12px;letter-spacing:.32em;color:var(--mut)}
 #game .gNarr .me{color:#9fb4c8}
-#game .gEot{text-align:center;font-size:9px;letter-spacing:.4em;color:#4a4a44;margin:28px 0 8px}
+#game .gEot{text-align:center;font-size:10px;letter-spacing:.4em;color:#4a4a44;margin:28px 0 8px}
 /* 输入区浮于正文之上（Ghost 式）：正文滚到底下透出，阅读面拉满；渐隐底幕保字可读 */
 /* z-index 必须高过三维面板(25)：这一层是层叠上下文，里面的模式行／四策／输入框
    写多大的 z 都被整块一起压在面板底下——放到最大档时控件就点不着了。 */
@@ -608,6 +609,10 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
   #game .gm .ms,#game .gsug .ms{display:none}
   #game .gm,#game .gsug{padding:4px 8px 3px !important;letter-spacing:.04em !important}
   #game .gNarr{padding-bottom:104px}
+  /* 手机上左右两条缩略列是浮在正文之上的，7% 的边距（27px）不够躲：
+     左列占到 45、右列的名字最左到 335，字就从它们底下穿过去。
+     正文两侧按实测让开——左 48、右 56（右边那列连名字一起更宽）。 */
+  #game .gNarr{padding-left:48px !important;padding-right:58px !important}
   /* 台底抬到输入层上沿之上，窗与输入行不再重叠 */
   #game .gMfd.mvDeck .mvStage{bottom:104px !important}
   /* 情报台的窗要压在三维画面上层（三维 z-index 25） */
@@ -4389,7 +4394,7 @@ $('#miOrac').addEventListener('pointerup',function(e){e.stopPropagation();apiOpe
 $('#miArch').addEventListener('pointerup',function(e){e.stopPropagation();svOpen();});
 
 /* ================= game stage: Ghost layout in ROME dress ================ */
-var BUILD=65;
+var BUILD=66;
 /* 地图初始朝向。原来是 15°E（罗马那边）——这是从罗马那一版继承下来的，
    在秦这一版里一打开地图看到的是欧洲，中国被挤在球体右缘。
    球心画在画布最左缘（cx=gmW*.04），所以可视带约是 lonC ~ lonC+90°，
@@ -5556,7 +5561,7 @@ var CFGS={velo:1,font:1,preset:''};
 try{Object.assign(CFGS,JSON.parse(localStorage.getItem('rome_cfg')||'{}'));}catch(_){}
 delete CFGS.lux;   /* 白昼不持久：清掉旧版可能落盘的键 */
 function cfgStore(){lsSet('rome_cfg',JSON.stringify(CFGS))}
-var VELOMAP=[26,13,4,0],FONTMAP=['11.5px','13px','14.5px','16.5px'];
+var VELOMAP=[26,13,4,0],FONTMAP=['15px','17px','19px','21px'];
 /* 界面缩放：一根拉杆放大缩小全部文字层（正文／情报台／顶栏／输入区／所有弹窗）。
    对外只露 0–100 的刻度（0=最小、100=最大，1 格 1%），内部线性映射到真正有用的
    0.80–1.70 缩放系数。刻度定义在此处集中，别处一律走 uiQ→uiZoom 换算。 */
@@ -5602,7 +5607,7 @@ function luxApply(on){
 }
 function setSeg(sel,idx){var ch=$(sel).children;for(var i=0;i<ch.length;i++)ch[i].classList.toggle('on',i===idx);}
 function applyCfg(){
-  $('#gNarr').style.fontSize=FONTMAP[CFGS.font]||'13px';
+  $('#gNarr').style.fontSize=FONTMAP[CFGS.font]||'17px';
   setSeg('#sgVelo',CFGS.velo);
   uiScaleApply(uiScaleGet());
   if(CFGS.motus){                       /* 动效档位随设置恢复；没设过就跟随系统 */
