@@ -970,22 +970,22 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
       visibility:hidden;transform:translateY(-113%) translateZ(0);transition:transform .45s cubic-bezier(.2,.85,.25,1),height .3s,visibility .45s;overflow:hidden;font-family:var(--mono)}
 /* 里头两层场景宿主本来没底色；现代城那层原是实心 #030303，改成半透。 */
 #pnTx #modScene3D{background:rgba(3,3,3,.72) !important}
-/* ── 三维画面并入全站的黑金单色 ──
-   引擎那张低模场景是自己的调子：蓝天、绿草、粉树，饱和度拉满，
-   摆在一屏黑金线框旁边像两个软件拼起来的。引擎不动（那是渲染管线的事，
-   一改天空与雾就全毁），只在这一层做色彩分级：抽掉大半饱和度、压暗、
-   往暖里偏一点，让它落回同一张色表。 */
+/* ── 三维画面：只做一点点统调，不许抽色 ──
+   上一版按「并入黑金单色」去调，saturate 压到 .26，等于把游戏做成了黑白片——
+   这是我把「面板要有玻璃质感」误读成「画面也要变单色」。
+   游戏就该是彩色的。这里只留一丝暖调与极轻的压暗，让它跟这扇窗的底色搭得上，
+   颜色基本原样：饱和度 .92、亮度 .97，肉眼几乎看不出被动过。 */
 #pnTx #zjScene3D>canvas,#pnTx #mdScene3D>canvas,#pnTx #modScene3D>canvas{
-      filter:saturate(.26) brightness(.84) contrast(1.08) sepia(.34) hue-rotate(-10deg)}
-/* 白昼模式那条整站反色仍要先生效，再叠同一副分级 */
+      filter:saturate(.92) brightness(.97) contrast(1.02) sepia(.06)}
+/* 白昼模式那条整站反色照旧先生效 */
 html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx #modScene3D>canvas{
-      filter:invert(1) hue-rotate(180deg) saturate(.24) contrast(1.10) sepia(.28)}
+      filter:invert(1) hue-rotate(180deg) saturate(.92) contrast(1.02)}
 /* 玻璃罩：把这扇窗自己的底色罩在画面上，再收一圈暗角——
    看着才像「隔着这扇毛玻璃窗往外看」，而不是把一张外来的图钉在框里。
    z-index:3 压在画布之上；引擎那几枚小片也在这层底下，罩子因此给得很淡。 */
 #pnTx::after{content:'';position:absolute;inset:0;z-index:3;pointer-events:none;
-      background:linear-gradient(180deg,rgba(6,6,6,.26) 0%,rgba(6,6,6,.08) 42%,rgba(10,8,5,.30) 100%);
-      box-shadow:inset 0 0 62px rgba(0,0,0,.42)}
+      background:linear-gradient(180deg,rgba(6,6,6,.20) 0%,rgba(6,6,6,0) 40%,rgba(10,8,5,.22) 100%);
+      box-shadow:inset 0 0 48px rgba(0,0,0,.30)}
 /* 画面里那几枚小片（地名、年号、营造、关闭）是引擎用内联样式写死的棕褐调，
    和全站那副玻璃不是一套。按内联样式的子串精确接管——只认它默认那个底色，
    不碰别的元素。引擎把底色改成金色高亮时，属性里这段就没了，规则自动让位，
