@@ -557,31 +557,21 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
 #game.txOpen.tx2 #arr3d .t::after{content:'·放大'}
 #game.txOpen.txBig #arr3d .t::after{content:'·全屏'}
 .gPanel{position:absolute;left:96px;width:min(42vw,500px);z-index:30;
-      /* 玻璃与倾斜都不在这一层——它装着字。
-         带 backdrop-filter 的元素会被钉成一张合成纹理，此后任何变换（三维还是二维）
-         都只是在重采样这张纹理：字必糊、笔画必歪，改角度只能减轻。实测锐度
-         平面 23.5 / 斜 15.6，差一大截。
-         所以把玻璃整块搬到下面那层 ::after 上去斜——那一层一个字都没有，
-         糊了也没人看得出来；有字的这一层一动不动，锐度回到 23.7，与不斜时齐平。 */
-      /* 8° 而不是 10°：斜平面要盖住一块固定的矩形，必然比它高
-         （近边放大 a、远边缩小 b，得按 1/b 放大才盖得住，再乘 a 就是它在屏上的高）。
-         500 宽的面板、620 的透视、10° 那一档算下来要 959px 高，900 的屏放不下，
-         底下几行就会露到玻璃外面。收到 8° 并把透视放远到 900，配合下面把面板
-         上下各收一点，这块玻璃才整个装得进来。 */
-      --gpTilt:8deg;
-      transform-origin:0% 50%;
-      transform:translateX(-26px) scale(.955);
-      opacity:0;pointer-events:none;
-      transition:transform .34s cubic-bezier(.2,.85,.25,1),opacity .26s ease;overflow:visible}
-/* 斜的那面玻璃。四周各大出一圈——远的那条边会被透视缩小，不放大一点就盖不住内容。 */
-.gPanel::after{content:'';position:absolute;inset:-22px -18px;z-index:-1;pointer-events:none;
-      transform:perspective(900px) rotateY(var(--gpTilt));
       background:rgba(6,6,6,.78);border:1px solid rgba(236,236,232,.20);
       box-shadow:0 14px 34px rgba(0,0,0,.5);
-      backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
-/* 上下各收一档：斜着的那面玻璃比面板本身高，不留出这点地方它会顶穿顶栏与屏底。 */
-#pnMap{top:68px;bottom:52px}
-#pnArm{top:68px;bottom:52px}
+      backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
+      /* 与右边情报台那扇窗镜像：那边 rotateY(-10deg)，这边 +10deg，
+         正好各自朝着自己那一列缩略窗（左列 +17°、右列 −17°）的方向收。
+         perspective 写在 transform 里而不是给 #game——给 #game 加 perspective
+         会让它变成 fixed 子元素的包含块，整屏定位全要跟着塌。
+         gpFit：近的那条边被透视放大约 7.5%，照旧给足高度会顶穿上下，先缩回去。 */
+      --gpTilt:10deg;--gpFit:.93;
+      transform-origin:50% 50%;
+      transform:perspective(620px) translateX(-26px) scale(.955) rotateY(var(--gpTilt)) scaleY(var(--gpFit));
+      opacity:0;pointer-events:none;
+      transition:transform .34s cubic-bezier(.2,.85,.25,1),opacity .26s ease;overflow:hidden}
+#pnMap{top:56px;bottom:10px}
+#pnArm{top:56px;bottom:10px}
 #pnArm::before{
   content:'';position:absolute;left:0;right:0;top:0;height:62px;z-index:2;pointer-events:none;
   background:linear-gradient(180deg,rgba(6,6,6,.92) 0%,rgba(6,6,6,.62) 46%,rgba(6,6,6,0) 100%);
@@ -589,11 +579,10 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
   -webkit-mask-image:linear-gradient(180deg,#000 44%,transparent 100%);
           mask-image:linear-gradient(180deg,#000 44%,transparent 100%)}
 
-/* 开着的时候本体一动不动——斜的是它底下那面 ::after 玻璃。
-   这一条要是还留着三维变换，内容层照旧被扭，外面又多一层斜玻璃，成了双重倾斜。 */
 #game.mapOpen #pnMap,#game.armOpen #pnArm,#game.shopOpen #pnShop{
-      transform:none;opacity:1;pointer-events:auto;z-index:33}
-#pnShop{top:68px;bottom:52px}
+      transform:perspective(620px) rotateY(var(--gpTilt)) scaleY(var(--gpFit));
+      opacity:1;pointer-events:auto;z-index:33}
+#pnShop{top:56px;bottom:10px}
 
 .shRow{display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid rgba(236,236,232,.07)}
 .shRow:hover{background:rgba(236,236,232,.045)}
@@ -1209,18 +1198,19 @@ html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx
    这一扇从右边推出来。倾角在开、合两态里是同一个值，
    所以推出来的过程只有平移与淡入，不会连带转一下（转着出现会晃眼）。
    绕中心转，不绕右缘——绕边转的话左沿要甩出八十多像素，那是开门不是倾斜。 */
-/* 与左边三扇同一套：有字的那一层不变换，玻璃搬到 ::after 上去斜（理由见 .gPanel）。
-   倾角 -10°，与左边 +10° 镜像；缩略窗仍是 ∓17°。 */
-.gMfd.mvDeck .mvWin{position:absolute;transform-origin:100% 50%;--mvTilt:-8deg;
-      transform:translateX(26px) scale(.955);opacity:0;pointer-events:none;
+/* 倾角写成变量，由 mvDeck 一处给值：CSS 转多少度、JS 反解时按多少度算，
+   两边必须是同一个数——差一度，窗就嵌不回那一条里去。
+   缩略窗照旧 17°（那么小一枚，斜得狠些才看得出来）；
+   正文窗收到 10°：同样一块八百像素高的面板，17° 的梯形比是 1.176，
+   一整屏小字全跟着斜，读起来累。 */
+.gMfd.mvDeck .mvWin{position:absolute;transform-origin:50% 50%;--mvTilt:-10deg;
+      transform:translateX(26px) scale(.955) rotateY(var(--mvTilt));opacity:0;pointer-events:none;
       transition:transform .34s cubic-bezier(.2,.85,.25,1),opacity .26s ease}
-.gMfd.mvDeck .mvWin.on{transform:none;opacity:1;pointer-events:auto;z-index:2}
-.gMfd.mvDeck .mvWin::after{content:'';position:absolute;inset:-11px -12px;z-index:-1;pointer-events:none;
-      transform:perspective(900px) rotateY(var(--mvTilt));
+.gMfd.mvDeck .mvWin.on{transform:rotateY(var(--mvTilt));opacity:1;pointer-events:auto;z-index:2}
+.gMfd.mvDeck .mvWin .cfr{position:absolute;inset:0;
       background:rgba(6,6,6,.78);border:1px solid rgba(236,236,232,.20);
       box-shadow:0 14px 34px rgba(0,0,0,.5);
       -webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px)}
-.gMfd.mvDeck .mvWin .cfr{position:absolute;inset:0;background:transparent;border:0;box-shadow:none}
 /* 缩略窗里那张微缩：这一段的真内容克隆一份，按整窗宽度排好版再整体缩下来。
    克隆而不是搬——真内容得留在窗里，缩略图只是它的影子。 */
 .gMfd.mvDeck .mvCard .mw{position:absolute;top:1px;left:1px;overflow:hidden;
@@ -7323,7 +7313,7 @@ function applyGlass(){
     +'#game .gTop{background:rgba(6,6,6,'+(.05+.22*a).toFixed(2)+') !important}'
     /* 情报台那几扇窗跟着同一根「面板透明度」拉杆走——它们就是同一种窗，
        底色不该有两套。 */
-    +'.gPanel::after,.gMfd.mvDeck .mvWin::after,#pnTx{background:rgba(6,6,6,'+(.10+.36*a).toFixed(2)+') !important}'
+    +'.gPanel,.gMfd.mvDeck .mvWin .cfr,#pnTx{background:rgba(6,6,6,'+(.10+.36*a).toFixed(2)+') !important}'
     /* 全屏档背后被自己盖满，透太多只会把正文透出来糊成一片，单给一档更实的 */
     +'#game.txBig #pnTx{background:rgba(6,6,6,'+(.62+.34*a).toFixed(2)+') !important}';
 }
