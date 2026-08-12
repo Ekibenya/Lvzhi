@@ -551,13 +551,13 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
 /* 三维那一枚单独坐在顶栏正下方的最左角（LINEA NOVA 那行字底下）。
    它不在 .gRail 里，拿不到那一份 perspective，所以自带一份——数值与那一列同源，
    否则 rotateY 只会把它横向压扁，看不出是斜的。 */
-.g3dRail{position:absolute;left:6px;top:calc(46px*var(--ui) + 10px);z-index:34;
+.g3dRail{position:absolute;left:6px;top:calc(46px*var(--ui) - 4px);z-index:34;
       padding:4px 0 4px 12px;perspective:620px;perspective-origin:0% 50%}
 /* ── 手机版的台前调度 ──
    屏就那么点宽，小窗按桌面的 64×44 摆上去正好压在正文头一行上。
    收到 42×28、底色再透一档（.42 → .20），认得出是哪一扇就够了，不挡阅读。 */
 @media (max-width:760px){
-  .g3dRail{left:3px;top:calc(46px*var(--ui) + 6px);padding:3px 0 3px 8px;perspective:420px}
+  .g3dRail{left:3px;top:calc(46px*var(--ui) - 4px);padding:3px 0 3px 8px;perspective:420px}
   /* 屏幕小，缩略图看不清也没用；真正要认的是「这是哪一扇」。
      所以窗再收一档（34×23），名字反过来放大到 9px 并提亮——
      手机上名字才是主角，缩略图退成陪衬。 */
@@ -584,7 +584,7 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
   /* 抽屉改回「浮在正文上的窗」，不再是撑满的整页 */
   #game .gPanel{display:block !important;position:absolute !important;
         left:50px !important;right:6px !important;width:auto !important;
-        top:calc(46px*var(--ui) + 6px) !important;bottom:52px !important;
+        top:calc(46px*var(--ui) - 8px) !important;bottom:52px !important;
         border:1px solid rgba(236,236,232,.20) !important;
         box-shadow:0 14px 34px rgba(0,0,0,.5) !important;
         transform:translateX(-18px) scale(.96) !important;
@@ -658,8 +658,8 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
       transform:perspective(620px) translateX(-26px) scale(.955) rotateY(var(--gpTilt)) scaleY(var(--gpFit));
       opacity:0;pointer-events:none;
       transition:transform .34s cubic-bezier(.2,.85,.25,1),opacity .26s ease;overflow:hidden}
-#pnMap{top:56px;bottom:10px}
-#pnArm{top:56px;bottom:10px}
+#pnMap{top:42px;bottom:10px}
+#pnArm{top:42px;bottom:10px}
 #pnArm::before{
   content:'';position:absolute;left:0;right:0;top:0;height:62px;z-index:2;pointer-events:none;
   background:linear-gradient(180deg,rgba(6,6,6,.92) 0%,rgba(6,6,6,.62) 46%,rgba(6,6,6,0) 100%);
@@ -670,7 +670,7 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
 #game.mapOpen #pnMap,#game.armOpen #pnArm,#game.shopOpen #pnShop{
       transform:perspective(620px) rotateY(var(--gpTilt)) scaleY(var(--gpFit));
       opacity:1;pointer-events:auto;z-index:33}
-#pnShop{top:56px;bottom:10px}
+#pnShop{top:42px;bottom:10px}
 
 .shRow{display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid rgba(236,236,232,.07)}
 .shRow:hover{background:rgba(236,236,232,.045)}
@@ -1063,7 +1063,7 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
 /* 玻璃四项（底色／边／投影／模糊）与 .gPanel 一个数不改；
    再从顶栏底下让开 10px——那三扇是 top:56（46+10），这一扇也浮起来，
    不然它焊在顶栏上，只有下沿一条边，怎么看都不是同一族的窗。 */
-#pnTx{position:absolute;left:100px;right:calc(322px*var(--ui));top:calc(46px*var(--ui) + 10px);height:min(24vh,215px);z-index:25;
+#pnTx{position:absolute;left:100px;right:calc(322px*var(--ui));top:calc(46px*var(--ui) - 4px);height:min(24vh,215px);z-index:25;
       background:rgba(6,6,6,.34);border:1px solid rgba(236,236,232,.20);
       box-shadow:0 14px 34px rgba(0,0,0,.5);
       -webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);
@@ -1098,7 +1098,7 @@ html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx
    小窗自己 z-index 34、画面 25，盖不着——退出全屏就靠再点它一下。
    这一档不再挂毛玻璃：整屏的 backdrop 每帧重算，而它背后已被自己盖满，
    模糊出来谁也看不见，纯属白烧一层合成。底色相应加实。 */
-#game.txBig #pnTx{left:10px;right:10px;height:calc(100% - 46px*var(--ui) - 20px);
+#game.txBig #pnTx{left:10px;right:10px;height:calc(100% - 46px*var(--ui) - 6px);
       background:rgba(6,6,6,.45);
       -webkit-backdrop-filter:none;backdrop-filter:none}
 #game.txOpen #pnTx{visibility:visible;transform:translateZ(0)}
@@ -1109,7 +1109,7 @@ html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx
 @media(max-width:760px){ /* 手机版三维照常可用：全宽三档，TERRA 拉手居中 */
   #pnTx{left:6px;right:6px;height:min(23vh,205px)}   /* 手机上宽度本来就紧，只留一线边 */
   #game.tx2 #pnTx{height:min(52vh,460px)}
-  #game.txBig #pnTx{left:6px;right:6px;height:calc(100% - 46px - 20px)}
+  #game.txBig #pnTx{left:6px;right:6px;height:calc(100% - 46px - 6px)}
   /* 顶栏那条「时地」原来被挤到只剩 28px（八颗工具钮 flex:none 一个不让，
      padding 与间距又按桌面来）——连「前48年 · 罗马」都只露得出两个字。
      先把钮和间距收一档腾出地方，再让时地占住剩下的全部宽度。 */
@@ -4388,7 +4388,7 @@ $('#miOrac').addEventListener('pointerup',function(e){e.stopPropagation();apiOpe
 $('#miArch').addEventListener('pointerup',function(e){e.stopPropagation();svOpen();});
 
 /* ================= game stage: Ghost layout in ROME dress ================ */
-var BUILD=73;
+var BUILD=74;
 /* 地图初始朝向。原来是 15°E（罗马那边）——这是从罗马那一版继承下来的，
    在秦这一版里一打开地图看到的是欧洲，中国被挤在球体右缘。
    球心画在画布最左缘（cx=gmW*.04），所以可视带约是 lonC ~ lonC+90°，
