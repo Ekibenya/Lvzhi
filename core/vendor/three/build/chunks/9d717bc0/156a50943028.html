@@ -1711,7 +1711,7 @@ html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx
       <div class="sRow"><span>MVSICA&nbsp;·&nbsp;配乐</span><input type="range" id="cfgBgm" min="0" max="100" value="55"></div>
       <div class="sRow"><span>MOTVS&nbsp;·&nbsp;动效</span><span class="sSeg" id="sgMotus"><span class="on">全开</span><span>减弱（低配）</span></span></div>
       <div class="sRow"><span>VELOCITAS&nbsp;·&nbsp;文字速度</span><span class="sSeg" id="sgVelo"><span>缓</span><span class="on">中</span><span>疾</span><span>瞬</span></span></div>
-      <div class="sRow"><span>LITTERAE&nbsp;·&nbsp;字号</span><span style="display:flex;gap:10px;align-items:center;flex:1;justify-content:flex-end"><input type="number" id="cfgUi" min="0" max="100" step="1" value="22" inputmode="numeric" style="width:84px;text-align:right;background:rgba(236,236,232,.04);border:1px solid rgba(236,236,232,.25);color:var(--ink);padding:6px 8px;font-family:var(--mono);font-size:13px"><b id="cfgUiVal" style="font-weight:400;font-size:10px;letter-spacing:.1em;color:var(--gold-hi);min-width:3.2em;text-align:right">22%</b></span></div><div class="sub">填 0-100 的整数整体缩放界面——正文、情报台状态栏、顶栏、输入区与全部弹窗（含本设置与世界书）一同放大缩小；三维场景不受影响。0 最小、100 最大，22 为原始尺寸；输入后回车或点开生效，上下箭头可 1% 微调。</div><div class="sRow"><span>LVX&nbsp;·&nbsp;白昼模式</span><span style="flex:1;text-align:right"><input type="checkbox" id="cfgLux" style="accent-color:var(--gold);width:15px;height:15px;cursor:pointer"></span></div><div class="sub">把全站换成浅色（白昼）配色，正文黑字白底更近纸面；三维画面与配图保持原貌。主菜单右上角的&nbsp;☀/☾&nbsp;也能随时切换，两处同步。</div><div class="sRow"><span>CONSILIVM&nbsp;·&nbsp;四选项</span><span style="flex:1;text-align:right"><input type="checkbox" id="cfgSugg" checked style="accent-color:var(--gold);width:15px;height:15px;cursor:pointer"></span></div><div class="sub">开启后，每一幕落定就由参谋按当下局势拟四条可点选的下一步，点哪条便照哪条发出（并自动切到对应的输入模式）；第四条恒为冒险策。输入区上方那枚「参谋四策」也能随时开关，两处同步。未接 AI 时给的是本地拟的朴素四条。</div>
+      <div class="sRow"><span>LITTERAE&nbsp;·&nbsp;正文字体</span><span style="display:flex;gap:10px;align-items:center;flex:1;justify-content:flex-end"><input type="number" id="cfgNarr" min="12" max="30" step="1" value="17" inputmode="numeric" style="width:84px;text-align:right;background:rgba(236,236,232,.04);border:1px solid rgba(236,236,232,.25);color:var(--txt);padding:6px 8px;font-family:var(--mono);font-size:13px"><b id="cfgNarrVal" style="font-weight:400;font-size:10px;letter-spacing:.1em;color:var(--gold-hi);min-width:3.6em;text-align:right">17px</b></span></div><div class="sub">只改叙事正文那一栏的字号，单位像素，12–30，17 为默认。界面其余部分不动。</div><div class="sRow"><span>INTERFACIES&nbsp;·&nbsp;界面字体</span><span style="display:flex;gap:10px;align-items:center;flex:1;justify-content:flex-end"><input type="number" id="cfgUi" min="0" max="100" step="1" value="22" inputmode="numeric" style="width:84px;text-align:right;background:rgba(236,236,232,.04);border:1px solid rgba(236,236,232,.25);color:var(--txt);padding:6px 8px;font-family:var(--mono);font-size:13px"><b id="cfgUiVal" style="font-weight:400;font-size:10px;letter-spacing:.1em;color:var(--gold-hi);min-width:3.6em;text-align:right">22%</b></span></div><div class="sub">填 0-100 的整数整体缩放界面——情报台状态栏、顶栏、输入区与全部弹窗（含本设置与世界书）一同放大缩小；正文另有上面那一档，三维场景不受影响。0 最小、100 最大，22 为原始尺寸；输入后回车或点开生效，上下箭头可 1% 微调。</div><div class="sRow"><span>LVX&nbsp;·&nbsp;白昼模式</span><span style="flex:1;text-align:right"><input type="checkbox" id="cfgLux" style="accent-color:var(--gold);width:15px;height:15px;cursor:pointer"></span></div><div class="sub">把全站换成浅色（白昼）配色，正文黑字白底更近纸面；三维画面与配图保持原貌。主菜单右上角的&nbsp;☀/☾&nbsp;也能随时切换，两处同步。</div><div class="sRow"><span>CONSILIVM&nbsp;·&nbsp;四选项</span><span style="flex:1;text-align:right"><input type="checkbox" id="cfgSugg" checked style="accent-color:var(--gold);width:15px;height:15px;cursor:pointer"></span></div><div class="sub">开启后，每一幕落定就由参谋按当下局势拟四条可点选的下一步，点哪条便照哪条发出（并自动切到对应的输入模式）；第四条恒为冒险策。输入区上方那枚「参谋四策」也能随时开关，两处同步。未接 AI 时给的是本地拟的朴素四条。</div>
       <div class="sub">透明度：拖动即时生效——拉到最左＝完全透明（直接看穿到后面的动态背景）；拉到最右＝完全不透明（纯色纸底，彻底看不穿）。开低配模式时模糊被关闭。版式：自动依屏幕宽窄选择版式，也可强制使用电脑或手机布局。</div>
       <div class="sRow"><span>OBSCVRITAS&nbsp;·&nbsp;面板透明度</span><input type="range" id="cfgGlass" min="0" max="100" value="80"></div>
       <div class="sRow"><span>FORMA&nbsp;·&nbsp;版式</span><span class="sSeg" id="sgForma"><span class="on">自动</span><span>桌面</span><span>手机</span></span></div>
@@ -4472,7 +4472,7 @@ $('#miOrac').addEventListener('pointerup',function(e){e.stopPropagation();apiOpe
 $('#miArch').addEventListener('pointerup',function(e){e.stopPropagation();svOpen();});
 
 /* ================= game stage: Ghost layout in ROME dress ================ */
-var BUILD=80;
+var BUILD=81;
 /* 地图初始朝向。原来是 15°E（罗马那边）——这是从罗马那一版继承下来的，
    在秦这一版里一打开地图看到的是欧洲，中国被挤在球体右缘。
    球心画在画布最左缘（cx=gmW*.04），所以可视带约是 lonC ~ lonC+90°，
@@ -5638,7 +5638,7 @@ invRender();
 })();
 /* ============ 引擎：回合史 / 打字机 / 神谕(AI) / 重演·回溯 / 语音 ============ */
 var TURNS=[],TURNI=0,BUSY=false;
-var CFGS={velo:1,font:1,preset:''};
+var CFGS={velo:1,font:1,narrPx:17,preset:''};
 try{Object.assign(CFGS,JSON.parse(localStorage.getItem('rome_cfg')||'{}'));}catch(_){}
 delete CFGS.lux;   /* 白昼不持久：清掉旧版可能落盘的键 */
 function cfgStore(){lsSet('rome_cfg',JSON.stringify(CFGS))}
@@ -5656,6 +5656,24 @@ function uiQ2Pct(q){
 function uiPct2Q(p){
   return Math.round(p<=100 ? (p-UIZ_MIN)*UIQ_DEF/(100-UIZ_MIN)
                            : UIQ_DEF+(p-100)*(100-UIQ_DEF)/(UIZ_MAX-100));
+}
+/* 正文字号与界面缩放拆成两档。原来只有一根「字号」拉杆，动它整站一起缩放，
+   想把正文调大一点、别的不动做不到。这一档只写 #gNarr 的 font-size，单位像素。
+   老配置里的 CFGS.font 是四档的下标（FONTMAP），没设过 narrPx 时照它折算，向后兼容。 */
+function narrPxGet(){
+  var v=parseInt(CFGS?CFGS.narrPx:null,10);
+  if(isNaN(v))v=parseInt(((typeof FONTMAP!=='undefined'&&FONTMAP[CFGS&&CFGS.font])||'17px'),10);
+  if(isNaN(v))v=17;
+  return Math.max(12,Math.min(30,v));
+}
+function narrPxApply(v){
+  v=parseInt(v,10);if(isNaN(v))v=17;
+  v=Math.max(12,Math.min(30,v));
+  CFGS.narrPx=v;
+  var n=$('#gNarr');if(n)n.style.fontSize=v+'px';
+  var lab=$('#cfgNarrVal');if(lab)lab.textContent=v+'px';
+  var sl=$('#cfgNarr');if(sl&&+sl.value!==v&&document.activeElement!==sl)sl.value=v;
+  try{cfgStore();}catch(_){}
 }
 function uiScaleGet(){
   var q=(CFGS?CFGS.uiq:null);
@@ -5688,7 +5706,7 @@ function luxApply(on){
 }
 function setSeg(sel,idx){var ch=$(sel).children;for(var i=0;i<ch.length;i++)ch[i].classList.toggle('on',i===idx);}
 function applyCfg(){
-  $('#gNarr').style.fontSize=FONTMAP[CFGS.font]||'17px';
+  narrPxApply(narrPxGet());
   setSeg('#sgVelo',CFGS.velo);
   uiScaleApply(uiScaleGet());
   if(CFGS.motus){                       /* 动效档位随设置恢复；没设过就跟随系统 */
@@ -7463,6 +7481,15 @@ try{bgmPlay(0);}catch(_){}
   try{if(window.__sugSync)window.__sugSync();}catch(_){}
   if(CFGS.sugg!==false){try{suggGen();}catch(_){}}
 });})();
+(function(){var sl=$('#cfgNarr');if(!sl)return;
+  sl.addEventListener('input',function(e){
+    if(e.inputType&&/insert|delete/.test(e.inputType))return;   /* 键入中：先不动 */
+    var v=parseInt(this.value,10);
+    if(!isNaN(v))narrPxApply(v);
+  });
+  sl.addEventListener('change',function(){narrPxApply(this.value);});
+  sl.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();this.blur();}});
+})();
 (function(){var sl=$('#cfgUi');if(!sl)return;
   /* 输入式：上下箭头（step）点一下即时生效；手打数字则等回车/失焦再生效，
      不然打「3」「5」想要 35 的瞬间界面先跳到 3%，很吓人。 */
