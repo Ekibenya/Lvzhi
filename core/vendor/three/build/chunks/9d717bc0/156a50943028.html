@@ -389,8 +389,13 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
 /* 情报台摊开成台前调度之后，正文让出的这一条就是「窗 + 缩略列」正好占满的那一块。
    宽度由 JS 按当下的窗宽算出来写进 --mvGut：三维与正文都在这条线左边收住，
    窗与缩略列都在这条线右边站着，谁也不压谁。 */
-#game.mvFree .gMain{right:calc(var(--mvGut,322px)*var(--ui))}
-#game.mvFree #pnTx{right:calc(var(--mvGut,322px)*var(--ui))}
+/* 「给情报台让出一条」只在桌面成立。手机上情报台是底部胶囊切过去的一整页，
+   不占右侧；这两条要是也生效，390 的屏被让掉 322，正文只剩 68px、三维只剩 62px
+   ——手机版整个 UI 就是这么崩的。 */
+@media (min-width:761px){
+  #game.mvFree .gMain{right:calc(var(--mvGut,322px)*var(--ui))}
+  #game.mvFree #pnTx{right:calc(var(--mvGut,322px)*var(--ui))}
+}
 #game .gNarr{flex:1;overflow-y:auto;padding:calc(46px*var(--ui) + 36px) 7% 118px;font-size:13px;line-height:2.2;
       letter-spacing:.06em;color:#c8c8c2;background:transparent}
 #game .gNarr p{margin-bottom:1.5em}
@@ -546,6 +551,29 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
    否则 rotateY 只会把它横向压扁，看不出是斜的。 */
 .g3dRail{position:absolute;left:6px;top:calc(46px*var(--ui) + 10px);z-index:34;
       padding:4px 0 4px 12px;perspective:620px;perspective-origin:0% 50%}
+/* ── 手机版的台前调度 ──
+   屏就那么点宽，小窗按桌面的 64×44 摆上去正好压在正文头一行上。
+   收到 42×28、底色再透一档（.42 → .20），认得出是哪一扇就够了，不挡阅读。 */
+@media (max-width:760px){
+  .g3dRail{left:3px;top:calc(46px*var(--ui) + 6px);padding:3px 0 3px 8px;perspective:420px}
+  .gArr{width:42px;height:28px}
+  .gArr .win{background:rgba(6,6,6,.20)}
+  .gArr .ic{left:-8px;bottom:-5px;width:16px;height:16px}
+  .gArr .ic svg{width:9px;height:9px}
+  .gArr .t{left:10px;bottom:-12px;font-size:6.5px;letter-spacing:.18em}
+  .gMfd.mvDeck .mvCard.thumb .cfr{background:rgba(6,6,6,.20) !important}
+  /* 情报台在手机上是整整一页，不是右边那一条。
+     .mvDeck 那句 width:min(56vw,680px) 在 390 的屏上算出来只有 218，
+     这一页就缩成了一条竖带（窗还被挤到 left:-43）。选择器同权、它在后面，
+     只能用 !important 压回来。 */
+  #game .gMfd.mvDeck{width:auto !important;left:0 !important;right:0 !important}
+  /* 名字在桌面是从缩略窗左沿往右写的；手机上缩略列贴着屏幕最右缘，
+     再往右写就出界被切了。改成靠右对齐，往左长。 */
+  /* 权重要压得过后面那条 .mvCard.thumb .mvGhost{left:15px;text-align:left}——
+     同权而它在后面，写在这儿会被它盖掉，所以带上 #game 与 .mvDeck。 */
+  #game .gMfd.mvDeck .mvCard.thumb .mvGhost{left:auto;right:1px;text-align:right}
+  #game .gMfd.mvDeck .mvCard.thumb .mvGhost .g3{font-size:6.5px;letter-spacing:.14em}
+}
 .gArr .m3d{position:absolute;inset:0;width:100%;height:100%;display:block}
 /* 正在开着的那一枚：转正、往右挪、贴金边 */
 #game.mapOpen #arrMap,#game.armOpen #arrArm,#game.shopOpen #arrShop,#game.txOpen #arr3d{
@@ -11622,7 +11650,10 @@ function mvSize(){
   /* 缩略窗尺寸与间距照搬左边那一列：64×44、隔 20px。
      原来隔 6px 太挤——名字写在窗外下面一行，缝比字还窄就被下一枚压住了。
      台高站不下时再逐档缩，缩到 24px 高为止。 */
-  MV.tw=64;MV.th=44;MV.tgap=20;
+  /* 手机上台就那么窄，64×44 一列压过去正好盖住半幅正文；收到 42×28。
+     桌面一个数不动。 */
+  var _nar=(W<520);
+  MV.tw=_nar?42:64;MV.th=_nar?28:44;MV.tgap=_nar?12:20;
   var _cn=Math.max(1,MV.cards.length);
   while(_cn*(MV.th+MV.tgap)>H-20&&MV.th>24){MV.tw-=4;MV.th=Math.round(MV.tw*.69);MV.tgap=Math.max(12,MV.tgap-1);}
   /* 让出来那一条：外缝 + 窗 + 内缝 + 缩略列 + 内缝。
