@@ -389,7 +389,6 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
    窗与缩略列都在这条线右边站着，谁也不压谁。 */
 #game.mvFree .gMain{right:calc(var(--mvGut,322px)*var(--ui))}
 #game.mvFree #pnTx{right:calc(var(--mvGut,322px)*var(--ui))}
-#game.mvFree #arrTx{right:calc(var(--mvGut,322px)*var(--ui) + 10px)}
 #game .gNarr{flex:1;overflow-y:auto;padding:calc(46px*var(--ui) + 36px) 7% 118px;font-size:13px;line-height:2.2;
       letter-spacing:.06em;color:#c8c8c2;background:transparent}
 #game .gNarr p{margin-bottom:1.5em}
@@ -540,14 +539,23 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
       white-space:nowrap;color:var(--mut)}
 #arrShop{order:2}
 #arrArm{order:3}
+/* 三维那一枚单独坐在顶栏正下方的最左角（LINEA NOVA 那行字底下）。
+   它不在 .gRail 里，拿不到那一份 perspective，所以自带一份——数值与那一列同源，
+   否则 rotateY 只会把它横向压扁，看不出是斜的。 */
+.g3dRail{position:absolute;left:6px;top:calc(46px*var(--ui) + 10px);z-index:34;
+      padding:4px 0 4px 12px;perspective:620px;perspective-origin:0% 50%}
+.gArr .m3d{position:absolute;inset:0;width:100%;height:100%;display:block}
 /* 正在开着的那一枚：转正、往右挪、贴金边 */
-#game.mapOpen #arrMap,#game.armOpen #arrArm,#game.shopOpen #arrShop{
+#game.mapOpen #arrMap,#game.armOpen #arrArm,#game.shopOpen #arrShop,#game.txOpen #arr3d{
       transform:rotateY(0deg) translateX(8px) translateZ(26px);color:var(--gold-hi)}
-#game.mapOpen #arrMap .win,#game.armOpen #arrArm .win,#game.shopOpen #arrShop .win{
+#game.mapOpen #arrMap .win,#game.armOpen #arrArm .win,#game.shopOpen #arrShop .win,#game.txOpen #arr3d .win{
       border-color:var(--gold)}
-#game.mapOpen #arrMap .ic,#game.armOpen #arrArm .ic,#game.shopOpen #arrShop .ic{
+#game.mapOpen #arrMap .ic,#game.armOpen #arrArm .ic,#game.shopOpen #arrShop .ic,#game.txOpen #arr3d .ic{
       border-color:var(--gold);background:var(--gold);color:#0a0a0a}
-#game.mapOpen #arrMap .t,#game.armOpen #arrArm .t,#game.shopOpen #arrShop .t{color:var(--gold-hi)}
+#game.mapOpen #arrMap .t,#game.armOpen #arrArm .t,#game.shopOpen #arrShop .t,#game.txOpen #arr3d .t{color:var(--gold-hi)}
+/* 档位写在名字上：一眼知道再点一下会怎样 */
+#game.txOpen.tx2 #arr3d .t::after{content:'·放大'}
+#game.txOpen.txBig #arr3d .t::after{content:'·全屏'}
 .gPanel{position:absolute;left:96px;width:min(42vw,500px);z-index:30;
       background:rgba(6,6,6,.78);border:1px solid rgba(236,236,232,.20);
       box-shadow:0 14px 34px rgba(0,0,0,.5);
@@ -948,42 +956,24 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
    而右缘这一条是空的（底部已被 DICTVM 指令栏与建造清单／执行占满）。 */
 /* 三维框的右下角：仍挂在框的下沿（跟原来一样是一条横向小标签），
    但从正中挪到最右侧——正中那块要留给正文，靠右就不碍事了。 */
-/* 基准位置＝「三维画面已经收干净」时该待的地方，也就是紧贴顶栏下沿。
-   原来这里写死的是「已展开」那一档的高度（46px + 24vh），而 .txOpen 那几条给的又是
-   同一个值——于是彻底收起后画面没了，这条小标签却还停在原来那条下沿上，
-   孤零零悬在正文中间。展开时的位置一律交给下面的 #game.txOpen 三条去写。 */
-#arrTx{position:absolute;top:calc(46px*var(--ui));right:calc(322px*var(--ui) + 10px);left:auto;
-      transform:none;height:24px;padding:0;z-index:26;
-      border:1px solid rgba(236,236,232,.16);border-top:0;
-      background:rgba(6,6,6,.9);display:flex;flex-direction:row;align-items:stretch;color:var(--mut);
-      transition:top .45s cubic-bezier(.2,.85,.25,1),border-color .2s}
-#arrTx:hover{border-color:var(--gold)}
-#arrTx .ax{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:5px;
-      padding:0 11px;cursor:pointer;color:var(--mut);transition:color .2s,opacity .2s;-webkit-tap-highlight-color:transparent}
-#arrTx .ax:hover{color:var(--gold-hi)}
-#arrTx .ax+.ax{border-left:1px solid rgba(236,236,232,.16)}
-#arrTx .ax.off{opacity:.28;cursor:default;color:var(--mut)}   /* 到顶／到底：变灰且不可点 */
-#arrTx .a{font-size:11px}
-#arrTx .t{font-size:8px;letter-spacing:.22em;white-space:nowrap}
-#pnTx{position:absolute;left:0;right:calc(322px*var(--ui));top:calc(46px*var(--ui));height:min(24vh,215px);z-index:25;background:#0b0906;border-bottom:1px solid rgba(236,236,232,.14);visibility:hidden;transform:translateY(-103%) translateZ(0);transition:transform .45s cubic-bezier(.2,.85,.25,1),height .3s,visibility .45s;overflow:hidden;font-family:var(--mono)}
+/* 展开／收起那两个钮撤了：档位改由左上角那一枚台前调度小窗轮着点。
+   左边留出 100px 给它——不留的话画面从 x=0 起，小窗就压在画面上。
+   开着的那一枚会转正并往前挪（translateX(8px) translateZ(26px)），
+   投影后右缘到 94px，所以 90 不够，得 100。 */
+#pnTx{position:absolute;left:100px;right:calc(322px*var(--ui));top:calc(46px*var(--ui));height:min(24vh,215px);z-index:25;background:#0b0906;border-bottom:1px solid rgba(236,236,232,.14);visibility:hidden;transform:translateY(-103%) translateZ(0);transition:transform .45s cubic-bezier(.2,.85,.25,1),height .3s,visibility .45s;overflow:hidden;font-family:var(--mono)}
 #game.tx2 #pnTx{height:min(58vh,540px)}
-#game.txBig #pnTx{height:min(84vh,760px)}
+/* 最大那一档是真全屏：左右到底、下到底，正文与情报台全盖住。
+   小窗自己 z-index 34、画面 25，盖不着——退出全屏就靠再点它一下。 */
+#game.txBig #pnTx{left:0;right:0;height:calc(100% - 46px*var(--ui))}
 #game.txOpen #pnTx{visibility:visible;transform:translateZ(0)}
-#game.txOpen #arrTx{top:calc(46px + min(24vh,215px))}
-#game.txOpen.tx2 #arrTx{top:calc(46px + min(58vh,540px))}
-#game.txOpen.txBig #arrTx{top:calc(46px + min(84vh,760px))}
 /* 箭头恒朝下：此钮语义=向下逐级展开游戏画面 */
 #txHint{position:absolute;left:12px;bottom:44px;z-index:3;font-size:11.5px;color:#d9a06a;text-shadow:0 1px 3px #000}
 @keyframes zj3dMarq{to{transform:translateX(-50%)}}
 .zj3dMarq{animation:zj3dMarq linear infinite}
 @media(max-width:760px){ /* 手机版三维照常可用：全宽三档，TERRA 拉手居中 */
-  #pnTx{right:0;height:min(23vh,205px)}
+  #pnTx{left:0;right:0;height:min(23vh,205px)}   /* 手机上宽度本来就紧，不再给左边让位 */
   #game.tx2 #pnTx{height:min(52vh,460px)}
-  #game.txBig #pnTx{height:min(70vh,560px)}   /* 再高就会和下方模式行／输入行叠在一起 */
-  #arrTx{right:10px;left:auto}
-  #game.txOpen #arrTx{top:calc(46px + min(23vh,205px))}
-  #game.txOpen.tx2 #arrTx{top:calc(46px + min(52vh,460px))}
-  #game.txOpen.txBig #arrTx{top:calc(46px + min(70vh,560px))}
+  #game.txBig #pnTx{height:calc(100% - 46px)}
   /* 顶栏那条「时地」原来被挤到只剩 28px（八颗工具钮 flex:none 一个不让，
      padding 与间距又按桌面来）——连「前48年 · 罗马」都只露得出两个字。
      先把钮和间距收一档腾出地方，再让时地占住剩下的全部宽度。 */
@@ -1228,7 +1218,7 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
 
 /* —— 可点元素：统一的状态过渡 + 按下反馈 —— */
 #game .gm,#game .gsug,#game .gAux,#game .gSend,#game .gt,
-.gDlg .sSeg span,.gDlg .cfgTabs span,#arrTx .ax,
+.gDlg .sSeg span,.gDlg .cfgTabs span,
 .cxTab,.cxCat,.cxEnt,.op,#gNarr .op{
   transition:color var(--t-ui) var(--e-io),
              background-color var(--t-ui) var(--e-io),
@@ -1237,8 +1227,7 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
              transform var(--t-tap) var(--e-io)}
 #game .gm:active,#game .gsug:active,#game .gAux:active,#game .gSend:active,
 #game .gt:active,.gDlg .sSeg span:active,.gDlg .cfgTabs span:active,
-#arrTx .ax:active,.cxTab:active,.op:active{transform:scale(var(--mv-tap))}
-#arrTx .ax.off:active{transform:none}      /* 灰掉的钮不该有按下反馈 */
+.cxTab:active,.op:active{transform:scale(var(--mv-tap))}
 
 /* —— 顶栏图标：悬停微亮 —— */
 #game .gTools .gt{transition:color var(--t-ui) var(--e-io),
@@ -1276,9 +1265,10 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
               box-shadow:0 0 0 1px rgba(201,155,63,.25),0 4px 14px rgba(0,0,0,.5)}
 .svFold:active{background:rgba(201,155,63,.16)}
 
-/* —— 三维面板本体：展开／收起时高度平滑（宿主已给 #arrTx 的 top 加了过渡，
-      这里补上面板自身，两者共用同一条曲线才不会各走各的） —— */
+/* —— 三维面板本体：换档时高度／左右都要平滑（最大档还要横着铺满） —— */
 #pnTx{transition:height var(--t-view) var(--e-io),
+                 left var(--t-view) var(--e-io),
+                 right var(--t-view) var(--e-io),
                  bottom var(--t-view) var(--e-io)}
 
 /* —— 进度条／生成条：宽度走过去 —— */
@@ -1443,7 +1433,12 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
   <div id="pnTx"><div id="zjScene3D" style="position:absolute;inset:0"></div><div id="mdScene3D" style="position:absolute;inset:0;display:none;outline:none"></div><div id="modScene3D" style="position:absolute;inset:0;display:none;background:#030303"><canvas id="mcGl" style="position:absolute;inset:0;width:100%;height:100%"></canvas><canvas id="mcOv" style="position:absolute;inset:0;width:100%;height:100%;touch-action:none"></canvas></div>
     <div id="txHint"></div>
   </div>
-  <div id="arrTx"><span class="ax" id="arrUp" title="收起：逐级缩小三维画面，最小后再点即关闭"><span class="a">▴</span><span class="t">收&nbsp;起</span></span><span class="ax" id="arrDn" title="展开：逐级放大三维画面"><span class="t">展&nbsp;开</span><span class="a">▾</span></span></div>
+  <div class="g3dRail">
+    <div class="gArr" id="arr3d" title="TERRA · 天下三维　点一下换一档：默认 → 放大 → 全屏 → 收起">
+      <div class="win"><canvas class="m3d" width="128" height="88"></canvas></div>
+      <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 2.6 21 7.4v9.2L12 21.4 3 16.6V7.4z"/><path d="M3 7.4l9 4.8 9-4.8M12 12.2v9.2"/></svg></div>
+      <span class="t">天下</span></div>
+  </div>
   <div class="gPanel" id="pnMap">
     <canvas id="gmapCv"></canvas>
     <div class="pnTitle"><i>◆</i>&nbsp;TABVLA&nbsp;·&nbsp;地图&nbsp;&nbsp;—&nbsp;&nbsp;拖动旋转</div>
@@ -10566,54 +10561,54 @@ function medEdictSync(){ /* 环海侧 sec_deed 敕令：同 edictSync，落到 M
   }
 }
 (function(){
-  var ar=document.getElementById('arrTx');
+  var ar=document.getElementById('arr3d');
   if(ar){
-    /* 三维画面共四档：关闭 → 小 → 中 → 大。
-       展开钮只往大走、收起钮只往小走，各自到头就变灰，不再循环。 */
+    /* 三维画面四档循环：默认 → 放大 → 全屏 → 收起 → 默认…
+       原来是展开／收起两个钮各管一头，现在全交给左上角那一枚台前调度小窗，
+       点一下走一档。四档正好绕一圈，点过头再点三下就回来，不会卡死在某一端。 */
     function eng(){return window.MED3D;}
-    function tierNow(){var E=eng();return (E&&E.tier!=null)?E.tier:0;}
-    function setTier(tt){
+    /* 档位原来只存在引擎对象上：引擎还没加载（或这条线根本不用引擎）时
+       tierNow 恒返回 0，setTier 写进去也没人接——点多少下都停在第一档。
+       面板自己的布局档不该依赖引擎在不在。这里补一份本地的：
+       引擎在就以引擎为准并回记（建造清单那类自抬层级要认），不在就用本地这份。 */
+    var TIER=0;
+    try{var _t0=parseInt(localStorage.getItem('med3d_tier'),10);
+        if(_t0>=0&&_t0<=2)TIER=_t0;}catch(_){}
+    function tierNow(){
       var E=eng();
-      if(E){E.tier=tt;E.expanded=tt>0;}
-      try{localStorage.setItem('med3d_tier',String(tt));
-          localStorage.setItem('med3d_expand',tt>0?'1':'0');}catch(_){}
+      if(E&&E.tier!=null)TIER=Math.max(0,Math.min(2,E.tier|0));
+      return TIER;
+    }
+    function setTier(tt){
+      TIER=Math.max(0,Math.min(2,tt|0));
+      var E=eng();
+      if(E){E.tier=TIER;E.expanded=TIER>0;}
+      try{localStorage.setItem('med3d_tier',String(TIER));
+          localStorage.setItem('med3d_expand',TIER>0?'1':'0');}catch(_){}
     }
     function paint(){
       var g=document.getElementById('game'),tr=tierNow();
       g.classList.toggle('txOpen',GAME.txOpen);
       g.classList.toggle('tx2',GAME.txOpen&&tr===1);
       g.classList.toggle('txBig',GAME.txOpen&&tr===2);
-      var up=document.getElementById('arrUp'),dn=document.getElementById('arrDn');
-      if(up)up.classList.toggle('off',!GAME.txOpen);              /* 已关闭：收不动了 */
-      if(dn)dn.classList.toggle('off',GAME.txOpen&&tr>=2);        /* 已最大：展不动了 */
       /* 单臂：每个入口(渲染/缩放/点击/心跳)从前都会各自起一条 480ms 独立链，
          回合越多链越多，同一份工作被跑 N 遍——旧链还把死文档钉着。 */
       if(GAME.txOpen&&LIVE){if(_TICK_T)clearTimeout(_TICK_T);_TICK_T=tmo(zj3dTick,480);}
     }
-    /* 「变灰」只是外观提示，绝不拿它当行为开关：
-       它由一次性的初始化 paint 决定，而面板是之后才打开的，class 一旦算错，
-       两个钮就会互相锁死、点了毫无反应。行为一律现查真实状态。 */
-    function grow(){
+    /* 行为一律现查真实状态，不看样式类：面板是初始化之后才打开的，
+       拿一次性算出来的 class 当开关，点了会毫无反应。 */
+    function cycle(){
       var E=eng();
       if(!GAME.txOpen){ GAME.txOpen=true; setTier(0); if(E&&E.wake)E.wake(); }
       else if(tierNow()<2){ setTier(tierNow()+1); }
-      else return;                                   /* 已最大 */
-      paint();
-    }
-    function shrink(){
-      if(!GAME.txOpen)return;
-      var tr=tierNow();
-      if(tr>0){ setTier(tr-1); }
-      else{                                                       /* 已经最小：再点即关闭 */
+      else{                                          /* 已全屏：这一下是收起 */
         GAME.txOpen=false; setTier(0);
         try{if(window.MED3D&&MED3D.sleep)MED3D.sleep();}catch(_){}
         try{if(window.ZJ3D&&ZJ3D.sleep)ZJ3D.sleep();}catch(_){}
       }
       paint();
     }
-    var dnEl=document.getElementById('arrDn'),upEl=document.getElementById('arrUp');
-    if(dnEl)dnEl.addEventListener('click',grow);
-    if(upEl)upEl.addEventListener('click',shrink);
+    ar.addEventListener('click',cycle);
     paint();
     window.__arrPaint=paint;   /* 别处改了档位（如营造清单自抬层级）后可让钮态跟上 */
     /* 整块收起／还原。手机上切到情报台那一页时要用：三维画面 z-index 25、
@@ -11958,10 +11953,51 @@ function railMapThumb(){
   g.clearRect(0,0,c.width,c.height);
   try{g.drawImage(src,0,0,c.width,c.height);}catch(_){}
 }
+/* 三维那一枚的微缩。三维是 WebGL，宿主没开 preserveDrawingBuffer，
+   合成一过缓冲就被清了——在主循环里 drawImage 过去多半是一片黑。
+   所以拷完抽查几个点：真有像素就用，全黑就退回自己画一张地平线示意，
+   总好过挂一块死黑的方块。收起状态下画面本来就没有，直接画示意。 */
+function rail3dThumb(){
+  var c=document.querySelector('#arr3d .m3d');if(!c)return;
+  var g=c.getContext('2d');if(!g)return;
+  var W=c.width,H=c.height,live=false;
+  g.clearRect(0,0,W,H);
+  if(GAME.txOpen){
+    var hosts=['zjScene3D','mdScene3D','modScene3D'],src=null,i,j;
+    for(i=0;i<hosts.length&&!src;i++){
+      var h=document.getElementById(hosts[i]);
+      if(!h)continue;
+      try{if(getComputedStyle(h).display==='none')continue;}catch(_){}
+      var cvs=h.querySelectorAll('canvas');
+      for(j=0;j<cvs.length;j++)if(cvs[j].width>1&&cvs[j].height>1){src=cvs[j];break;}
+    }
+    if(src){
+      try{g.drawImage(src,0,0,W,H);}catch(_){}
+      try{
+        var d=g.getImageData(0,0,W,H).data;
+        for(var k=0;k<d.length;k+=4*13){if(d[k]>8||d[k+1]>8||d[k+2]>8){live=true;break;}}
+      }catch(_){live=true;}      /* 画布被污染读不了：当它是活的，别退回示意 */
+    }
+  }
+  if(live)return;
+  /* 示意：一条地平线 + 几道退远的横线，与选局那张山脉底同一种笔触 */
+  g.clearRect(0,0,W,H);
+  var hor=H*.52,r;
+  g.strokeStyle='rgba(156,156,152,.34)';g.lineWidth=1;
+  g.beginPath();g.moveTo(0,hor);g.lineTo(W,hor);g.stroke();
+  for(r=1;r<=5;r++){
+    var y=hor+Math.pow(r/5,1.7)*(H-hor-2);
+    g.strokeStyle='rgba(156,156,152,'+(.26-r*.04).toFixed(2)+')';
+    g.beginPath();g.moveTo(0,y);g.lineTo(W,y);g.stroke();
+  }
+  g.fillStyle='rgba(201,155,63,.55)';
+  g.fillRect(W*.34,hor-9,2,9);g.fillRect(W*.46,hor-14,2,14);g.fillRect(W*.60,hor-7,2,7);
+}
 function railSync(){
   try{railThumb('arrArm','pnArm');}catch(_){}
   try{railThumb('arrShop','pnShop');}catch(_){}
   try{railMapThumb();}catch(_){}
+  try{rail3dThumb();}catch(_){}
 }
 
 /* 版本印：设置面板底部常驻，一眼看出当前跑的是哪一版，省得靠猜缓存 */
