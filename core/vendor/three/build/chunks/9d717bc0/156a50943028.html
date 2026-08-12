@@ -224,7 +224,7 @@ canvas{display:block}
       justify-content:center;background:rgba(4,4,4,.58)}
 #eraBox .box,#persona .box,#psRes .box{border:1px solid rgba(236,236,232,.4);padding:38px 46px;
       min-width:340px;max-width:540px;
-      background:rgba(6,6,6,.55);box-shadow:0 18px 48px rgba(0,0,0,.55);
+      background:rgba(6,6,6,.24);box-shadow:0 18px 48px rgba(0,0,0,.55);
       -webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%)}
 /* 场面窗压在人物面板之上：返回时人物面板原样还在后头，填好的名字不必重打 */
 #psRes{z-index:84;background:rgba(4,4,4,.92)}
@@ -518,7 +518,7 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
 /* 缩略窗本体：一道细边框住内容。没有标题栏、没有四角括号——
    那三颗视窗按钮是苹果的，角括号是本作别处的花活，搁在 44px 高的小窗上只剩噪点。 */
 .gArr .win{position:absolute;inset:0;overflow:hidden;
-      background:rgba(6,6,6,.80);border:1px solid rgba(236,236,232,.30);
+      background:rgba(6,6,6,.42);border:1px solid rgba(236,236,232,.30);
       -webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);
       transition:border-color .22s}
 /* 小窗里装的是那个抽屉的真内容，不是画一张示意图：把抽屉的 innerHTML 原样搬进
@@ -559,7 +559,7 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
 #game.txOpen.tx2 #arr3d .t::after{content:'·放大'}
 #game.txOpen.txBig #arr3d .t::after{content:'·全屏'}
 .gPanel{position:absolute;left:96px;width:min(42vw,500px);z-index:30;
-      background:rgba(6,6,6,.78);border:1px solid rgba(236,236,232,.20);
+      background:rgba(6,6,6,.34);border:1px solid rgba(236,236,232,.20);
       box-shadow:0 14px 34px rgba(0,0,0,.5);
       backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
       /* 与右边情报台那扇窗镜像：那边 rotateY(-10deg)，这边 +10deg，
@@ -670,7 +670,7 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
 .gDlg{position:fixed;inset:0;z-index:86;display:none;align-items:center;justify-content:center;
       background:rgba(4,4,4,.58)}
 .gDlg .box{border:1px solid rgba(236,236,232,.4);
-      background:rgba(6,6,6,.55);box-shadow:0 18px 48px rgba(0,0,0,.55);
+      background:rgba(6,6,6,.24);box-shadow:0 18px 48px rgba(0,0,0,.55);
       -webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%);
       padding:34px 42px;
       min-width:min(calc(92vw/var(--ui)),360px);max-width:min(calc(94vw/var(--ui)),680px);max-height:calc(92vh/var(--ui));overflow:auto}
@@ -760,9 +760,9 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
 #svField{position:absolute;inset:0;z-index:2}
 .svFold{position:absolute;display:flex;align-items:center;gap:7px;padding:5px 10px 5px 6px;cursor:pointer;
   -webkit-backdrop-filter:blur(9px) saturate(140%);backdrop-filter:blur(9px) saturate(140%);
-  background:rgba(6,6,6,.55);border:1px solid rgba(236,236,232,.30);white-space:nowrap;
+  background:rgba(6,6,6,.24);border:1px solid rgba(236,236,232,.30);white-space:nowrap;
   transform:translate(-50%,-50%);will-change:transform;transition:border-color .18s,background .18s}
-.svFold .tab{position:absolute;left:-1px;top:-7px;width:38%;height:7px;background:rgba(6,6,6,.55);
+.svFold .tab{position:absolute;left:-1px;top:-7px;width:38%;height:7px;background:rgba(6,6,6,.24);
   -webkit-backdrop-filter:blur(9px) saturate(140%);backdrop-filter:blur(9px) saturate(140%);
   border:1px solid rgba(236,236,232,.30);border-bottom:0}
 .svFold .num{font-size:14px;font-weight:400;letter-spacing:.04em;color:rgba(220,220,215,.55);
@@ -941,7 +941,7 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
 .fd-ov,.fd-ov *{border-radius:0!important}
 .fd-ov{position:fixed;inset:0;z-index:2147481300;display:flex;align-items:center;justify-content:center;background:rgba(4,4,4,.58);font-family:var(--mono)}
 .fd-win{border:1px solid rgba(236,236,232,.4);
-  background:rgba(6,6,6,.55);box-shadow:0 18px 48px rgba(0,0,0,.55);
+  background:rgba(6,6,6,.24);box-shadow:0 18px 48px rgba(0,0,0,.55);
   -webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%);
   padding:30px 36px 24px;width:min(92vw,430px);max-height:80vh;overflow-y:auto;color:#d9d9d4;font-family:var(--mono)}
 .fd-win h2{font-size:14px;letter-spacing:.3em;font-weight:400;color:#ecece8;margin:18px 0 6px}
@@ -978,7 +978,7 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
    再从顶栏底下让开 10px——那三扇是 top:56（46+10），这一扇也浮起来，
    不然它焊在顶栏上，只有下沿一条边，怎么看都不是同一族的窗。 */
 #pnTx{position:absolute;left:100px;right:calc(322px*var(--ui));top:calc(46px*var(--ui) + 10px);height:min(24vh,215px);z-index:25;
-      background:rgba(6,6,6,.78);border:1px solid rgba(236,236,232,.20);
+      background:rgba(6,6,6,.34);border:1px solid rgba(236,236,232,.20);
       box-shadow:0 14px 34px rgba(0,0,0,.5);
       -webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);
       visibility:hidden;transform:translateY(-113%) translateZ(0);transition:transform .45s cubic-bezier(.2,.85,.25,1),height .3s,visibility .45s;overflow:hidden;font-family:var(--mono)}
@@ -1022,7 +1022,7 @@ html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx
    这一档不再挂毛玻璃：整屏的 backdrop 每帧重算，而它背后已被自己盖满，
    模糊出来谁也看不见，纯属白烧一层合成。底色相应加实。 */
 #game.txBig #pnTx{left:10px;right:10px;height:calc(100% - 46px*var(--ui) - 20px);
-      background:rgba(6,6,6,.92);
+      background:rgba(6,6,6,.45);
       -webkit-backdrop-filter:none;backdrop-filter:none}
 #game.txOpen #pnTx{visibility:visible;transform:translateZ(0)}
 /* 箭头恒朝下：此钮语义=向下逐级展开游戏画面 */
@@ -1186,7 +1186,7 @@ html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx
    名字同样写在窗外下面一行。上了台的那扇窗才用 .gPanel 那一套（带投影的玻璃）。 */
 .mvCard.thumb .mvBody{overflow:hidden;pointer-events:none}
 .mvCard.thumb .ftag,.mvCard.thumb .fnum{display:none}
-.gMfd.mvDeck .mvCard.thumb .cfr{background:rgba(6,6,6,.80) !important;
+.gMfd.mvDeck .mvCard.thumb .cfr{background:rgba(6,6,6,.42) !important;
       border-color:rgba(236,236,232,.30);box-shadow:none}
 .mvCard .ic{position:absolute;left:-11px;bottom:-7px;width:22px;height:22px;z-index:5;
       background:#0a0a0a;border:1px solid rgba(236,236,232,.34);opacity:0;
@@ -1226,7 +1226,7 @@ html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx
    （原先玻璃在子元素 .cfr 上、透视在祖先上，采样被截断，糊不出来。）
    mvFit 抵掉近边被透视放大的那一点，免得上下顶出台子。 */
 .gMfd.mvDeck .mvWin{position:absolute;transform-origin:50% 50%;--mvTilt:-10deg;--mvFit:.93;
-      background:rgba(6,6,6,.22);border:1px solid rgba(236,236,232,.20);
+      background:rgba(6,6,6,.10);border:1px solid rgba(236,236,232,.20);
       box-shadow:0 14px 34px rgba(0,0,0,.5);
       /* 这一扇背后只有那层细线框（灰度 4~16），blur(9px) 把 1px 的线摊开近二十像素，
          峰值只剩百分之一二，再被面板底色压一道，等于什么都看不见。
@@ -7356,15 +7356,15 @@ function applyGlass(){
     +'#game .gTop{background:rgba(6,6,6,'+(.05+.22*a).toFixed(2)+') !important}'
     /* 情报台那几扇窗跟着同一根「面板透明度」拉杆走——它们就是同一种窗，
        底色不该有两套。 */
-    +'.gPanel,#pnTx{background:rgba(6,6,6,'+(.10+.36*a).toFixed(2)+') !important}'
+    +'.gPanel,#pnTx{background:rgba(6,6,6,'+(.04+.16*a).toFixed(2)+') !important}'
     /* 情报台那六扇单独一档更透的：它们背后只有一层细线框，底色跟左边三扇一样厚的话
        线全被压掉，看着就是六块不透的黑板。同一根拉杆，系数减半。 */
-    +'.gMfd.mvDeck .mvWin{background:rgba(6,6,6,'+(.04+.20*a).toFixed(2)+') !important}'
+    +'.gMfd.mvDeck .mvWin{background:rgba(6,6,6,'+(.02+.08*a).toFixed(2)+') !important}'
     /* 全屏档背后被自己盖满，透太多只会把正文透出来糊成一片，单给一档更实的 */
-    +'#game.txBig #pnTx{background:rgba(6,6,6,'+(.62+.34*a).toFixed(2)+') !important}'
+    +'#game.txBig #pnTx{background:rgba(6,6,6,'+(.28+.18*a).toFixed(2)+') !important}'
     /* 弹窗类：身后隔着一层遮罩，比贴着画面的那几扇给厚一档 */
     +'.gDlg .box,#eraBox .box,#persona .box,#psRes .box,.fd-win,.svFold,.svFold .tab'
-    +'{background:rgba(6,6,6,'+(.22+.42*a).toFixed(2)+') !important}';
+    +'{background:rgba(6,6,6,'+(.09+.19*a).toFixed(2)+') !important}';
 }
 applyGlass();
 $('#cfgGlass').value=SET.glass;
