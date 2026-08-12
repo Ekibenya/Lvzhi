@@ -1860,30 +1860,12 @@
     ensureBuildHud(host);
   }
   function isTouch() { return matchMedia('(pointer:coarse)').matches; }
-  /* 手机上三维面板两侧浮着宿主的台前调度缩略列：左边那条（3D场景／地图／商店／装备）
-     占到视口 x=45，右边情报台那一列的名字最左到 x=345。HUD 的东西全是贴着面板边摆的
-     ——地名片贴左上、营造清单贴底、清单钮贴右下——于是统统压在缩略列底下。
-     这里只把 HUD 这一层让进来：画布照旧铺满，挪的只是要看要点的那些东西。
-     46/344 两个数就是上面那两条列的边，宿主的 @media (max-width:760px) 里定的。
-     桌面（>760）两条列在面板之外，一律不让。 */
-  var HUD_L = 46, HUD_R = 344;
-  function hudFit(force) {
-    if (!hud || !hud.parentNode) return;
-    var now = performance.now();
-    if (!force && hudFit._t && now - hudFit._t < 250) return;
-    hudFit._t = now;
-    var L = 0, R = 0;
-    if (innerWidth <= 760) {
-      var r = hud.parentNode.getBoundingClientRect();
-      L = Math.max(0, Math.round(HUD_L - r.left));
-      R = Math.max(0, Math.round(r.right - HUD_R));
-    }
-    if (hud._L !== L) { hud._L = L; hud.style.left = L + 'px'; }
-    if (hud._R !== R) { hud._R = R; hud.style.right = R + 'px'; }
-  }
+  /* 手机上画面左上角正压着台前调度那一列的第一枚小窗（3D场景），地名片和纪年那行
+     怎么摆都在它底下。这两样在正文顶栏和状态栏里都各有一份，画面里这份是重复的，
+     窄屏干脆不出——比互相让位干净。760 这个界是宿主那边缩略列的媒体查询边界。 */
+  function chipOn() { return !!Z.chipText && innerWidth > 760; }
   function updateHud() {
     if (!hud) return;
-    hudFit(1);
     if (Z.loading) { loadEl.style.display = 'flex'; loadEl.textContent = '营造天下 ' + Math.round(Z.prog * 100) + '%'; }
     else if (Z.failed) { loadEl.style.display = 'flex'; loadEl.textContent = '三维资材未至 · 以简册代之'; }
     else loadEl.style.display = 'none';
@@ -1895,7 +1877,7 @@
     if (Z._lowBtn) Z._lowBtn();
     if (Z._txtBtn) Z._txtBtn.style.display = Z.expanded ? 'block' : 'none';
     if (locChip) { // 与顶排按钮同行：限宽到右侧最近按钮之前，放不下省略号截断
-      locChip.style.display = Z.chipText ? 'block' : 'none';
+      locChip.style.display = chipOn() ? 'block' : 'none';
       var lm = Infinity;
       [bHud.goldChip, Z._txtBtn, bHud.viewBtn, expBtn].forEach(function (el) {
         if (!el || el.style.display === 'none') return;
@@ -1915,14 +1897,14 @@
   function applyChip() {
     if (!locChip) return;
     locChip.textContent = Z.chipText || '';
-    locChip.style.display = Z.chipText ? 'block' : 'none';
+    locChip.style.display = chipOn() ? 'block' : 'none';
     applyEra();
   }
   /* 纪年不进地名框——单独一行半透明小字浮在框下面；太长就无缝跑马灯滚动。 */
   function applyEra() {
     if (!eraChip) return;
     var era = Z.eraText || '';
-    if (!era || !Z.chipText) { eraChip.style.display = 'none'; eraChip.textContent = ''; eraChip._full = ''; return; }
+    if (!era || !chipOn()) { eraChip.style.display = 'none'; eraChip.textContent = ''; eraChip._full = ''; return; }
     eraChip.style.display = 'block';
     eraChip._full = era;
     fitScroll(eraChip, era);
@@ -2083,7 +2065,6 @@
       }
       return;
     }
-    hudFit();
     if (!Z.scene || !Z.rnd || !Z.cv.isConnected) return;
     if (isTouch()) { // 手机：操作中全速，静止或低配 30fps；打字时 ~8fps 让键盘丝滑
       var nowT = performance.now();
@@ -3278,7 +3259,7 @@
     cats.forEach(function (c, i) {
       var t = document.createElement('div');
       t.textContent = c.tab;
-      t.style.cssText = 'padding:' + (isTouch() ? '2px 9px' : '3px 14px') + ';cursor:pointer;font-size:' + (isTouch() ? '9.5px' : '10.5px') + ';letter-spacing:.16em;border-radius:0;white-space:nowrap;flex:0 0 auto;' +
+      t.style.cssText = 'padding:' + (isTouch() ? '2px 9px' : '3px 14px') + ';cursor:pointer;font-size:' + (isTouch() ? '9.5px' : '10.5px') + ';letter-spacing:.16em;border-radius:0;' +
         (i === bHud.tab ? 'background:rgba(201,155,63,.2);color:#ecc878;border:1px solid rgba(201,155,63,.55);border-bottom:none' : 'color:#9c9c98;border:1px solid transparent');
       t.onclick = function () { bHud.tab = i; fillTray(); };
       bHud.tabsEl.appendChild(t);
@@ -3405,6 +3386,11 @@
       bHud.tray.style.display = 'block';
       fillTray();
     }
+    /* 手机上情报台那一列浮在右缘（名字最左到视口 345），底下这两枚贴右摆的钮正压在它上面。
+       清单栏本身一格不缩——只把钮往左挪一截，错开就行。桌面那一列在面板之外，不挪。 */
+    var _shift = (innerWidth <= 760) ? 44 : 0;
+    if (bHud.trayBtn) bHud.trayBtn.style.right = (8 + _shift) + 'px';
+    if (bHud.reportBtn) bHud.reportBtn.style.right = ((isTouch() ? 70 : 124) + _shift) + 'px';
     bHud.viewBtn.style.display = (Z.expanded && (Z.mode === 'city' || Z.intPlan)) ? 'block' : 'none';
     bHud.viewBtn.textContent = Z.intPlan ? '出 · 回城' : (Z.view === 'build' ? '游历' : '营造');
     // 操作条贴近底部，托盘展开时抬升避让
