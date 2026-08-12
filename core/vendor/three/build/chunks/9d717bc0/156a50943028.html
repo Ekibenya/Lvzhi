@@ -968,9 +968,39 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
       box-shadow:0 14px 34px rgba(0,0,0,.5);
       -webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);
       visibility:hidden;transform:translateY(-113%) translateZ(0);transition:transform .45s cubic-bezier(.2,.85,.25,1),height .3s,visibility .45s;overflow:hidden;font-family:var(--mono)}
-/* 里头两层场景宿主本来没底色，玻璃透得过去；现代城那层原是实心 #030303，
-   改成半透，不然那一条线上玻璃等于没有。 */
+/* 里头两层场景宿主本来没底色；现代城那层原是实心 #030303，改成半透。 */
 #pnTx #modScene3D{background:rgba(3,3,3,.72) !important}
+/* ── 三维画面并入全站的黑金单色 ──
+   引擎那张低模场景是自己的调子：蓝天、绿草、粉树，饱和度拉满，
+   摆在一屏黑金线框旁边像两个软件拼起来的。引擎不动（那是渲染管线的事，
+   一改天空与雾就全毁），只在这一层做色彩分级：抽掉大半饱和度、压暗、
+   往暖里偏一点，让它落回同一张色表。 */
+#pnTx #zjScene3D>canvas,#pnTx #mdScene3D>canvas,#pnTx #modScene3D>canvas{
+      filter:saturate(.26) brightness(.84) contrast(1.08) sepia(.34) hue-rotate(-10deg)}
+/* 白昼模式那条整站反色仍要先生效，再叠同一副分级 */
+html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx #modScene3D>canvas{
+      filter:invert(1) hue-rotate(180deg) saturate(.24) contrast(1.10) sepia(.28)}
+/* 玻璃罩：把这扇窗自己的底色罩在画面上，再收一圈暗角——
+   看着才像「隔着这扇毛玻璃窗往外看」，而不是把一张外来的图钉在框里。
+   z-index:3 压在画布之上；引擎那几枚小片也在这层底下，罩子因此给得很淡。 */
+#pnTx::after{content:'';position:absolute;inset:0;z-index:3;pointer-events:none;
+      background:linear-gradient(180deg,rgba(6,6,6,.26) 0%,rgba(6,6,6,.08) 42%,rgba(10,8,5,.30) 100%);
+      box-shadow:inset 0 0 62px rgba(0,0,0,.42)}
+/* 画面里那几枚小片（地名、年号、营造、关闭）是引擎用内联样式写死的棕褐调，
+   和全站那副玻璃不是一套。按内联样式的子串精确接管——只认它默认那个底色，
+   不碰别的元素。引擎把底色改成金色高亮时，属性里这段就没了，规则自动让位，
+   它的激活反馈照旧生效。两个引擎各有一套底色，都列上。 */
+/* 子串要按「序列化之后」的写法来：浏览器读回 style 属性时会补空格、
+   把 .42 写成 0.42（rgba(24, 18, 11, 0.42)）。按源码里那种紧凑写法去匹配，
+   一条都命不中——这一版就是这么白改了一轮。两种写法都列上，谁在都能接住。 */
+#pnTx [style*="rgba(24, 18, 11"],#pnTx [style*="rgba(24,18,11"],
+#pnTx [style*="background: rgba(6, 6, 6"],#pnTx [style*="background:rgba(6,6,6"]{
+      background:rgba(6,6,6,.78) !important;
+      border-color:rgba(236,236,232,.20) !important;
+      -webkit-backdrop-filter:blur(9px) saturate(140%) !important;
+              backdrop-filter:blur(9px) saturate(140%) !important;
+      box-shadow:0 6px 18px rgba(0,0,0,.45) !important;
+      color:#d9d9d4 !important}
 #game.tx2 #pnTx{height:min(58vh,540px)}
 /* 最大那一档是真全屏：左右各留 10px、上下也各留 10px，正文与情报台全盖住。
    小窗自己 z-index 34、画面 25，盖不着——退出全屏就靠再点它一下。
