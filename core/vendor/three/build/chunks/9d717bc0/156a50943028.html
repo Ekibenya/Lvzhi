@@ -1250,6 +1250,11 @@ html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx
 .gMfd.mvDeck .mvCard.on .ic{border-color:rgba(201,155,63,.8);
       background:rgba(201,155,63,.16);color:var(--gold-hi)}
 .gMfd.mvDeck .mvCard.on .mvGhost .g3{color:var(--gold-hi)}
+/* 挂载那一刻 .gMfd 还没被 CSS 铺到 min(56vw,680px)，量到的台宽只有一两百，
+   按它算出来的窗位是负的（实测 left:-52px、313×560），窗会先甩到正文上面
+   再弹回来——加上 .34s 的过渡曲线，看着就是进局时弹窗闪一下。
+   先藏着，等 mvDeck 拿到像样的台宽真正排过一次，再揭开。 */
+.gMfd.mvBoot .mvTrack,.gMfd.mvBoot .mvPanes{visibility:hidden}
 #game .gMfd.mvDeck{overflow:visible}
 .gMfd.mvDeck .mvStage{overflow:visible}
 /* 顶沿与底沿是弧最宽的地方，小字贴边写没问题；细的是腰，让正文去躲。 */
@@ -11528,6 +11533,7 @@ function mvRingMount(){
   box.appendChild(bg);box.appendChild(vig);box.appendChild(stage);
   box.appendChild(rail);box.appendChild(foot);
   box.classList.add('mvRing');
+  if(deck)box.classList.add('mvBoot');      /* 排好第一帧之前先藏着，见 .mvBoot 那段注释 */
 
   MV.box=box;MV.stage=stage;MV.track=track;MV.panes=panes;MV.foot=foot;MV.cards=cards;MV.n=cards.length;
   MV.bg=bg;MV.bgx=bg.getContext('2d');MV.rail=rail;MV.railx=rail.getContext('2d');
@@ -11594,8 +11600,18 @@ function mvRailPick(e){
    转角表 MV.ang 存的是每张卡的绝对角度（弧度），pos 在表上线性插值。 */
 function mvSize(){
   if(!MV.stage||!MV.box)return;
+  /* 这两个类必须在量尺寸「之前」加：.gMfd 加了 .mvDeck 才有 min(56vw,680px)，
+     不加就还是那条 322 的窄栏。原先它们写在下面，于是第一趟量到的是 322，
+     整套窗位按 322 算出来是负的（实测 left:-52px），画一帧再弹回去——
+     进局时那一下弹窗闪烁就是这么来的。 */
+  MV.mode=mvMode();
+  MV.box.classList.toggle('mvDeck',MV.mode!==2);
+  try{gEl.classList.toggle('mvFree',MV.mode!==2);}catch(_){}
   var W=MV.stage.clientWidth,H=MV.stage.clientHeight;
   if(!(W>10&&H>10))return;
+  /* 卡叠那一条最窄也要 240（MV.gut 的下限）+ 内外缝，台宽不到 260 说明还没铺开，
+     这一趟算出来全是负数，宁可不排——下一帧 mvTick 还会再来。 */
+  if(mvMode()!==2&&W<260)return;
   MV.w=W;MV.h=H;
   var cw=Math.max(150,W-10);
   /* 「每段按自己的内容量高」和「看得出是个环」是一对矛盾：正前那张越高，
@@ -11644,9 +11660,6 @@ function mvSize(){
      两倍半——那是站在鼓外面看鼓，所以转开的面越来越小、卡的两端越收越窄，整个反了。
      取 P = 1.30R，眼睛落在轴心到内壁的三成处：转开的面反而越来越大，卡的上下两端
      离眼更近因而更宽——腰细端宽，这才是从胎内看胎壁。 */
-  MV.mode=mvMode();
-  MV.box.classList.toggle('mvDeck',MV.mode!==2);
-  try{gEl.classList.toggle('mvFree',MV.mode!==2);}catch(_){}
   if(MV.mode===2){
     MV.P=Math.max(120,Math.round(MV.R*1.30));
   }else{
@@ -11883,6 +11896,10 @@ function mvDeck(){
       C.win.style.width=winW+'px';C.win.style.height=Hc+'px';
     }
   }
+  /* 尺寸连着两帧没变，才算真定住，这时候露面才不会闪。
+     420ms 的宽度过渡期间一直藏着；重排（每幕重挂）时尺寸本来就没变，
+     两帧＝三十几毫秒，看不出来。 */
+  if((MV.stableN||0)>=2&&MV.box&&MV.box.classList.contains('mvBoot'))MV.box.classList.remove('mvBoot');
 }
 function mvLayout(){
   if(MV.mode!==2)return mvDeck();
@@ -11966,7 +11983,11 @@ function mvTick(){
     var nav=gEl.querySelector('.gNav');
     var navH=(nav&&getComputedStyle(nav).display!=='none')?'34px':'0px';
     if(MV._nav!==navH){MV._nav=navH;box.style.setProperty('--mvNav',navH);MV.w=0;}
-    if(MV.stage.clientWidth!==MV.w||MV.stage.clientHeight!==MV.h)mvSize();
+    /* .gMfd 身上有一条 transition:width 420ms：加上 .mvDeck 之后宽度是「动画」从
+       322 走到 680 的，当场读 clientWidth 读到的还是 322，按它排出来的窗位是负的。
+       所以尺寸每变一次就重排一次，并且要连着两帧不变才认为定住了（见 mvDeck 末尾）。 */
+    if(MV.stage.clientWidth!==MV.w||MV.stage.clientHeight!==MV.h){MV.stableN=0;mvSize();}
+    else MV.stableN=(MV.stableN||0)+1;
     var now=performance.now();
     /* 缓动按真实时长算，不按帧数。三维城景一开，低配机上这个循环一秒只跑得动
        两三帧——写死每帧 .16 的话，翻一段要等好几秒，人会以为按钮没反应。 */
