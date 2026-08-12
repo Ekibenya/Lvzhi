@@ -1538,7 +1538,7 @@ html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx
 </div>
 
 <div id="brand">
-  <div class="row"><span class="name">LVZHI</span><span class="tag">UI·EXP_01</span></div>
+  <div class="row"><span class="name">LVZHI</span></div>
   <div class="sub">选局 / OPENING SELECT <i>●</i> SHELL:STANDBY</div>
 </div>
 <div id="glyphs"><span class="star">✦</span><br>SYS 09.2030<br>NET:PACIFIC</div>
@@ -4492,7 +4492,7 @@ $('#miOrac').addEventListener('pointerup',function(e){e.stopPropagation();apiOpe
 $('#miArch').addEventListener('pointerup',function(e){e.stopPropagation();svOpen();});
 
 /* ================= game stage: Ghost layout in ROME dress ================ */
-var BUILD=84;
+var BUILD=85;
 /* 地图初始朝向。原来是 15°E（罗马那边）——这是从罗马那一版继承下来的，
    在秦这一版里一打开地图看到的是欧洲，中国被挤在球体右缘。
    球心画在画布最左缘（cx=gmW*.04），所以可视带约是 lonC ~ lonC+90°，
@@ -12489,6 +12489,11 @@ function rail3dThumb(){
   g.fillRect(W*.34,hor-9,2,9);g.fillRect(W*.46,hor-14,2,14);g.fillRect(W*.60,hor-7,2,7);
 }
 function railSync(){
+  /* 商店那一栏是 shopOpen 时才 shopRender() 的，没开过就只有一层空壳，
+     缩略窗拷过去自然是一片空白。这里在它还空着的时候先替它渲一次——
+     只渲这一次（有子节点就不再进来），此后照常由开关与买卖各自刷新。 */
+  try{var _sw=document.getElementById('shopWrap');
+      if(GAME.on&&_sw&&!_sw.firstElementChild)shopRender();}catch(_){}
   try{railThumb('arrArm','pnArm');}catch(_){}
   try{railThumb('arrShop','pnShop');}catch(_){}
   try{railMapThumb();}catch(_){}
