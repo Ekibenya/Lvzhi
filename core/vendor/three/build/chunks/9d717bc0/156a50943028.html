@@ -3035,12 +3035,12 @@ addEventListener('resize',menuSize);
 menuSize();
 function menuEnter(){MENU.gen=(MENU.gen||0)+1;MENU.exiting=false;MENU.on=true;MENU.t0=performance.now();menuScatter();
   /* 菜单期间把选局环 DOM 全部收起：淡入过程不再透出残留画面 */
-  $('#stage').style.display='none';$('#rail').style.display='none';$('#mission').style.display='none';
+  $('#stage').style.display='none';$('#rail').style.display='none';$('#mission').style.display='none';try{$('#luxTg').style.display='none';}catch(_){}
   var mc=$('#miCont');if(mc)mc.style.display=(GAME.op?'':'none'); /* 有局在身才给「继续游戏」 */
   mOv.classList.add('show');}
 function menuExit(){
   if(MENU.exiting)return;MENU.exiting=true;
-  $('#stage').style.display='';$('#rail').style.display='';$('#mission').style.display='';
+  $('#stage').style.display='';$('#rail').style.display='';$('#mission').style.display='';try{$('#luxTg').style.display='';}catch(_){}
   /* 关键：rail 在菜单期是 display:none，此前所有 size() 量到的都是 0 宽，
      导轨画布与 stepPix() 因此恒为 0——滑动一除就成了 Infinity。
      揭开之后必须立刻重量一次，下一帧再补一次（等布局落定）。 */
@@ -4389,7 +4389,7 @@ $('#miOrac').addEventListener('pointerup',function(e){e.stopPropagation();apiOpe
 $('#miArch').addEventListener('pointerup',function(e){e.stopPropagation();svOpen();});
 
 /* ================= game stage: Ghost layout in ROME dress ================ */
-var BUILD=64;
+var BUILD=65;
 /* 地图初始朝向。原来是 15°E（罗马那边）——这是从罗马那一版继承下来的，
    在秦这一版里一打开地图看到的是欧洲，中国被挤在球体右缘。
    球心画在画布最左缘（cx=gmW*.04），所以可视带约是 lonC ~ lonC+90°，
@@ -4434,7 +4434,7 @@ function gameShow(){
   var gb=$('#game .gBrand');if(gb&&gb.textContent.indexOf('·B')<0)gb.textContent+='  ·B'+BUILD;
   /* 进局即乐起（首曲 Fons Vitae）；被浏览器拦截则首次点按时补放。玩家手动暂停过则不再自作主张 */
   try{if(typeof BGM!=='undefined'&&!BGM.a)bgmPlay(0);}catch(_){}
-  $('#stage').style.display='none';$('#rail').style.display='none';$('#mission').style.display='none';
+  $('#stage').style.display='none';$('#rail').style.display='none';$('#mission').style.display='none';try{$('#luxTg').style.display='none';}catch(_){}
   setTimeout(gmapSize,80);
 }
 /* 自定义开局（CONDERE）：以所选年代·地点·身份现场铸一个全新开局。
@@ -4607,7 +4607,7 @@ function gameExit(){
      回调里的代际守卫虽然拦得住，但进度条与 BUSY 会挂在半路。 */
   try{if(GENAC)GENAC.abort();}catch(_){}
   BUSY=false;try{genClose();}catch(_){}
-  $('#stage').style.display='';$('#rail').style.display='';$('#mission').style.display='';
+  $('#stage').style.display='';$('#rail').style.display='';$('#mission').style.display='';try{$('#luxTg').style.display='';}catch(_){}
   GAME.on=false;GAME.txOpen=false;gEl.classList.remove('show','mapOpen','armOpen','txOpen');
   mOv.classList.remove('gbg');
   GAME.mapOpen=GAME.armOpen=GAME.shopOpen=false;
