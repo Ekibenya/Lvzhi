@@ -431,42 +431,42 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
 #game .gmBtn .cv{font-style:normal;margin-left:7px;opacity:.6}
 #game .gmBtn:hover,#game .gmBtn.open{border-color:var(--gold)}
 /* 弹出来的那张单子：浮在输入层上沿之上（.gInput 是 absolute，作定位参照）。
-   不能放进 .gModes——那一条是 overflow-x:auto，绝对定位的子元素会被裁掉。 */
-#game .gmMenu{position:absolute;left:14px;bottom:100%;margin-bottom:6px;z-index:40;
-      min-width:250px;max-width:min(86vw,360px);padding:4px;display:none;pointer-events:auto;
-      background:rgba(6,6,6,.84);border:1px solid rgba(236,236,232,.20);
-      box-shadow:0 14px 34px rgba(0,0,0,.5);
-      -webkit-backdrop-filter:blur(14px) saturate(150%);backdrop-filter:blur(14px) saturate(150%)}
-#game .gmMenu.open{display:block}
-/* 单子里的项：图标 + 名字 + 一行说明，选中的那条压一层金底并打勾。
+   不能放进 .gModes——那一条是 overflow-x:auto，绝对定位的子元素会被裁掉。
+   ── 三件事按全站的规矩来 ──
+   · 玻璃：底色／模糊／边／投影一律照弹窗那一族（.gDlg .box），并跟同一根拉杆走；
+   · 倾斜：perspective 写进自己的 transform、不给祖先加——给祖先加会切断 backdrop 根，
+     毛玻璃当场变成一块不透的黑。这一条与 .gPanel 同源，角度也取 +10deg 与左侧同向；
+   · 出现：不再 display 直切，改 opacity+transform 过渡，位移量走 --mv-y，
+     设置里关掉动效时自动归零。
+   宽度收到内容宽：说明那一列撤了（提示语本来就写在输入框的 placeholder 里），
+   剩图标+名字，整张单子于是是一条窄的竖长方形，占地最小。 */
+#game .gmMenu{position:absolute;left:14px;bottom:100%;margin-bottom:8px;z-index:40;
+      width:max-content;max-width:min(64vw,220px);padding:4px;
+      background:rgba(6,6,6,.24);border:1px solid rgba(236,236,232,.4);
+      box-shadow:0 18px 48px rgba(0,0,0,.55);
+      -webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%);
+      opacity:0;visibility:hidden;pointer-events:none;
+      transform:perspective(620px) translateY(var(--mv-y)) rotateY(10deg) scaleY(.93) scale(var(--mv-s));
+      transition:transform var(--t-view) var(--e-out),opacity var(--t-view) var(--e-out),
+                 visibility var(--t-view)}
+#game .gmMenu.open{opacity:1;visibility:visible;pointer-events:auto;
+      transform:perspective(620px) rotateY(10deg) scaleY(.93)}
+/* 单子里的项：图标 + 名字，选中的那条压一层金底。
    行里那套页签样式（金底黑字、9px 字距 .2em）在这里一律不算数。 */
-#game .gmMenu .gm{display:flex;align-items:center;gap:9px;width:100%;
-      padding:8px 10px !important;letter-spacing:.06em !important;font-size:11px;
-      background:transparent;border:0;white-space:nowrap;color:var(--mut)}
-#game .gmMenu .gm .ms{display:inline !important;margin-right:0;flex:none;width:12px;
+#game .gmMenu .gm,#game .gmMenu .gsug{display:flex;align-items:center;gap:8px;width:100%;
+      padding:7px 9px !important;letter-spacing:.06em !important;font-size:11px;
+      margin:0;background:transparent;border:0;white-space:nowrap;color:var(--mut)}
+#game .gmMenu .ms{display:inline !important;margin-right:0;flex:none;width:12px;
       text-align:center;opacity:.75}
-#game .gmMenu .gm b{font-weight:400;color:#d9d9d4;flex:none}
-#game .gmMenu .gm em{font-style:normal;font-size:9px;letter-spacing:.02em;color:var(--mut);
-      flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;text-align:right}
-#game .gmMenu .gm.on{background:rgba(201,155,63,.16);color:var(--mut);font-weight:400}
-#game .gmMenu .gm.on b{color:var(--gold-hi)}
-#game .gmMenu .gm.on .ms{opacity:1;color:var(--gold-hi)}
-#game .gmMenu .gm:hover{background:rgba(236,236,232,.06)}
+#game .gmMenu b{font-weight:400;color:#d9d9d4;flex:none}
+#game .gmMenu em{display:none}          /* 说明只留在输入框的 placeholder 里，单子不再重复一遍 */
+#game .gmMenu .gm.on,#game .gmMenu .gsug.on{background:rgba(201,155,63,.16);color:var(--mut)}
+#game .gmMenu .gm.on b,#game .gmMenu .gsug.on b{color:var(--gold-hi)}
+#game .gmMenu .gm.on .ms,#game .gmMenu .gsug.on .ms{opacity:1;color:var(--gold-hi)}
+#game .gmMenu .gm:hover,#game .gmMenu .gsug:hover{background:rgba(236,236,232,.06)}
 #game .gmSep{display:block;height:1px;margin:4px 6px;background:rgba(236,236,232,.14)}
-#game .gmMenu .gsug{display:flex;align-items:center;gap:9px;width:100%;
-      padding:8px 10px !important;letter-spacing:.06em !important;font-size:11px;
-      margin:0;border:0;background:transparent;color:var(--mut);white-space:nowrap}
-#game .gmMenu .gsug .ms{display:inline !important;margin-right:0;flex:none;width:12px;
-      text-align:center;opacity:.75}
-#game .gmMenu .gsug b{font-weight:400;color:#d9d9d4;flex:none}
-#game .gmMenu .gsug em{font-style:normal;font-size:9px;letter-spacing:.02em;color:var(--mut);
-      flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;text-align:right}
 #game .gmMenu .gsug::after{content:'';flex:none;width:11px;margin-left:auto;text-align:right;color:var(--gold-hi)}
 #game .gmMenu .gsug.on::after{content:'✓'}
-#game .gmMenu .gsug.on{color:var(--mut)}
-#game .gmMenu .gsug.on b{color:var(--gold-hi)}
-#game .gmMenu .gsug.on .ms{opacity:1;color:var(--gold-hi)}
-#game .gmMenu .gsug:hover{background:rgba(236,236,232,.06)}
 /* 行里那颗 ○／● 是给一排小钮用的开关指示；单子里右边已经有勾了，不要两套。 */
 #game .gmMenu .gsug::before,#game .gmMenu .gsug.on::before{content:none}
 /* 参谋是开关不是输入模式：它不占模式位，只管「每一幕后要不要给四条可点的下一步」 */
@@ -653,8 +653,6 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
   #game .gInput{padding-top:8px !important;padding-bottom:6px !important}
   /* 一屏放得下：藏掉前缀符号、字距收紧、内距再收一档。 */
   #game .gm .ms,#game .gsug .ms{display:none}
-  #game .gmMenu{left:12px;right:12px;min-width:0;max-width:none}
-  #game .gmMenu .gm em,#game .gmMenu .gsug em{display:none}
   #game .gm,#game .gsug{padding:4px 8px 3px !important;letter-spacing:.04em !important}
   #game .gNarr{padding-bottom:104px}
   /* 手机上左右两条缩略列是浮在正文之上的，7% 的边距（27px）不够躲：
@@ -4442,7 +4440,7 @@ $('#miOrac').addEventListener('pointerup',function(e){e.stopPropagation();apiOpe
 $('#miArch').addEventListener('pointerup',function(e){e.stopPropagation();svOpen();});
 
 /* ================= game stage: Ghost layout in ROME dress ================ */
-var BUILD=76;
+var BUILD=77;
 /* 地图初始朝向。原来是 15°E（罗马那边）——这是从罗马那一版继承下来的，
    在秦这一版里一打开地图看到的是欧洲，中国被挤在球体右缘。
    球心画在画布最左缘（cx=gmW*.04），所以可视带约是 lonC ~ lonC+90°，
@@ -7515,7 +7513,7 @@ function applyGlass(){
     /* 全屏档背后被自己盖满，透太多只会把正文透出来糊成一片，单给一档更实的 */
     +'#game.txBig #pnTx{background:rgba(6,6,6,'+(.28+.18*a).toFixed(2)+') !important}'
     /* 弹窗类：身后隔着一层遮罩，比贴着画面的那几扇给厚一档 */
-    +'.gDlg .box,#eraBox .box,#persona .box,#psRes .box,.fd-win,.svFold,.svFold .tab'
+    +'.gDlg .box,#eraBox .box,#persona .box,#psRes .box,.fd-win,.svFold,.svFold .tab,#game .gmMenu'
     +'{background:rgba(6,6,6,'+(.09+.19*a).toFixed(2)+') !important}';
 }
 applyGlass();
