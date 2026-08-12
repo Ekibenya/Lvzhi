@@ -1208,7 +1208,7 @@ html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx
    （原先玻璃在子元素 .cfr 上、透视在祖先上，采样被截断，糊不出来。）
    mvFit 抵掉近边被透视放大的那一点，免得上下顶出台子。 */
 .gMfd.mvDeck .mvWin{position:absolute;transform-origin:50% 50%;--mvTilt:-10deg;--mvFit:.93;
-      background:rgba(6,6,6,.78);border:1px solid rgba(236,236,232,.20);
+      background:rgba(6,6,6,.22);border:1px solid rgba(236,236,232,.20);
       box-shadow:0 14px 34px rgba(0,0,0,.5);
       /* 这一扇背后只有那层细线框（灰度 4~16），blur(9px) 把 1px 的线摊开近二十像素，
          峰值只剩百分之一二，再被面板底色压一道，等于什么都看不见。
@@ -7338,7 +7338,10 @@ function applyGlass(){
     +'#game .gTop{background:rgba(6,6,6,'+(.05+.22*a).toFixed(2)+') !important}'
     /* 情报台那几扇窗跟着同一根「面板透明度」拉杆走——它们就是同一种窗，
        底色不该有两套。 */
-    +'.gPanel,.gMfd.mvDeck .mvWin,#pnTx{background:rgba(6,6,6,'+(.10+.36*a).toFixed(2)+') !important}'
+    +'.gPanel,#pnTx{background:rgba(6,6,6,'+(.10+.36*a).toFixed(2)+') !important}'
+    /* 情报台那六扇单独一档更透的：它们背后只有一层细线框，底色跟左边三扇一样厚的话
+       线全被压掉，看着就是六块不透的黑板。同一根拉杆，系数减半。 */
+    +'.gMfd.mvDeck .mvWin{background:rgba(6,6,6,'+(.04+.20*a).toFixed(2)+') !important}'
     /* 全屏档背后被自己盖满，透太多只会把正文透出来糊成一片，单给一档更实的 */
     +'#game.txBig #pnTx{background:rgba(6,6,6,'+(.62+.34*a).toFixed(2)+') !important}';
 }
