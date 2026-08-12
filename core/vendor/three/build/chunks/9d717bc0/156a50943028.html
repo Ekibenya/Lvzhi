@@ -1210,7 +1210,13 @@ html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx
 .gMfd.mvDeck .mvWin{position:absolute;transform-origin:50% 50%;--mvTilt:-10deg;--mvFit:.93;
       background:rgba(6,6,6,.78);border:1px solid rgba(236,236,232,.20);
       box-shadow:0 14px 34px rgba(0,0,0,.5);
-      -webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);
+      /* 这一扇背后只有那层细线框（灰度 4~16），blur(9px) 把 1px 的线摊开近二十像素，
+         峰值只剩百分之一二，再被面板底色压一道，等于什么都看不见。
+         实测：模糊半径几乎不影响，起决定作用的是亮度增益。
+         所以半径收到 6px、补一道 2.6 倍增益——线这才透得出来。
+         左边三扇不用这么补：它们背后是打了光的三维画面，本来就亮。 */
+      -webkit-backdrop-filter:blur(6px) brightness(2.6) saturate(140%);
+              backdrop-filter:blur(6px) brightness(2.6) saturate(140%);
       transform:perspective(620px) translateX(26px) scale(.955) rotateY(var(--mvTilt)) scaleY(var(--mvFit));
       opacity:0;pointer-events:none;
       transition:transform .34s cubic-bezier(.2,.85,.25,1),opacity .26s ease}
