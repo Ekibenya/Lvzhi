@@ -1141,7 +1141,11 @@ html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx
 /* 底铺到 #gTerr 上去了，情报台自己那张不再重复画 */
 .gMfd.mvDeck .mvBg,.gMfd.mvDeck .mvVig{display:none}
 .gMfd.mvDeck .mvStage{left:0;right:0;overflow:visible;pointer-events:none}
-.gMfd.mvDeck .mvTrack{pointer-events:none}
+/* 缩略列压在正文窗上层：正在看的那一枚会转正并往前挪，会和窗的右沿叠上一点，
+   窗（.mvWin.on 有 z-index:2）会把它盖住半截。左边那一列也是这么排的：
+   .gRail 是 34、抽屉开着是 33。.mvTrack 有 preserve-3d，本身就是个层叠上下文，
+   所以要抬只能抬它，给里面的卡写 z-index 出不去。 */
+.gMfd.mvDeck .mvTrack{pointer-events:none;z-index:3}
 .gMfd.mvDeck .mvFoot{left:auto;right:0;width:212px;pointer-events:auto;
       border-left:1px solid #232320}
 .gMfd.mvDeck .mvFoot .l{display:none}
