@@ -960,20 +960,34 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
    左边留出 100px 给它——不留的话画面从 x=0 起，小窗就压在画面上。
    开着的那一枚会转正并往前挪（translateX(8px) translateZ(26px)），
    投影后右缘到 94px，所以 90 不够，得 100。 */
-#pnTx{position:absolute;left:100px;right:calc(322px*var(--ui));top:calc(46px*var(--ui));height:min(24vh,215px);z-index:25;background:#0b0906;border-bottom:1px solid rgba(236,236,232,.14);visibility:hidden;transform:translateY(-103%) translateZ(0);transition:transform .45s cubic-bezier(.2,.85,.25,1),height .3s,visibility .45s;overflow:hidden;font-family:var(--mono)}
+/* 玻璃四项（底色／边／投影／模糊）与 .gPanel 一个数不改；
+   再从顶栏底下让开 10px——那三扇是 top:56（46+10），这一扇也浮起来，
+   不然它焊在顶栏上，只有下沿一条边，怎么看都不是同一族的窗。 */
+#pnTx{position:absolute;left:100px;right:calc(322px*var(--ui));top:calc(46px*var(--ui) + 10px);height:min(24vh,215px);z-index:25;
+      background:rgba(6,6,6,.78);border:1px solid rgba(236,236,232,.20);
+      box-shadow:0 14px 34px rgba(0,0,0,.5);
+      -webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);
+      visibility:hidden;transform:translateY(-113%) translateZ(0);transition:transform .45s cubic-bezier(.2,.85,.25,1),height .3s,visibility .45s;overflow:hidden;font-family:var(--mono)}
+/* 里头两层场景宿主本来没底色，玻璃透得过去；现代城那层原是实心 #030303，
+   改成半透，不然那一条线上玻璃等于没有。 */
+#pnTx #modScene3D{background:rgba(3,3,3,.72) !important}
 #game.tx2 #pnTx{height:min(58vh,540px)}
-/* 最大那一档是真全屏：左右到底、下到底，正文与情报台全盖住。
-   小窗自己 z-index 34、画面 25，盖不着——退出全屏就靠再点它一下。 */
-#game.txBig #pnTx{left:0;right:0;height:calc(100% - 46px*var(--ui))}
+/* 最大那一档是真全屏：左右各留 10px、上下也各留 10px，正文与情报台全盖住。
+   小窗自己 z-index 34、画面 25，盖不着——退出全屏就靠再点它一下。
+   这一档不再挂毛玻璃：整屏的 backdrop 每帧重算，而它背后已被自己盖满，
+   模糊出来谁也看不见，纯属白烧一层合成。底色相应加实。 */
+#game.txBig #pnTx{left:10px;right:10px;height:calc(100% - 46px*var(--ui) - 20px);
+      background:rgba(6,6,6,.92);
+      -webkit-backdrop-filter:none;backdrop-filter:none}
 #game.txOpen #pnTx{visibility:visible;transform:translateZ(0)}
 /* 箭头恒朝下：此钮语义=向下逐级展开游戏画面 */
 #txHint{position:absolute;left:12px;bottom:44px;z-index:3;font-size:11.5px;color:#d9a06a;text-shadow:0 1px 3px #000}
 @keyframes zj3dMarq{to{transform:translateX(-50%)}}
 .zj3dMarq{animation:zj3dMarq linear infinite}
 @media(max-width:760px){ /* 手机版三维照常可用：全宽三档，TERRA 拉手居中 */
-  #pnTx{left:0;right:0;height:min(23vh,205px)}   /* 手机上宽度本来就紧，不再给左边让位 */
+  #pnTx{left:6px;right:6px;height:min(23vh,205px)}   /* 手机上宽度本来就紧，只留一线边 */
   #game.tx2 #pnTx{height:min(52vh,460px)}
-  #game.txBig #pnTx{height:calc(100% - 46px)}
+  #game.txBig #pnTx{left:6px;right:6px;height:calc(100% - 46px - 20px)}
   /* 顶栏那条「时地」原来被挤到只剩 28px（八颗工具钮 flex:none 一个不让，
      padding 与间距又按桌面来）——连「前48年 · 罗马」都只露得出两个字。
      先把钮和间距收一档腾出地方，再让时地占住剩下的全部宽度。 */
@@ -7268,7 +7282,9 @@ function applyGlass(){
     +'#game .gTop{background:rgba(6,6,6,'+(.05+.22*a).toFixed(2)+') !important}'
     /* 情报台那几扇窗跟着同一根「面板透明度」拉杆走——它们就是同一种窗，
        底色不该有两套。 */
-    +'.gPanel,.gMfd.mvDeck .mvWin .cfr{background:rgba(6,6,6,'+(.10+.36*a).toFixed(2)+') !important}';
+    +'.gPanel,.gMfd.mvDeck .mvWin .cfr,#pnTx{background:rgba(6,6,6,'+(.10+.36*a).toFixed(2)+') !important}'
+    /* 全屏档背后被自己盖满，透太多只会把正文透出来糊成一片，单给一档更实的 */
+    +'#game.txBig #pnTx{background:rgba(6,6,6,'+(.62+.34*a).toFixed(2)+') !important}';
 }
 applyGlass();
 $('#cfgGlass').value=SET.glass;
