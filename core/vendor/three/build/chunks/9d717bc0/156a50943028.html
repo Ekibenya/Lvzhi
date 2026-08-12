@@ -4492,7 +4492,7 @@ $('#miOrac').addEventListener('pointerup',function(e){e.stopPropagation();apiOpe
 $('#miArch').addEventListener('pointerup',function(e){e.stopPropagation();svOpen();});
 
 /* ================= game stage: Ghost layout in ROME dress ================ */
-var BUILD=83;
+var BUILD=84;
 /* 地图初始朝向。原来是 15°E（罗马那边）——这是从罗马那一版继承下来的，
    在秦这一版里一打开地图看到的是欧洲，中国被挤在球体右缘。
    球心画在画布最左缘（cx=gmW*.04），所以可视带约是 lonC ~ lonC+90°，
@@ -4724,7 +4724,6 @@ function gmapDraw(){
   if(gmW<4){gmapSize();if(gmW<4)return;}
   if(!GAME.drag){GAME.lon+=GAME.vel+((REDUCED||GAME.hov)?0:.00022);GAME.vel*=.94;}
   var cx=gmW*.04,cy=gmH*.5,R=Math.min(gmH*.72,gmW*.98)*(GAME.zoom||1);
-  GAME.gmGeo={cx:cx,cy:cy,R:R};        /* 缩略窗要照这个几何裁，不能整幅硬塞 */
   var lonC=GAME.lon,tilt=(GAME.tilt==null?.42:GAME.tilt),ctl=Math.cos(tilt),stl=Math.sin(tilt);
   var cs=Math.cos(lonC),sn=Math.sin(lonC);
   var eraRed=ERA.year>=-27&&ERA.year<=395;
@@ -12412,35 +12411,43 @@ function railThumb(arrId,srcId){
   if(mw._h!==h){mw._h=h;mw.innerHTML=h;}
 }
 function railMapThumb(){
-  var c=document.querySelector('#arrMap .mmap'),src=document.getElementById('gmapCv');
-  if(!c||!src)return;
-  /* 地图画布只在抽屉开着的时候画，没开过就是一片空白，缩略窗跟着空。
-     只补画一次也不够——那一次很可能赶在地点、纪年定下来之前，画出来还是空的。
-     所以抽屉关着的时候每隔 1.4s 替它重画一帧；开着时本来就每帧在画，不必插手。 */
-  if(GAME.on&&!GAME.mapOpen){
-    var _mn=performance.now();
-    if(_mn-(railMapThumb._t||0)>1400){railMapThumb._t=_mn;try{gmapSize();gmapDraw();}catch(_){}}
-  }
-  if(!(src.width>1)||!(src.height>1))return;
+  /* 缩略窗里画一颗完整的地球。
+     原来是从地图面板的画布上拷像素——可那幅是「地球挂在左缘、只露右半边」的构图
+     （cx=宽*0.04、R 接近整幅），整幅硬塞会横向拉扁，按比例裁又只剩一条局部带。
+     两条路都到不了「一颗完整的球」。所以这里不拷了：用同一份 LANDPTS、同一套投影、
+     同一个点阵分桶器另画一颗，居中、半径按短边算——不裁、不拉、不畸变。
+     顺带把「面板关着时每 1.4 秒替它重画一帧」那段也撤了：那一整幅重绘本来就只是
+     为了喂这枚缩略窗，现在自己画，不必再惊动面板。 */
+  var c=document.querySelector('#arrMap .mmap');if(!c)return;
   var g=c.getContext('2d');if(!g)return;
-  g.clearRect(0,0,c.width,c.height);
-  /* 原来是把整幅地图画布硬塞进 128×88。地图那块是竖的（面板 476×810 之类），
-     塞进一个 1.45:1 的框里，横向被拉开一倍多——地球就成了压扁的椭圆。
-     改成先按缩略窗的比例在源画布上裁一块（以地球心为中心、越界就贴边），
-     再等比画过去：两轴缩放系数相同，圆还是圆。 */
-  var ar=c.width/c.height,geo=GAME.gmGeo,sx,sy,sw,sh;
-  if(geo&&geo.R>1){
-    sh=Math.min(src.height,geo.R*2*1.18);
-    sw=sh*ar;
-    if(sw>src.width){sw=src.width;sh=sw/ar;}
-    sx=Math.max(0,Math.min(src.width-sw,geo.cx-sw/2));
-    sy=Math.max(0,Math.min(src.height-sh,geo.cy-sh/2));
-  }else{                                /* 还没画过：退回居中等比裁 */
-    var s=Math.max(c.width/src.width,c.height/src.height);
-    sw=c.width/s;sh=c.height/s;sx=(src.width-sw)/2;sy=(src.height-sh)/2;
+  var W=c.width,H=c.height;
+  if(!(W>1)||!(H>1))return;
+  g.clearRect(0,0,W,H);
+  var cx=W/2,cy=H/2,R=Math.min(W,H)*.42;
+  var lonC=GAME.lon||0,tilt=(GAME.tilt==null?.42:GAME.tilt),ctl=Math.cos(tilt),stl=Math.sin(tilt);
+  var hg=g.createRadialGradient(cx,cy,0,cx,cy,R*1.14);
+  hg.addColorStop(0,'rgba(255,148,38,0)');
+  hg.addColorStop(.84,'rgba(255,148,38,0)');
+  hg.addColorStop(.90,'rgba(255,148,38,.28)');
+  hg.addColorStop(1,'rgba(255,148,38,0)');
+  g.fillStyle=hg;g.beginPath();g.arc(cx,cy,R*1.14,0,Math.PI*2);g.fill();
+  var eraRed=ERA.year>=-27&&ERA.year<=395;
+  for(var i=0;i<LANDPTS.length;i++){
+    var p=LANDPTS[i],lam=p.lo-lonC;
+    var Xr=p.cl*Math.sin(lam),Zr=p.cl*Math.cos(lam),Yr=p.sy;
+    var Y2=Yr*ctl-Zr*stl,Z2=Yr*stl+Zr*ctl;
+    if(Z2<=0)continue;
+    var x=cx+Xr*R,y=cy-Y2*R,s=1.05*(.75+.4*Z2);
+    if(p.rome&&eraRed)GB_push(0,((.5+.5*Z2)*GB_N)|0,x,y,s*1.3,s*1.3);
+    else if(p.hi)GB_push(1,(Math.min(1,(.2+.6*Z2)*1.4)*GB_N)|0,x-.6,y-.6,s*1.9,s*1.9);
+    else{
+      var rim=Math.pow(1-Z2,5)*.38,a=Math.min(1,(.12+.55*Z2)*p.br+rim);
+      GB_push(rim>.12?2:3,(a*GB_N)|0,x,y,s,s);
+    }
   }
-  try{g.drawImage(src,sx,sy,sw,sh,0,0,c.width,c.height);}catch(_){}
+  GB_flush(g);
 }
+
 /* 三维那一枚的微缩。三维是 WebGL，宿主没开 preserveDrawingBuffer，
    合成一过缓冲就被清了——在主循环里 drawImage 过去多半是一片黑。
    所以拷完抽查几个点：真有像素就用，全黑就退回自己画一张地平线示意，
