@@ -1391,6 +1391,23 @@ html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx
 /* 六扇窗里的字一律加粗：面板全是短标签＋数字，常规字重压在毛玻璃上发虚。
    只作用于窗内容（.mvBody），缩略窗里那份微缩不动。 */
 .gMfd.mvDeck .mvWin .mvBody,.gMfd.mvDeck .mvWin .mvBody *{font-weight:700}
+/* 窗里的字整体上抬一档（约 ×1.2）：11px 那一档在毛玻璃上偏小，看久了累。
+   不用 zoom——mvMeasure 量的是 .mvBody 子节点的 offsetHeight，zoom 之下这个值
+   不含缩放，量出来偏小 20%，窗高跟着不够，内容会被裁掉。逐条写死最稳。
+   这几个类名是 #mission 开局简报共用的，所以一律限定在 .mvWin .mvBody 之内。
+   角标 .ftag/.fnum 在 .mvBody 之外，不在此列。 */
+#game .gMfd.mvDeck .mvWin .mvBody{font-size:13px}
+#game .gMfd.mvDeck .mvWin .mvBody .mHead{font-size:14px}
+#game .gMfd.mvDeck .mvWin .mvBody .mCap{font-size:12px}
+#game .gMfd.mvDeck .mvWin .mvBody .mLead{font-size:13px}
+#game .gMfd.mvDeck .mvWin .mvBody .mMind{font-size:11px}
+#game .gMfd.mvDeck .mvWin .mvBody .mRow{font-size:13px}
+#game .gMfd.mvDeck .mvWin .mvBody .mRow b{font-size:15px}
+#game .gMfd.mvDeck .mvWin .mvBody .nName{font-size:14px}
+#game .gMfd.mvDeck .mvWin .mvBody .nRole{font-size:12px}
+#game .gMfd.mvDeck .mvWin .mvBody .nLine{font-size:12.5px}
+#game .gMfd.mvDeck .mvWin .mvBody .nMind{font-size:12.5px}
+#game .gMfd.mvDeck .mvWin .mvBody .nEye{font-size:11.5px}
 /* 缩略窗里那张微缩：这一段的真内容克隆一份，按整窗宽度排好版再整体缩下来。
    克隆而不是搬——真内容得留在窗里，缩略图只是它的影子。 */
 .gMfd.mvDeck .mvCard .mw{position:absolute;top:1px;left:1px;overflow:hidden;
@@ -4475,7 +4492,7 @@ $('#miOrac').addEventListener('pointerup',function(e){e.stopPropagation();apiOpe
 $('#miArch').addEventListener('pointerup',function(e){e.stopPropagation();svOpen();});
 
 /* ================= game stage: Ghost layout in ROME dress ================ */
-var BUILD=82;
+var BUILD=83;
 /* 地图初始朝向。原来是 15°E（罗马那边）——这是从罗马那一版继承下来的，
    在秦这一版里一打开地图看到的是欧洲，中国被挤在球体右缘。
    球心画在画布最左缘（cx=gmW*.04），所以可视带约是 lonC ~ lonC+90°，
