@@ -4398,7 +4398,7 @@ $('#miOrac').addEventListener('pointerup',function(e){e.stopPropagation();apiOpe
 $('#miArch').addEventListener('pointerup',function(e){e.stopPropagation();svOpen();});
 
 /* ================= game stage: Ghost layout in ROME dress ================ */
-var BUILD=67;
+var BUILD=68;
 /* 地图初始朝向。原来是 15°E（罗马那边）——这是从罗马那一版继承下来的，
    在秦这一版里一打开地图看到的是欧洲，中国被挤在球体右缘。
    球心画在画布最左缘（cx=gmW*.04），所以可视带约是 lonC ~ lonC+90°，
@@ -11979,14 +11979,18 @@ function mvDeck(){
     var C=C0[i],on=(i===cur),y=y0+i*STEP;
     if(C.w!==TW){C.w=TW;C.el.style.width=TW+'px';}
     if(C.h!==TH){C.h=TH;C.el.style.height=TH+'px';}
+    /* 翘出来的那一枚说的是「正在看这一扇」。桌面上窗常驻，这话永远成立；
+       手机上点第二下把窗收了，它就不该还翘在外面——没窗就没有正在看的那一扇。
+       段号还是在它身上（on 不动），只是不再摆出来。 */
+    var pop=on&&(!mvPhone()||(gEl&&gEl.classList.contains('mvOpen')));
     /* 开着的那一枚转正并往镜头挪；其余保持 -17°（左边那一列是 +17°，两侧互为镜像）。 */
-    var key=(on?'1':'0')+'|'+thumbX.toFixed(1)+'|'+y.toFixed(1);
+    var key=(on?'1':'0')+(pop?'1':'0')+'|'+thumbX.toFixed(1)+'|'+y.toFixed(1);
     if(C.k!==key){
       C.k=key;
       C.el.style.transform='translate(-50%,-50%) translate('+thumbX.toFixed(1)+'px,'+y.toFixed(1)+'px)'
-        +(on?' translateX(-7px) translateZ(22px) rotateY(0deg)':' rotateY(-17deg)');
+        +(pop?' translateX(-7px) translateZ(22px) rotateY(0deg)':' rotateY(-17deg)');
       C.el.classList.toggle('on',on);
-      C.fr.style.filter=on?'none':'brightness(.86)';
+      C.fr.style.filter=pop?'none':'brightness(.86)';
       if(C.win)C.win.classList.toggle('on',on);
     }
     /* 微缩按整窗宽度排版，再整体缩到缩略窗那么大——这样它和真窗是同一份版式。 */
