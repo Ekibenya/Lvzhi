@@ -12168,7 +12168,9 @@ function tiltBind(el,vn,fn,def){
       try{el.setPointerCapture(d.id);}catch(_){}
     }
     e.preventDefault();
-    var t=d.t0-dx/22;                                  /* 220px 走完全程 */
+    /* 方向按「抓着这块面转」来：往右拖，面就顺着手往右转（rotateY 变大）；
+       往左拖回来就扶正。之前写反了，手感是「推右边反而变平」。 */
+    var t=d.t0+dx/22;                                  /* 220px 走完全程 */
     tiltSet(el,vn,fn,def,Math.max(lo,Math.min(hi,t)));
   });
   function end(e){
