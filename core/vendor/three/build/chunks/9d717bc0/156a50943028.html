@@ -4279,7 +4279,11 @@ $('#miArch').addEventListener('pointerup',function(e){e.stopPropagation();svOpen
 
 /* ================= game stage: Ghost layout in ROME dress ================ */
 var BUILD=64;
-var GAME={on:false,mapOpen:false,armOpen:false,place:null,dest:null,lon:15*Math.PI/180,vel:0,drag:false,
+/* 地图初始朝向。原来是 15°E（罗马那边）——这是从罗马那一版继承下来的，
+   在秦这一版里一打开地图看到的是欧洲，中国被挤在球体右缘。
+   球心画在画布最左缘（cx=gmW*.04），所以可视带约是 lonC ~ lonC+90°，
+   面板正中落在 lonC+28° 上；要让咸阳（108.7°E）居中，中心经度取 80°E。 */
+var GAME={on:false,mapOpen:false,armOpen:false,place:null,dest:null,lon:80*Math.PI/180,vel:0,drag:false,
           lx:0,moved:0,mx:-1e4,my:-1e4,hit:[]};
 var gEl=$('#game'),gmCv=$('#gmapCv'),gmc=gmCv.getContext('2d');
 var gmW=0,gmH=0;
