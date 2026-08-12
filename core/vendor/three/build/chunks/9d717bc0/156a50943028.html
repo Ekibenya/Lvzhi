@@ -395,7 +395,7 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
   #game.mvFree .gMain{right:calc(var(--mvGut,322px)*var(--ui))}
   #game.mvFree #pnTx{right:calc(var(--mvGut,322px)*var(--ui))}
 }
-#game .gNarr{flex:1;overflow-y:auto;padding:calc(46px*var(--ui) + 36px) 7% 118px;font-size:17px;line-height:1.8;
+#game .gNarr{flex:1;overflow-y:auto;padding:calc(46px*var(--ui) + 36px) 7% 96px;font-size:17px;line-height:1.8;
       letter-spacing:.03em;color:#c8c8c2;background:transparent}
 #game .gNarr p{margin-bottom:1.5em}
 #game .gNarr>*{max-width:750px;margin-left:auto;margin-right:auto}
@@ -406,8 +406,10 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
 /* 输入区浮于正文之上（Ghost 式）：正文滚到底下透出，阅读面拉满；渐隐底幕保字可读 */
 /* z-index 必须高过三维面板(25)：这一层是层叠上下文，里面的模式行／四策／输入框
    写多大的 z 都被整块一起压在面板底下——放到最大档时控件就点不着了。 */
-#game .gInput{position:absolute;left:0;right:0;bottom:0;z-index:27;pointer-events:none;padding-top:14px;
-      background:linear-gradient(0deg,rgba(6,6,6,.88) 0%,rgba(6,6,6,.66) 55%,rgba(6,6,6,0) 100%)}
+/* 底幕只该盖住输入行那一条。模式行撤掉之后这一块矮了一截，内距再收一档；
+   渐变的收口也从 100% 提到 76%——上面那一段本来就是空的，压黑了只是白挡正文。 */
+#game .gInput{position:absolute;left:0;right:0;bottom:0;z-index:27;pointer-events:none;padding-top:6px;
+      background:linear-gradient(0deg,rgba(6,6,6,.88) 0%,rgba(6,6,6,.66) 42%,rgba(6,6,6,0) 76%)}
 /* 三维面板是 z-index:25 的绝对定位层；放到最大档时它会压住下面这一组控件。
    把输入这一组抬到面板之上——画面可以被盖一点，控件不能点不着。 */
 #game .gLine,#game .gSugRow{pointer-events:auto}
@@ -422,7 +424,7 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
 #game .gsug.off{opacity:.32;pointer-events:none}
 #game .gm:not(.on):hover{color:var(--gold-hi)}
 /* 行里那枚「当前模式」钮 */
-#game .gmBtn{flex:none;height:30px;display:inline-flex;align-items:center;
+#game .gmBtn{position:relative;flex:none;height:30px;display:inline-flex;align-items:center;
       font-size:9px;letter-spacing:.2em;color:var(--gold-hi);cursor:pointer;
       padding:0 11px;white-space:nowrap;
       border:1px solid rgba(201,155,63,.42);background:rgba(6,6,6,.6)}
@@ -440,7 +442,7 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
      设置里关掉动效时自动归零。
    宽度收到内容宽：说明那一列撤了（提示语本来就写在输入框的 placeholder 里），
    剩图标+名字，整张单子于是是一条窄的竖长方形，占地最小。 */
-#game .gmMenu{position:absolute;left:14px;bottom:100%;margin-bottom:8px;z-index:40;
+#game .gmMenu{position:absolute;left:0;bottom:100%;margin-bottom:2px;z-index:40;
       width:max-content;max-width:min(64vw,220px);padding:4px;
       background:rgba(6,6,6,.24);border:1px solid rgba(236,236,232,.4);
       box-shadow:0 18px 48px rgba(0,0,0,.55);
@@ -495,7 +497,7 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
 /* 朗读／重演／回退已挪到每段正文底下那排，输入区只留 麦克风｜输入框｜发送。
    这三个钮仍留在 DOM 里当逻辑载体——每段那排的重演/回退是转发给它们的。 */
 #game #gTts,#game #gRedo,#game #gBack{display:none}
-#game .gLine{display:flex;align-items:center;gap:12px;padding:10px 14px 14px}
+#game .gLine{display:flex;align-items:center;gap:12px;padding:6px 14px 10px}
 /* min-width:0 —— flex 子项默认 min-width:auto，输入框的 min-content 是按 size 属性
    算出来的一大截固定宽度，字号一大就把后面几颗钮整排顶出屏幕外。 */
 #game .gLine input{flex:1;min-width:0;background:transparent;border:0;border-bottom:1px solid rgba(236,236,232,.25);
@@ -650,11 +652,11 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
   .gMfd.mvDeck .mvFoot{display:none !important}
   /* 输入层原来为了让开底部胶囊留了 34px；胶囊已经撤了，这一段跟着收回来，
      整条从 140px 降到九十上下，情报台的窗才有地方站。 */
-  #game .gInput{padding-top:8px !important;padding-bottom:6px !important}
+  #game .gInput{padding-top:4px !important;padding-bottom:4px !important}
   /* 一屏放得下：藏掉前缀符号、字距收紧、内距再收一档。 */
   #game .gm .ms,#game .gsug .ms{display:none}
   #game .gm,#game .gsug{padding:4px 8px 3px !important;letter-spacing:.04em !important}
-  #game .gNarr{padding-bottom:104px}
+  #game .gNarr{padding-bottom:86px}
   /* 手机上左右两条缩略列是浮在正文之上的，7% 的边距（27px）不够躲：
      左列占到 45、右列的名字最左到 335，字就从它们底下穿过去。
      正文两侧按实测让开——左 48、右 56（右边那列连名字一起更宽）。 */
@@ -1029,7 +1031,7 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
   #dlgCfg .sRow>span:first-child{flex:none}
   /* 手机端这一排：输入框 16px（iOS 不再自动放大），字距收紧、钮之间的空隙压小，
      免得六颗钮加输入框排不下。 */
-  #game .gLine{gap:6px;padding:8px 10px 12px}
+  #game .gLine{gap:6px;padding:4px 10px 8px}
   #game .gLine input{font-size:16px;letter-spacing:0}
   #game .gAux{width:28px;height:28px;flex:none}
   #game .gmBtn{height:28px;padding:0 8px;letter-spacing:.04em}
@@ -1563,10 +1565,14 @@ html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx
       <div class="gEot">·&nbsp;&nbsp;·&nbsp;&nbsp;EOT&nbsp;&nbsp;·&nbsp;&nbsp;·</div>
     </div>
     <div class="gInput">
-      <!-- 六个模式页签横着排一排，桌面占掉整整一行，手机上还得横滑才看得全。
-           改成一枚「当前模式」钮 + 一张弹出来的单子：行里只剩当前这一档，点开才列全。
-           单子里的项仍是 .gm、仍带 data-tag / data-ph，送信那段照旧读 .gm.on，不用改。 -->
-      <div class="gmMenu" id="gModeMenu">
+      <div class="gSugRow" id="gSugRow"></div>
+      <div class="gLine">
+        <!-- 六个模式页签横着排一排，桌面占掉整整一行，手机上还得横滑才看得全。
+             改成一枚「当前模式」钮 + 一张挂在钮身上、贴着钮弹出来的单子。
+             单子里的项仍是 .gm、仍带 data-tag / data-ph，送信那段照旧读 .gm.on，不用改。
+             麦克风撤了：各家输入法自己都带语音，这一颗常年没人点。位置让给模式钮。 -->
+        <span class="gmBtn" id="gModeBtn" title="换一个输入模式"><i class="ms">◆</i><b>说话</b><i class="cv">▾</i>
+          <span class="gmMenu" id="gModeMenu">
         <span class="gm on" data-tag="SERMO" data-ph="出声「…」 · ~开头=内心独白 · @名字 指定对象"><i class="ms">◆</i><b>说话</b></span>
         <span class="gm" data-tag="ACTVS" data-ph="描述你要做的动作 · 具体到手和脚"><i class="ms">▸</i><b>动作</b></span>
         <span class="gm" data-tag="LIBERVM" data-ph="想怎么写就怎么写 · 不加任何模式前缀"><i class="ms">✧</i><b>随便写</b></span>
@@ -1576,12 +1582,9 @@ html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx
         <!-- 四选项不是输入模式，是个开关：隔一条线单列在单子最底下，开着打勾。
              点它不收单子——开关要能看见自己刚才被打上/取消了勾。 -->
         <i class="gmSep"></i>
-        <span class="gsug on" id="gSug" title="每一幕之后，按当下局势给出四条可点选的下一步。点这里开关。"><i class="ms">✦</i><b>四选项</b><em>每一幕后给四条可点的下一步</em></span>
-      </div>
-      <div class="gSugRow" id="gSugRow"></div>
-      <div class="gLine">
-        <!-- 麦克风撤了：各家输入法自己都带语音，这一颗常年没人点。位置让给模式钮。 -->
-        <span class="gmBtn" id="gModeBtn" title="换一个输入模式"><i class="ms">◆</i><b>说话</b><i class="cv">▾</i></span>
+            <span class="gsug on" id="gSug" title="每一幕之后，按当下局势给出四条可点选的下一步。点这里开关。"><i class="ms">✦</i><b>四选项</b><em>每一幕后给四条可点的下一步</em></span>
+          </span>
+        </span>
         <!-- 入梦／起床只有艳后线露面（dreamSync 控），跟着模式钮站在输入行里 -->
         <span class="gsug" id="dreamIn" style="display:none" title="入梦：切到埃及一侧，从上一段梦境中断处接续"><i class="ms">☾</i>入梦</span>
         <span class="gsug" id="dreamOut" style="display:none" title="起床：回到东京的这一天"><i class="ms">☀</i>起床</span>
@@ -4440,7 +4443,7 @@ $('#miOrac').addEventListener('pointerup',function(e){e.stopPropagation();apiOpe
 $('#miArch').addEventListener('pointerup',function(e){e.stopPropagation();svOpen();});
 
 /* ================= game stage: Ghost layout in ROME dress ================ */
-var BUILD=77;
+var BUILD=78;
 /* 地图初始朝向。原来是 15°E（罗马那边）——这是从罗马那一版继承下来的，
    在秦这一版里一打开地图看到的是欧洲，中国被挤在球体右缘。
    球心画在画布最左缘（cx=gmW*.04），所以可视带约是 lonC ~ lonC+90°，
@@ -7099,7 +7102,8 @@ function touchy(){
   function gmLabel(){
     var on=gEl.querySelector('.gm.on')||gms[0];
     if(!on||!mBtn)return;
-    var i0=mBtn.querySelector('.ms'),b0=mBtn.querySelector('b');
+    /* 单子挂在钮里，钮里于是有七套 .ms/b；只认钮自己那一层的直接子元素。 */
+    var i0=mBtn.querySelector(':scope>.ms'),b0=mBtn.querySelector(':scope>b');
     var i1=on.querySelector('.ms'),b1=on.querySelector('b');
     if(i0&&i1)i0.textContent=i1.textContent;
     if(b0&&b1)b0.textContent=b1.textContent;
@@ -7110,6 +7114,9 @@ function touchy(){
     if(mBtn)mBtn.classList.toggle('open',!!v);
   }
   if(mBtn)mBtn.addEventListener('click',function(e){
+    /* 单子挂在钮身上（贴着钮开），点单子里的项会冒泡到这里；不拦住的话
+       选一项＝先合上再被这里翻开，看着就是「点了没反应」。 */
+    if(mMenu&&mMenu.contains(e.target))return;
     e.stopPropagation();gmOpen(!mMenu.classList.contains('open'));
   });
   /* 点别处收起来。用捕获阶段：单子里那几项自己会 stopPropagation 之外的路都要拦得住。 */
@@ -7503,7 +7510,7 @@ function applyGlass(){
   glassCss.textContent='#game::before{background:radial-gradient(ellipse 90% 80% at 50% 42%,'
     +'transparent 55%,rgba(0,0,0,'+(.20+.42*a).toFixed(2)+') 100%) !important}'
     +'#game .gMfd{background:rgba(8,8,8,'+(.06+.25*a).toFixed(2)+') !important}'
-    +'#game .gInput{background:linear-gradient(0deg,rgba(6,6,6,'+(.55+.4*a).toFixed(2)+') 0%,rgba(6,6,6,'+(.35+.35*a).toFixed(2)+') 55%,rgba(6,6,6,0) 100%) !important}'
+    +'#game .gInput{background:linear-gradient(0deg,rgba(6,6,6,'+(.55+.4*a).toFixed(2)+') 0%,rgba(6,6,6,'+(.35+.35*a).toFixed(2)+') 42%,rgba(6,6,6,0) 76%) !important}'
     /* 情报台那几扇窗跟着同一根「面板透明度」拉杆走——它们就是同一种窗，
        底色不该有两套。 */
     +'.gPanel,#pnTx{background:rgba(6,6,6,'+(.04+.16*a).toFixed(2)+') !important}'
