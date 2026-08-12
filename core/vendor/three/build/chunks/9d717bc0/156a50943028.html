@@ -418,6 +418,8 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
       touch-action:pan-x;scrollbar-width:none;cursor:grab}
 #game .gModes::-webkit-scrollbar{display:none}
 #game .gm,#game .gsug{flex:none}
+/* 前缀符号单独一个 <i>：桌面留着当装饰，手机上整排要一屏放得下，藏掉它省一截。 */
+#game .gm .ms,#game .gsug .ms{font-style:normal;margin-right:5px}
 #game .gm{font-size:9px;letter-spacing:.2em;color:var(--mut);padding:6px 12px 5px;cursor:pointer;
       border:1px solid transparent;white-space:nowrap;background:rgba(6,6,6,.6)} /* 页签自带底色：浮层下正文透字不糊眼 */
 #game .gm.on{color:#0a0a0a;background:var(--gold);font-weight:600}
@@ -602,7 +604,9 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
      整条从 140px 降到九十上下，情报台的窗才有地方站。 */
   #game .gInput{padding-top:8px !important;padding-bottom:6px !important}
   #game .gModes{padding:6px 12px 0 !important}
-  #game .gm{padding:4px 10px 3px !important}
+  /* 一屏放得下：藏掉前缀符号、字距收紧、内距再收一档。 */
+  #game .gm .ms,#game .gsug .ms{display:none}
+  #game .gm,#game .gsug{padding:4px 8px 3px !important;letter-spacing:.04em !important}
   #game .gNarr{padding-bottom:104px}
   /* 台底抬到输入层上沿之上，窗与输入行不再重叠 */
   #game .gMfd.mvDeck .mvStage{bottom:104px !important}
@@ -1517,15 +1521,15 @@ html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx
     </div>
     <div class="gInput">
       <div class="gModes">
-        <span class="gm on" data-tag="SERMO" data-ph="出声「…」 · ~开头=内心独白 · @名字 指定对象">◆ 发话</span>
-        <span class="gm" data-tag="ACTVS" data-ph="描述你要做的动作 · 具体到手和脚">▸ 行动</span>
-        <span class="gm" data-tag="LIBERVM" data-ph="想怎么写就怎么写 · 不加任何模式前缀">✧ 自由</span>
-        <span class="gsug" id="dreamIn" style="display:none" title="入梦：切到埃及一侧，从上一段梦境中断处接续">☾ 入梦</span>
-        <span class="gsug" id="dreamOut" style="display:none" title="起床：回到东京的这一天">☀ 起床</span>
-        <span class="gm" data-tag="INSIDIAE" data-ph="密谋暗线 · 只有你与同谋可见">◈ 密谋</span>
-        <span class="gm" data-tag="EPISTVLA" data-ph="修书一封 · 收件人 @名字">✉ 书信</span>
-        <span class="gm" data-tag="EDICTVM" data-ph="以权威发布命令 · 折损恩宠">▣ 敕令</span>
-        <span class="gsug on" id="gSug" title="参谋四策：每一幕之后，参谋按当下局势拟四条可点选的下一步。点此开关。">✦ 参谋</span>
+        <span class="gm on" data-tag="SERMO" data-ph="出声「…」 · ~开头=内心独白 · @名字 指定对象"><i class="ms">◆</i>说话</span>
+        <span class="gm" data-tag="ACTVS" data-ph="描述你要做的动作 · 具体到手和脚"><i class="ms">▸</i>动作</span>
+        <span class="gm" data-tag="LIBERVM" data-ph="想怎么写就怎么写 · 不加任何模式前缀"><i class="ms">✧</i>随便写</span>
+        <span class="gsug" id="dreamIn" style="display:none" title="入梦：切到埃及一侧，从上一段梦境中断处接续"><i class="ms">☾</i>入梦</span>
+        <span class="gsug" id="dreamOut" style="display:none" title="起床：回到东京的这一天"><i class="ms">☀</i>起床</span>
+        <span class="gm" data-tag="INSIDIAE" data-ph="密谋暗线 · 只有你与同谋可见"><i class="ms">◈</i>密谈</span>
+        <span class="gm" data-tag="EPISTVLA" data-ph="修书一封 · 收件人 @名字"><i class="ms">✉</i>写信</span>
+        <span class="gm" data-tag="EDICTVM" data-ph="以权威发布命令 · 折损恩宠"><i class="ms">▣</i>下令</span>
+        <span class="gsug on" id="gSug" title="每一幕之后，按当下局势给出四条可点选的下一步。点这里开关。"><i class="ms">✦</i>给建议</span>
       </div>
       <div class="gSugRow" id="gSugRow"></div>
       <div class="gLine">
@@ -1630,7 +1634,7 @@ html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx
       <div class="sRow"><span>MVSICA&nbsp;·&nbsp;配乐</span><input type="range" id="cfgBgm" min="0" max="100" value="55"></div>
       <div class="sRow"><span>MOTVS&nbsp;·&nbsp;动效</span><span class="sSeg" id="sgMotus"><span class="on">全开</span><span>减弱（低配）</span></span></div>
       <div class="sRow"><span>VELOCITAS&nbsp;·&nbsp;文字速度</span><span class="sSeg" id="sgVelo"><span>缓</span><span class="on">中</span><span>疾</span><span>瞬</span></span></div>
-      <div class="sRow"><span>LITTERAE&nbsp;·&nbsp;字号</span><span style="display:flex;gap:10px;align-items:center;flex:1;justify-content:flex-end"><input type="number" id="cfgUi" min="0" max="100" step="1" value="22" inputmode="numeric" style="width:84px;text-align:right;background:rgba(236,236,232,.04);border:1px solid rgba(236,236,232,.25);color:var(--ink);padding:6px 8px;font-family:var(--mono);font-size:13px"><b id="cfgUiVal" style="font-weight:400;font-size:10px;letter-spacing:.1em;color:var(--gold-hi);min-width:3.2em;text-align:right">22%</b></span></div><div class="sub">填 0-100 的整数整体缩放界面——正文、情报台状态栏、顶栏、输入区与全部弹窗（含本设置与世界书）一同放大缩小；三维场景不受影响。0 最小、100 最大，22 为原始尺寸；输入后回车或点开生效，上下箭头可 1% 微调。</div><div class="sRow"><span>LVX&nbsp;·&nbsp;白昼模式</span><span style="flex:1;text-align:right"><input type="checkbox" id="cfgLux" style="accent-color:var(--gold);width:15px;height:15px;cursor:pointer"></span></div><div class="sub">把全站换成浅色（白昼）配色，正文黑字白底更近纸面；三维画面与配图保持原貌。主菜单右上角的&nbsp;☀/☾&nbsp;也能随时切换，两处同步。</div><div class="sRow"><span>CONSILIVM&nbsp;·&nbsp;参谋四策</span><span style="flex:1;text-align:right"><input type="checkbox" id="cfgSugg" checked style="accent-color:var(--gold);width:15px;height:15px;cursor:pointer"></span></div><div class="sub">开启后，每一幕落定就由参谋按当下局势拟四条可点选的下一步，点哪条便照哪条发出（并自动切到对应的输入模式）；第四条恒为冒险策。输入区上方那枚「参谋四策」也能随时开关，两处同步。未接 AI 时给的是本地拟的朴素四条。</div>
+      <div class="sRow"><span>LITTERAE&nbsp;·&nbsp;字号</span><span style="display:flex;gap:10px;align-items:center;flex:1;justify-content:flex-end"><input type="number" id="cfgUi" min="0" max="100" step="1" value="22" inputmode="numeric" style="width:84px;text-align:right;background:rgba(236,236,232,.04);border:1px solid rgba(236,236,232,.25);color:var(--ink);padding:6px 8px;font-family:var(--mono);font-size:13px"><b id="cfgUiVal" style="font-weight:400;font-size:10px;letter-spacing:.1em;color:var(--gold-hi);min-width:3.2em;text-align:right">22%</b></span></div><div class="sub">填 0-100 的整数整体缩放界面——正文、情报台状态栏、顶栏、输入区与全部弹窗（含本设置与世界书）一同放大缩小；三维场景不受影响。0 最小、100 最大，22 为原始尺寸；输入后回车或点开生效，上下箭头可 1% 微调。</div><div class="sRow"><span>LVX&nbsp;·&nbsp;白昼模式</span><span style="flex:1;text-align:right"><input type="checkbox" id="cfgLux" style="accent-color:var(--gold);width:15px;height:15px;cursor:pointer"></span></div><div class="sub">把全站换成浅色（白昼）配色，正文黑字白底更近纸面；三维画面与配图保持原貌。主菜单右上角的&nbsp;☀/☾&nbsp;也能随时切换，两处同步。</div><div class="sRow"><span>CONSILIVM&nbsp;·&nbsp;给建议</span><span style="flex:1;text-align:right"><input type="checkbox" id="cfgSugg" checked style="accent-color:var(--gold);width:15px;height:15px;cursor:pointer"></span></div><div class="sub">开启后，每一幕落定就由参谋按当下局势拟四条可点选的下一步，点哪条便照哪条发出（并自动切到对应的输入模式）；第四条恒为冒险策。输入区上方那枚「参谋四策」也能随时开关，两处同步。未接 AI 时给的是本地拟的朴素四条。</div>
       <div class="sub">透明度：拖动即时生效——拉到最左＝完全透明（直接看穿到后面的动态背景）；拉到最右＝完全不透明（纯色纸底，彻底看不穿）。开低配模式时模糊被关闭。版式：自动依屏幕宽窄选择版式，也可强制使用电脑或手机布局。</div>
       <div class="sRow"><span>OBSCVRITAS&nbsp;·&nbsp;面板透明度</span><input type="range" id="cfgGlass" min="0" max="100" value="80"></div>
       <div class="sRow"><span>FORMA&nbsp;·&nbsp;版式</span><span class="sSeg" id="sgForma"><span class="on">自动</span><span>桌面</span><span>手机</span></span></div>
