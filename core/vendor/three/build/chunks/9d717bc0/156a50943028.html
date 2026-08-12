@@ -1479,10 +1479,10 @@ html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx
     <div id="txHint"></div>
   </div>
   <div class="g3dRail">
-    <div class="gArr" id="arr3d" title="TERRA · 天下三维　点一下换一档：默认 → 放大 → 全屏 → 收起">
+    <div class="gArr" id="arr3d" title="3D 场景　点一下换一档：默认 → 放大 → 全屏 → 收起">
       <div class="win"><canvas class="m3d" width="128" height="88"></canvas></div>
       <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 2.6 21 7.4v9.2L12 21.4 3 16.6V7.4z"/><path d="M3 7.4l9 4.8 9-4.8M12 12.2v9.2"/></svg></div>
-      <span class="t">天下</span></div>
+      <span class="t">3D场景</span></div>
   </div>
   <div class="gPanel" id="pnMap">
     <canvas id="gmapCv"></canvas>
@@ -8870,7 +8870,7 @@ function renderMvu(panel){
   if(!panel)return;
   try{dreamSync(panel);}catch(_){}
   var spec=(CARDS[ACTIVE]&&CARDS[ACTIVE].panelSpec)||null;
-  var h='<div class="mSec"><div class="mHead"><i>◆</i>&nbsp;'+'石室&nbsp;·&nbsp;起居录'+'</div>';
+  var h='<div class="mSec"><div class="mHead"><i>◆</i>&nbsp;'+'角色状态'+'</div>';
   var bars=[],glyphSrc=null,glyphMap=null;
   if(spec&&spec.widgets)spec.widgets.forEach(function(w){
     if(w.type==='bar')bars.push(w);
@@ -8943,7 +8943,7 @@ function renderMvu(panel){
           :('<div class="mMind mute">以&nbsp;<b>~</b>&nbsp;开头发言，即记于此</div>'));
   h+='</div>';
   if(panel.npc.length){
-    h+='<div class="mSec"><div class="mHead"><i>◆</i>&nbsp;'+'在场诸人'+'</div>';
+    h+='<div class="mSec"><div class="mHead"><i>◆</i>&nbsp;'+'在场人物'+'</div>';
     panel.npc.forEach(function(n){
       var name=n[0]||'',st=n[1]||'',fav=parseInt(n[2],10),mind=n[3]||'',role=n[4]||'',loc=n[5]||'',eye=n[8]||'';
       h+='<div class="mNpc"><div class="nHead"><span class="nName">'+esc2(name)+'</span><span class="nRole">'+esc2(role)+(loc?'&nbsp;·&nbsp;'+esc2(loc):'')+'</span></div>';
@@ -8956,7 +8956,7 @@ function renderMvu(panel){
     h+='</div>';
   }
   if(panel.wd.length){
-    h+='<div class="mSec"><div class="mHead"><i>◆</i>&nbsp;'+'万国大势'+'</div>';
+    h+='<div class="mSec"><div class="mHead"><i>◆</i>&nbsp;'+'当前局势'+'</div>';
     panel.wd.forEach(function(kv){
       var k=kv[0],v=kv.slice(1).join('|');
       /* 世界段原来只认纯数字：AI 写「安稳|35/100」或全角「３５」，这条唯一的世界进度条
@@ -8983,9 +8983,9 @@ function renderMvu(panel){
   GAME.lastPanel=panel;
   try{memSync();}catch(_){}
   h+='<div class="zjP">'
-    +'<div class="mSec">'+zjHead(S.secG,'tgG','','宗谱&nbsp;·&nbsp;人物图谱',S.secG)+(S.secG?'<div id="zjGraphBox" class="fade">'+graphInner()+'</div>':'')+'</div>'
-    +'<div class="mSec">'+zjHead(S.secA,'tgA','','秦纪&nbsp;·&nbsp;编年史',S.secA)+(S.secA?'<div class="fade">'+axisInner()+'</div>':'')+'</div>'
-    +'<div class="mSec">'+zjHead(S.secM,'tgM','','金匮&nbsp;·&nbsp;长程记忆',S.secM)+(S.secM?'<div class="fade zjMemPane">'+memPaneInner(true)+'</div>':'')+'</div>'
+    +'<div class="mSec">'+zjHead(S.secG,'tgG','','人物关系',S.secG)+(S.secG?'<div id="zjGraphBox" class="fade">'+graphInner()+'</div>':'')+'</div>'
+    +'<div class="mSec">'+zjHead(S.secA,'tgA','','事件年表',S.secA)+(S.secA?'<div class="fade">'+axisInner()+'</div>':'')+'</div>'
+    +'<div class="mSec">'+zjHead(S.secM,'tgM','','长期记忆',S.secM)+(S.secM?'<div class="fade zjMemPane">'+memPaneInner(true)+'</div>':'')+'</div>'
     +'</div>';
   document.querySelector('#game .gMfd').innerHTML=h;
   /* 情报台整块重绘后，按文档顺序给各分区派发错开量（55ms 一级，封顶 220ms）。
@@ -11355,10 +11355,12 @@ function mvNear(t){                                        /* 取绕得最近的
 }
 function mvBox(){return document.querySelector('#game .gMfd');}
 function mvTag(t){
-  if(/在场|诸人/.test(t))return 'PRAESENTES';
-  if(/大势|万国|天下/.test(t))return 'MVNDVS';
-  if(/图谱/.test(t))return 'NEXVS';
-  if(/编年/.test(t))return 'ANNALES';
+  /* 认的是名字里的关键词。栏目名改成白话之后旧词一个都不命中，
+     不补新词的话「当前局势／人物关系／事件年表」三节会全掉回 STATVS。 */
+  if(/在场|诸人|人物$/.test(t))return 'PRAESENTES';
+  if(/局势|大势|万国|天下/.test(t))return 'MVNDVS';
+  if(/关系|图谱/.test(t))return 'NEXVS';
+  if(/年表|编年/.test(t))return 'ANNALES';
   if(/记忆/.test(t))return 'MEMORIA';
   if(/线索|INDICIA/.test(t))return 'INDICIA';
   if(/资材|RES/.test(t))return 'RES';
