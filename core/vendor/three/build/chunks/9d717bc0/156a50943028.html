@@ -1188,12 +1188,13 @@ html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx
      · 缩略列钉死在最右缘，一格一枚，永远那么大、永远在原地；
      · 正文另有一扇窗，位置尺寸同样钉死，切换时只是淡入淡出。
    谁都不挪窝，「动完之后重新命中」这件事根本不存在。 */
-.gMfd.mvDeck .mvPanes{position:absolute;inset:0;pointer-events:none;
-/* 正文窗也要斜，就得先给这一层自己的透视：.mvPanes 没有 preserve-3d，
-   在它这儿三维被压平了，台子那份透视传不到窗上——不补这一句，
-   rotateY 只会把窗横向压扁一点，看着像字变窄了，一点纵深都没有。
-   数值与缩略列同源：620px，原点同样钉在最右缘，两者斜得一模一样。 */
-      perspective:620px;perspective-origin:100% 50%}
+/* 这一层不再给透视——透视改写进窗自己的 transform 里（见下）。
+   原因：毛玻璃采的是「背后那一层」，而祖先身上挂着 perspective、
+   自己又被三维变换着的时候，采样范围会被截在这一层里，
+   而这一层是空的——于是糊出来是一片纯黑，看着就是既没糊也没透。
+   左边地图／装备／商店三扇一直是好的，正因为它们的 perspective() 写在
+   自己的 transform 里、玻璃也在同一个元素上。这里照抄它们。 */
+.gMfd.mvDeck .mvPanes{position:absolute;inset:0;pointer-events:none}
 /* 出现的方式照抄 .gPanel，只把方向左右对调：那三扇从左边推出来，
    这一扇从右边推出来。倾角在开、合两态里是同一个值，
    所以推出来的过程只有平移与淡入，不会连带转一下（转着出现会晃眼）。
@@ -1203,14 +1204,19 @@ html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx
    缩略窗照旧 17°（那么小一枚，斜得狠些才看得出来）；
    正文窗收到 10°：同样一块八百像素高的面板，17° 的梯形比是 1.176，
    一整屏小字全跟着斜，读起来累。 */
-.gMfd.mvDeck .mvWin{position:absolute;transform-origin:50% 50%;--mvTilt:-10deg;
-      transform:translateX(26px) scale(.955) rotateY(var(--mvTilt));opacity:0;pointer-events:none;
-      transition:transform .34s cubic-bezier(.2,.85,.25,1),opacity .26s ease}
-.gMfd.mvDeck .mvWin.on{transform:rotateY(var(--mvTilt));opacity:1;pointer-events:auto;z-index:2}
-.gMfd.mvDeck .mvWin .cfr{position:absolute;inset:0;
+/* 玻璃四项与倾斜挂在同一个元素上——与 .gPanel 完全同构，一个数不改。
+   （原先玻璃在子元素 .cfr 上、透视在祖先上，采样被截断，糊不出来。）
+   mvFit 抵掉近边被透视放大的那一点，免得上下顶出台子。 */
+.gMfd.mvDeck .mvWin{position:absolute;transform-origin:50% 50%;--mvTilt:-10deg;--mvFit:.93;
       background:rgba(6,6,6,.78);border:1px solid rgba(236,236,232,.20);
       box-shadow:0 14px 34px rgba(0,0,0,.5);
-      -webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px)}
+      -webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);
+      transform:perspective(620px) translateX(26px) scale(.955) rotateY(var(--mvTilt)) scaleY(var(--mvFit));
+      opacity:0;pointer-events:none;
+      transition:transform .34s cubic-bezier(.2,.85,.25,1),opacity .26s ease}
+.gMfd.mvDeck .mvWin.on{transform:perspective(620px) rotateY(var(--mvTilt)) scaleY(var(--mvFit));
+      opacity:1;pointer-events:auto;z-index:2}
+.gMfd.mvDeck .mvWin .cfr{position:absolute;inset:0;background:transparent;border:0;box-shadow:none}
 /* 缩略窗里那张微缩：这一段的真内容克隆一份，按整窗宽度排好版再整体缩下来。
    克隆而不是搬——真内容得留在窗里，缩略图只是它的影子。 */
 .gMfd.mvDeck .mvCard .mw{position:absolute;top:1px;left:1px;overflow:hidden;
@@ -7313,7 +7319,7 @@ function applyGlass(){
     +'#game .gTop{background:rgba(6,6,6,'+(.05+.22*a).toFixed(2)+') !important}'
     /* 情报台那几扇窗跟着同一根「面板透明度」拉杆走——它们就是同一种窗，
        底色不该有两套。 */
-    +'.gPanel,.gMfd.mvDeck .mvWin .cfr,#pnTx{background:rgba(6,6,6,'+(.10+.36*a).toFixed(2)+') !important}'
+    +'.gPanel,.gMfd.mvDeck .mvWin,#pnTx{background:rgba(6,6,6,'+(.10+.36*a).toFixed(2)+') !important}'
     /* 全屏档背后被自己盖满，透太多只会把正文透出来糊成一片，单给一档更实的 */
     +'#game.txBig #pnTx{background:rgba(6,6,6,'+(.62+.34*a).toFixed(2)+') !important}';
 }
