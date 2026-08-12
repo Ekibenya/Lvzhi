@@ -1860,8 +1860,30 @@
     ensureBuildHud(host);
   }
   function isTouch() { return matchMedia('(pointer:coarse)').matches; }
+  /* 手机上三维面板两侧浮着宿主的台前调度缩略列：左边那条（3D场景／地图／商店／装备）
+     占到视口 x=45，右边情报台那一列的名字最左到 x=345。HUD 的东西全是贴着面板边摆的
+     ——地名片贴左上、营造清单贴底、清单钮贴右下——于是统统压在缩略列底下。
+     这里只把 HUD 这一层让进来：画布照旧铺满，挪的只是要看要点的那些东西。
+     46/344 两个数就是上面那两条列的边，宿主的 @media (max-width:760px) 里定的。
+     桌面（>760）两条列在面板之外，一律不让。 */
+  var HUD_L = 46, HUD_R = 344;
+  function hudFit(force) {
+    if (!hud || !hud.parentNode) return;
+    var now = performance.now();
+    if (!force && hudFit._t && now - hudFit._t < 250) return;
+    hudFit._t = now;
+    var L = 0, R = 0;
+    if (innerWidth <= 760) {
+      var r = hud.parentNode.getBoundingClientRect();
+      L = Math.max(0, Math.round(HUD_L - r.left));
+      R = Math.max(0, Math.round(r.right - HUD_R));
+    }
+    if (hud._L !== L) { hud._L = L; hud.style.left = L + 'px'; }
+    if (hud._R !== R) { hud._R = R; hud.style.right = R + 'px'; }
+  }
   function updateHud() {
     if (!hud) return;
+    hudFit(1);
     if (Z.loading) { loadEl.style.display = 'flex'; loadEl.textContent = '营造天下 ' + Math.round(Z.prog * 100) + '%'; }
     else if (Z.failed) { loadEl.style.display = 'flex'; loadEl.textContent = '三维资材未至 · 以简册代之'; }
     else loadEl.style.display = 'none';
@@ -2061,6 +2083,7 @@
       }
       return;
     }
+    hudFit();
     if (!Z.scene || !Z.rnd || !Z.cv.isConnected) return;
     if (isTouch()) { // 手机：操作中全速，静止或低配 30fps；打字时 ~8fps 让键盘丝滑
       var nowT = performance.now();
@@ -3255,7 +3278,7 @@
     cats.forEach(function (c, i) {
       var t = document.createElement('div');
       t.textContent = c.tab;
-      t.style.cssText = 'padding:' + (isTouch() ? '2px 9px' : '3px 14px') + ';cursor:pointer;font-size:' + (isTouch() ? '9.5px' : '10.5px') + ';letter-spacing:.16em;border-radius:0;' +
+      t.style.cssText = 'padding:' + (isTouch() ? '2px 9px' : '3px 14px') + ';cursor:pointer;font-size:' + (isTouch() ? '9.5px' : '10.5px') + ';letter-spacing:.16em;border-radius:0;white-space:nowrap;flex:0 0 auto;' +
         (i === bHud.tab ? 'background:rgba(201,155,63,.2);color:#ecc878;border:1px solid rgba(201,155,63,.55);border-bottom:none' : 'color:#9c9c98;border:1px solid transparent');
       t.onclick = function () { bHud.tab = i; fillTray(); };
       bHud.tabsEl.appendChild(t);
