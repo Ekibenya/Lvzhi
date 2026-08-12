@@ -11579,6 +11579,12 @@ function mvRingMount(){
       wfr=document.createElement('div');wfr.className='cfr';
       wfr.innerHTML='<span class="ftag"></span><span class="fnum"></span><div class="mvBody"></div>';
       win.appendChild(wfr);panes.appendChild(win);
+      /* 每幕重挂都会新建这些窗：把上次调好的角度带过来，别一说话就弹回默认值 */
+      try{
+        if(MV.tiltU!=null)tiltSet(win,'--mvTilt','--mvFit',-10,MV.tiltU);
+        tiltBind(win,'--mvTilt','--mvFit',-10);
+        win.addEventListener('pointerup',function(){MV.tiltU=tiltGet(win,'--mvTilt',-10);});
+      }catch(_){}
       wfr.querySelector('.ftag').textContent=tag+' SECTIO // '+pad(k+1);
       wfr.querySelector('.fnum').textContent='SIG_'+pad(k+1)+'/'+pad(secs.length);
       body=wfr.querySelector('.mvBody');
@@ -12129,6 +12135,53 @@ try{if(mvOn())mvRingMount();}catch(_){}      /* 模块就位后补挂一次：�
    document.getElementById 会先摸到缩略图里的那一份（它在文档里更靠前），
    真面板的渲染与点击当场全失灵。
    地图是画布，innerHTML 搬过去只是一张空画布，改用 drawImage 拷贝像素。 */
+/* ══ 面板倾角随手调 ══
+   在展开的面板上横向拖一下，倾角在「设计值 ↔ 0°（扶正）」之间连续走。
+   三条约束：
+     · 只认横向。竖向是列表滚动，抢了就没法读长表。
+     · 上限就是设计值，不放开更大——再斜下去字会糊到读不动（实测 17° 时锐度掉四成）。
+     · 起手落在 canvas 上就不接管：地图那块画布自己要拖着转地球。
+   scaleY 那份补偿跟着角度走：它当初是按最大角算的，扶正到 0° 还压着就成了压扁。 */
+function tiltGet(el,vn,def){
+  var m=/(-?[\d.]+)deg/.exec(el.style.getPropertyValue(vn)||'');
+  return m?parseFloat(m[1]):def;
+}
+function tiltSet(el,vn,fn,def,t){
+  el.style.setProperty(vn,t.toFixed(2)+'deg');
+  var r=Math.abs(def)>.001?Math.abs(t)/Math.abs(def):0;
+  el.style.setProperty(fn,(1-(1-.93)*r).toFixed(3));
+}
+function tiltBind(el,vn,fn,def){
+  if(!el||el._tilt)return;el._tilt=1;
+  var lo=Math.min(0,def),hi=Math.max(0,def),d=null;
+  el.addEventListener('pointerdown',function(e){
+    if(e.pointerType==='mouse'&&e.button!==0)return;
+    if(e.target&&e.target.closest&&e.target.closest('canvas'))return;
+    d={x:e.clientX,y:e.clientY,t0:tiltGet(el,vn,def),on:0,id:e.pointerId};
+  });
+  el.addEventListener('pointermove',function(e){
+    if(!d||e.pointerId!==d.id)return;
+    var dx=e.clientX-d.x,dy=e.clientY-d.y;
+    if(!d.on){
+      if(Math.abs(dx)<10||Math.abs(dx)<Math.abs(dy)*1.4)return;   /* 竖向：让给滚动 */
+      d.on=1;el.style.transition='none';
+      try{el.setPointerCapture(d.id);}catch(_){}
+    }
+    e.preventDefault();
+    var t=d.t0-dx/22;                                  /* 220px 走完全程 */
+    tiltSet(el,vn,fn,def,Math.max(lo,Math.min(hi,t)));
+  });
+  function end(e){
+    if(!d||(e&&e.pointerId!==d.id))return;
+    if(d.on){el.style.transition='';try{el.releasePointerCapture(d.id);}catch(_){}}
+    d=null;
+  }
+  el.addEventListener('pointerup',end);
+  el.addEventListener('pointercancel',end);
+}
+try{['pnMap','pnArm','pnShop'].forEach(function(id){
+  tiltBind(document.getElementById(id),'--gpTilt','--gpFit',10);
+});}catch(_){}
 var _railT=0;
 /* 对局里的全场底：照搬 terrainDraw 那一行，一个参数不改——
    同一个 DPR（tc 多大就多大）、同样每帧的视差插值、同样 q=1 的密度。
