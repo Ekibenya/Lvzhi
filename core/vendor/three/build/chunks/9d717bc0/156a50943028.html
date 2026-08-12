@@ -557,20 +557,31 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
 #game.txOpen.tx2 #arr3d .t::after{content:'·放大'}
 #game.txOpen.txBig #arr3d .t::after{content:'·全屏'}
 .gPanel{position:absolute;left:96px;width:min(42vw,500px);z-index:30;
-      background:rgba(6,6,6,.78);border:1px solid rgba(236,236,232,.20);
-      box-shadow:0 14px 34px rgba(0,0,0,.5);
-      backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
-      /* 这扇窗不斜。试过 rotateY(10deg)，代价是三样一起来：横行整体走成梯形、
-         左边的字比右边大、整块还发虚——活的文字进了透视旋转，浏览器是把这一层
-         先栅格化再当纹理去扭，字号与笔画都不再是原来那个了，改角度只能减轻不能消除。
-         台前调度本身也是这么设计的：旁边那一列缩略窗斜着，正在用的那扇窗正对着人。
-         斜的留给缩略窗——那里面是缩略图，没有要读的字。 */
+      /* 玻璃与倾斜都不在这一层——它装着字。
+         带 backdrop-filter 的元素会被钉成一张合成纹理，此后任何变换（三维还是二维）
+         都只是在重采样这张纹理：字必糊、笔画必歪，改角度只能减轻。实测锐度
+         平面 23.5 / 斜 15.6，差一大截。
+         所以把玻璃整块搬到下面那层 ::after 上去斜——那一层一个字都没有，
+         糊了也没人看得出来；有字的这一层一动不动，锐度回到 23.7，与不斜时齐平。 */
+      /* 8° 而不是 10°：斜平面要盖住一块固定的矩形，必然比它高
+         （近边放大 a、远边缩小 b，得按 1/b 放大才盖得住，再乘 a 就是它在屏上的高）。
+         500 宽的面板、620 的透视、10° 那一档算下来要 959px 高，900 的屏放不下，
+         底下几行就会露到玻璃外面。收到 8° 并把透视放远到 900，配合下面把面板
+         上下各收一点，这块玻璃才整个装得进来。 */
+      --gpTilt:8deg;
       transform-origin:0% 50%;
       transform:translateX(-26px) scale(.955);
       opacity:0;pointer-events:none;
-      transition:transform .34s cubic-bezier(.2,.85,.25,1),opacity .26s ease;overflow:hidden}
-#pnMap{top:56px;bottom:10px}
-#pnArm{top:56px;bottom:10px}
+      transition:transform .34s cubic-bezier(.2,.85,.25,1),opacity .26s ease;overflow:visible}
+/* 斜的那面玻璃。四周各大出一圈——远的那条边会被透视缩小，不放大一点就盖不住内容。 */
+.gPanel::after{content:'';position:absolute;inset:-22px -18px;z-index:-1;pointer-events:none;
+      transform:perspective(900px) rotateY(var(--gpTilt));
+      background:rgba(6,6,6,.78);border:1px solid rgba(236,236,232,.20);
+      box-shadow:0 14px 34px rgba(0,0,0,.5);
+      backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
+/* 上下各收一档：斜着的那面玻璃比面板本身高，不留出这点地方它会顶穿顶栏与屏底。 */
+#pnMap{top:68px;bottom:52px}
+#pnArm{top:68px;bottom:52px}
 #pnArm::before{
   content:'';position:absolute;left:0;right:0;top:0;height:62px;z-index:2;pointer-events:none;
   background:linear-gradient(180deg,rgba(6,6,6,.92) 0%,rgba(6,6,6,.62) 46%,rgba(6,6,6,0) 100%);
@@ -578,9 +589,11 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
   -webkit-mask-image:linear-gradient(180deg,#000 44%,transparent 100%);
           mask-image:linear-gradient(180deg,#000 44%,transparent 100%)}
 
+/* 开着的时候本体一动不动——斜的是它底下那面 ::after 玻璃。
+   这一条要是还留着三维变换，内容层照旧被扭，外面又多一层斜玻璃，成了双重倾斜。 */
 #game.mapOpen #pnMap,#game.armOpen #pnArm,#game.shopOpen #pnShop{
       transform:none;opacity:1;pointer-events:auto;z-index:33}
-#pnShop{top:56px;bottom:10px}
+#pnShop{top:68px;bottom:52px}
 
 .shRow{display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid rgba(236,236,232,.07)}
 .shRow:hover{background:rgba(236,236,232,.045)}
@@ -1186,20 +1199,28 @@ html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx
      · 缩略列钉死在最右缘，一格一枚，永远那么大、永远在原地；
      · 正文另有一扇窗，位置尺寸同样钉死，切换时只是淡入淡出。
    谁都不挪窝，「动完之后重新命中」这件事根本不存在。 */
-.gMfd.mvDeck .mvPanes{position:absolute;inset:0;pointer-events:none}
+.gMfd.mvDeck .mvPanes{position:absolute;inset:0;pointer-events:none;
+/* 正文窗也要斜，就得先给这一层自己的透视：.mvPanes 没有 preserve-3d，
+   在它这儿三维被压平了，台子那份透视传不到窗上——不补这一句，
+   rotateY 只会把窗横向压扁一点，看着像字变窄了，一点纵深都没有。
+   数值与缩略列同源：620px，原点同样钉在最右缘，两者斜得一模一样。 */
+      perspective:620px;perspective-origin:100% 50%}
 /* 出现的方式照抄 .gPanel，只把方向左右对调：那三扇从左边推出来，
    这一扇从右边推出来。倾角在开、合两态里是同一个值，
    所以推出来的过程只有平移与淡入，不会连带转一下（转着出现会晃眼）。
    绕中心转，不绕右缘——绕边转的话左沿要甩出八十多像素，那是开门不是倾斜。 */
-/* 同左边三扇：这扇窗不斜，理由见 .gPanel 那段。缩略窗仍是 −17°。 */
-.gMfd.mvDeck .mvWin{position:absolute;transform-origin:100% 50%;
+/* 与左边三扇同一套：有字的那一层不变换，玻璃搬到 ::after 上去斜（理由见 .gPanel）。
+   倾角 -10°，与左边 +10° 镜像；缩略窗仍是 ∓17°。 */
+.gMfd.mvDeck .mvWin{position:absolute;transform-origin:100% 50%;--mvTilt:-8deg;
       transform:translateX(26px) scale(.955);opacity:0;pointer-events:none;
       transition:transform .34s cubic-bezier(.2,.85,.25,1),opacity .26s ease}
 .gMfd.mvDeck .mvWin.on{transform:none;opacity:1;pointer-events:auto;z-index:2}
-.gMfd.mvDeck .mvWin .cfr{position:absolute;inset:0;
+.gMfd.mvDeck .mvWin::after{content:'';position:absolute;inset:-11px -12px;z-index:-1;pointer-events:none;
+      transform:perspective(900px) rotateY(var(--mvTilt));
       background:rgba(6,6,6,.78);border:1px solid rgba(236,236,232,.20);
       box-shadow:0 14px 34px rgba(0,0,0,.5);
       -webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px)}
+.gMfd.mvDeck .mvWin .cfr{position:absolute;inset:0;background:transparent;border:0;box-shadow:none}
 /* 缩略窗里那张微缩：这一段的真内容克隆一份，按整窗宽度排好版再整体缩下来。
    克隆而不是搬——真内容得留在窗里，缩略图只是它的影子。 */
 .gMfd.mvDeck .mvCard .mw{position:absolute;top:1px;left:1px;overflow:hidden;
@@ -7302,7 +7323,7 @@ function applyGlass(){
     +'#game .gTop{background:rgba(6,6,6,'+(.05+.22*a).toFixed(2)+') !important}'
     /* 情报台那几扇窗跟着同一根「面板透明度」拉杆走——它们就是同一种窗，
        底色不该有两套。 */
-    +'.gPanel,.gMfd.mvDeck .mvWin .cfr,#pnTx{background:rgba(6,6,6,'+(.10+.36*a).toFixed(2)+') !important}'
+    +'.gPanel::after,.gMfd.mvDeck .mvWin::after,#pnTx{background:rgba(6,6,6,'+(.10+.36*a).toFixed(2)+') !important}'
     /* 全屏档背后被自己盖满，透太多只会把正文透出来糊成一片，单给一档更实的 */
     +'#game.txBig #pnTx{background:rgba(6,6,6,'+(.62+.34*a).toFixed(2)+') !important}';
 }
@@ -11762,15 +11783,34 @@ function mvDeck(){
   var winH=Math.max(160,SH-MO);
   var thumbX=SW/2-TW/2-MI;                         /* 缩略列：最右缘，留一道内缝 */
   var winX=SW/2-MI*2-TW-winW/2;                    /* 窗位：隔一道内缝挨着缩略列 */
-  /* 窗不斜了，原先那一整套「投影反解」（按倾角倒推 CSS 宽度与窗心）也就不用了：
-     平面窗屏幕上占的就是 winW×winH 本身。 */
-  /* 高度不一刀切成满台。原来每扇窗都撑到顶，短的那几段下面吊着一大片空框，
+  /* 窗斜了 17°，屏幕上就不再是 winW×winH 那一块了：
+       · 近的那条边（右沿）被放大 a 倍，远的那条边（左沿）被缩小 b 倍——照旧给足高度，
+         右沿会顶穿台顶台底；
+       · 整块还因为灭点钉在最右缘而被压窄，左边平白空出三十来像素。
+     所以反解一次：已知「投影后该占哪一块」（就是没斜时那一块），倒推 CSS 该给多宽、
+     窗心该摆在哪。投影式 X(u)=ox+(xc+u·cosθ−ox)·P/(P−u·sinθ)，u 是离窗心的横向偏移；
+     两端两个方程、两个未知数，a 与 b 又随宽度变，迭代四轮足够收敛。 */
+  var TILT=10;                                   /* 正文窗的倾角，唯一出处 */
+  var PP=620,SN=Math.sin(TILT*Math.PI/180),CS=Math.cos(TILT*Math.PI/180);
+  if(MV.panes&&MV.tiltK!==TILT){MV.tiltK=TILT;MV.panes.style.setProperty('--mvTilt',(-TILT)+'deg');}
+  var ox=SW;                                     /* perspective-origin:100% → 台子最右缘 */
+  var xl=SW/2+winX-winW/2,xr=SW/2+winX+winW/2;   /* 投影后要占的左右两端 */
+  var Wc=winW,xc=SW/2+winX,ka=1;
+  for(var it=0;it<4;it++){
+    ka=PP/(PP-SN*Wc/2);
+    var kb=PP/(PP+SN*Wc/2);
+    Wc=((xr-ox)/ka-(xl-ox)/kb)/CS;
+    xc=ox+(xr-ox)/ka-CS*Wc/2;
+  }
+  winW=Math.round(Wc);
+  /* 高度不再一刀切成满台。原来每扇窗都撑到顶，短的那几段下面吊着一大片空框，
      看着就是「这一段没内容」。改成各按自己那一段的实际内容量高：
      MV.full 是 mvMeasure 量出来的每段内容高（已含正文上下内距），
-     mvTick 每 600ms 重量一次，人物关系／事件年表那种后填进来的内容也跟得上。 */
-  var winCap=Math.round(winH);
+     mvTick 每 600ms 重量一次，図谱／编年那种后填进来的内容也跟得上。
+     上限仍是斜完之后台子装得下的那个高度。 */
+  var winCap=Math.round(winH/ka);                /* 除掉近边那点放大，斜完正好卡在台里 */
   var full=MV.full||[];
-  var wl=Math.round(SW/2+winX-winW/2);
+  var wl=Math.round(xc-Wc/2);
   var y0=-(n-1)*STEP/2;
   var sc=TW/Math.max(1,winW),mwH=Math.round((TH-2)/Math.max(.001,sc));
   var cur=mvWrap(Math.round(MV.pos));
