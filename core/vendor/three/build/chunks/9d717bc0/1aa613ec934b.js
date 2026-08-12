@@ -3370,10 +3370,18 @@
       bHud.reportBtn.style.display = (on && lc > 0) ? 'block' : 'none';
       bHud.reportBtn.textContent = isTouch() ? ('奏报·' + lc + '（发AI）') : ('奏报·' + lc + '（发送给AI）');
     }
-    /* 建造清单默认收起：一进来先让人看见三维场景本身，清单按钮就在顶排，想盖房子再点开。
-       （旧行为是首次进营造即自动弹出，整幅画面被物品格挡住，看不到城。）
+    /* 点「营造」就是「我要盖东西」，清单跟着一起出来——原先还得再点一次清单钮，
+       等于把一个意图拆成两下。当年不敢自动弹是因为默认那一条只有两百来像素高，
+       132px 的清单压上去就看不见城了；现在这一钮同时把面板展开到 tx2，高度够，
+       两样并存不打架。
+       一趟只弹这一次（_openedSession）：玩家自己收起来之后不再自动弹回去。
        离开营造(on=false)一律收起并复位。 */
     if (!on) { bHud._openedSession = false; bHud.tray.style.display = 'none'; }
+    else if (!bHud._openedSession) {
+      bHud._openedSession = true;
+      bHud.tray.style.display = 'block';
+      fillTray();
+    }
     bHud.viewBtn.style.display = (Z.expanded && (Z.mode === 'city' || Z.intPlan)) ? 'block' : 'none';
     bHud.viewBtn.textContent = Z.intPlan ? '出 · 回城' : (Z.view === 'build' ? '游历' : '营造');
     // 操作条贴近底部，托盘展开时抬升避让
@@ -4676,7 +4684,12 @@
   /* ---------------- public hooks ---------------- */
   Z.toggleExpand = function () {
     Z.expanded = !Z.expanded;
+    /* 面板的档位（0 默认 / 1 放大 / 2 全屏）以 Z.tier 为准，台前调度小窗和这一钮
+       共用同一个数。以前这里只翻 expanded 不动 tier，面板读 tier 仍是 0，
+       于是按了「营造」画面纹丝不动。展开顶到第 1 档（已在更大档就留着），收起归 0。 */
+    Z.tier = Z.expanded ? Math.max(1, Z.tier | 0) : 0;
     try { localStorage.setItem('zj3d_expand', Z.expanded ? '1' : '0'); } catch (e) { }
+    try { localStorage.setItem('med3d_tier', String(Z.tier)); localStorage.setItem('med3d_expand', Z.tier > 0 ? '1' : '0'); } catch (e) { }
     Z.camDist = Z.mode === 'interior' ? 7 : 12;
     if (window.ZJ3D_onExpand) window.ZJ3D_onExpand();
     updateHud(); if (bHud.wrap) updateBuildHud();

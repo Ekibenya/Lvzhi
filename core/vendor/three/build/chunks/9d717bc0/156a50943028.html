@@ -4389,7 +4389,7 @@ $('#miOrac').addEventListener('pointerup',function(e){e.stopPropagation();apiOpe
 $('#miArch').addEventListener('pointerup',function(e){e.stopPropagation();svOpen();});
 
 /* ================= game stage: Ghost layout in ROME dress ================ */
-var BUILD=69;
+var BUILD=70;
 /* 地图初始朝向。原来是 15°E（罗马那边）——这是从罗马那一版继承下来的，
    在秦这一版里一打开地图看到的是欧洲，中国被挤在球体右缘。
    球心画在画布最左缘（cx=gmW*.04），所以可视带约是 lonC ~ lonC+90°，
@@ -9919,10 +9919,16 @@ window.ZJ3D_closePane=function(){
     if(window.ZJ3D&&ZJ3D.sleep)ZJ3D.sleep();
   }catch(e){}
 };
+/* 这张卡的主引擎。原先到处写 ACTIVE==='zhou' 判「是不是中原线」，可本卡的
+   ACTIVE 是 'luzhi'，一律判成地中海线：档位被记到了一台根本没在跑的 MED3D 上，
+   读回来自然是 0。画面里那枚「营造」按下去毫无反应就是这么来的——
+   引擎自己已经把 expanded 翻成 true，下一拍又被这条同步按回 false。
+   按卡名列一次，涉及引擎归属的地方都引这里，别再各写各的。 */
+function homeEng(){return (ACTIVE==='roma'||ACTIVE==='cleo')?window.MED3D:window.ZJ3D;}
 window.ZJ3D_onExpand=function(){
   try{
     var g=document.getElementById('game');
-    var E=(ACTIVE==='zhou')?window.ZJ3D:window.MED3D;
+    var E=homeEng();
     var tr=E?(E.tier!=null?E.tier:(E.expanded?1:0)):0;
     g.classList.toggle('tx2',tr===1);
     g.classList.toggle('txBig',tr===2);
@@ -10622,7 +10628,7 @@ function zj3dTick(){
     /* 中原引擎兩張卡共用：告訴它現在誰在操縱，天子與貝羅娜不是同一個人 */
     if(window.ZJ3D&&window.ZJ3D.setSide)window.ZJ3D.setSide(ACTIVE);
     if(E.wake)E.wake();
-    var _Eo=(ACTIVE==='zhou')?window.ZJ3D:window.MED3D; /* 档位记在本卡引擎上，借用引擎同步之 */
+    var _Eo=homeEng(); /* 档位记在本卡引擎上，借用引擎同步之 */
     if(E!==_Eo&&_Eo&&_Eo.tier!=null){E.tier=_Eo.tier;E.expanded=!!_Eo.expanded;}
     if(E.setEra)E.setEra(cw['纪年']||(GAME.op?GAME.op.era:'')||'');
     /* mvuSpec 里对模型白纸黑字写着「天气一栏必须含 晴/阴/雨/雪/风/雾 之一（三维画面据此取景）」，
@@ -10746,7 +10752,12 @@ function medEdictSync(){ /* 环海侧 sec_deed 敕令：同 edictSync，落到 M
     /* 三维画面四档循环：默认 → 放大 → 全屏 → 收起 → 默认…
        原来是展开／收起两个钮各管一头，现在全交给左上角那一枚台前调度小窗，
        点一下走一档。四档正好绕一圈，点过头再点三下就回来，不会卡死在某一端。 */
-    function eng(){return window.MED3D;}
+    /* 档位要写给「当前这条线用的那台引擎」。写死 MED3D 是个哑 bug：
+       周纪／陆之纪走的是 ZJ3D，setTier 把档位记到了一台根本没在跑的引擎上，
+       tierNow 也从那台空引擎读回 0。后果是画面里那枚「营造」按下去毫无反应——
+       引擎自己把 expanded 翻成 true、ZJ3D_onExpand 也挂上了 tx2，
+       紧接着 paint() 从 MED3D 读回 0，又把 tx2 摘掉了。 */
+    function eng(){return homeEng();}
     /* 档位原来只存在引擎对象上：引擎还没加载（或这条线根本不用引擎）时
        tierNow 恒返回 0，setTier 写进去也没人接——点多少下都停在第一档。
        面板自己的布局档不该依赖引擎在不在。这里补一份本地的：
