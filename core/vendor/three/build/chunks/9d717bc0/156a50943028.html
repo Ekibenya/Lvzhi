@@ -567,6 +567,39 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
      这一页就缩成了一条竖带（窗还被挤到 left:-43）。选择器同权、它在后面，
      只能用 !important 压回来。 */
   #game .gMfd.mvDeck{width:auto !important;left:0 !important;right:0 !important}
+  /* ── 手机：不再分页，就一个正文界面 ──
+     原先底部胶囊把地图／商店／正文／情报台切成四整页，一次只看得见一页。
+     有了台前调度就不需要分页了：正文常驻，四扇缩略窗浮在边上，点一下弹出对应的窗，
+     再点一下收回去——和桌面同一套交互，只是尺寸收小、底色更透。
+     forma===2 那套整页规则是 JS 注入的、排在后面，只能用 !important 压过去。 */
+  #game .gNav{display:none !important}
+  #game .gMain{left:0 !important;right:0 !important;bottom:0 !important;display:flex !important}
+  .gRail{display:flex !important;left:3px;gap:12px;padding:3px 0 3px 8px;
+        perspective:420px;perspective-origin:0% 50%}
+  /* 抽屉改回「浮在正文上的窗」，不再是撑满的整页 */
+  #game .gPanel{display:block !important;position:absolute !important;
+        left:50px !important;right:6px !important;width:auto !important;
+        top:calc(46px*var(--ui) + 6px) !important;bottom:52px !important;
+        border:1px solid rgba(236,236,232,.20) !important;
+        box-shadow:0 14px 34px rgba(0,0,0,.5) !important;
+        transform:translateX(-18px) scale(.96) !important;
+        opacity:0 !important;pointer-events:none !important;
+        transition:transform .34s cubic-bezier(.2,.85,.25,1),opacity .26s ease !important}
+  #game.mapOpen #pnMap,#game.armOpen #pnArm,#game.shopOpen #pnShop{
+        transform:none !important;opacity:1 !important;pointer-events:auto !important}
+  /* 情报台不再是一页，而是常驻的一层浮层：缩略列贴右缘，窗点开才出现 */
+  #game .gMfd{display:block !important;left:0 !important;right:0 !important;
+        top:calc(46px*var(--ui)) !important;bottom:0 !important;width:auto !important;
+        padding-bottom:0 !important;pointer-events:none}
+  #game .gMfd.mvDeck .mvWin.on{opacity:0;pointer-events:none}
+  #game.mvOpen .gMfd.mvDeck .mvWin.on{opacity:1;pointer-events:auto}
+  /* 情报台底条在手机上贴右下，别压住输入行 */
+  .gMfd.mvDeck .mvFoot{bottom:56px}
+  /* 桌面那几扇是嵌在让出来的一条里、身后是空的，可以透到 .08；
+     手机上它们是盖在正文上的浮层，透成那样两层字会叠在一起没法读。
+     加实到 .62——仍是毛玻璃，但字站得住。 */
+  #game .gMfd.mvDeck .mvWin{background:rgba(6,6,6,.62) !important}
+  #game .gPanel{background:rgba(6,6,6,.62) !important}
   /* 名字在桌面是从缩略窗左沿往右写的；手机上缩略列贴着屏幕最右缘，
      再往右写就出界被切了。改成靠右对齐，往左长。 */
   /* 权重要压得过后面那条 .mvCard.thumb .mvGhost{left:15px;text-align:left}——
@@ -11436,6 +11469,8 @@ function mvNear(t){                                        /* 取绕得最近的
   return MV.pos+d;
 }
 function mvBox(){return document.querySelector('#game .gMfd');}
+/* 手机版：情报台的窗是点出来的浮层，不是常驻的一条 */
+function mvPhone(){try{return innerWidth<=760;}catch(_){return false;}}
 function mvTag(t){
   /* 认的是名字里的关键词。栏目名改成白话之后旧词一个都不命中，
      不补新词的话「当前局势／人物关系／事件年表」三节会全掉回 STATVS。 */
@@ -11600,11 +11635,17 @@ function mvBind(){
   st.addEventListener('click',function(e){
     var c=e.target&&e.target.closest?e.target.closest('.mvCard'):null;
     if(!c){MV.w=0;return;}
-    if(c.classList.contains('on')){MV.w=0;return;}   /* 点的是正前这张：交给里面的按钮 */
+    if(c.classList.contains('on')){
+      /* 手机上情报台是一层浮层：点当前这一枚就收回去，再点又弹出来。
+         桌面窗常驻在让出来的那一条里，不需要这个开关。 */
+      if(mvPhone()){try{gEl.classList.toggle('mvOpen');}catch(_){}}
+      MV.w=0;return;                                  /* 桌面：点的是正前这张，交给里面的按钮 */
+    }
     /* 捕获阶段就截住：collapsed 的那几条抬头里也有 data-act 之类的按钮，
        不拦的话点一下会顺手把図谱那一节收起来。 */
     e.preventDefault();e.stopPropagation();
     MV.tgt=mvNear(parseInt(c.getAttribute('data-i'),10)||0);
+    if(mvPhone()){try{gEl.classList.add('mvOpen');}catch(_){}}
   },true);
   MV.foot.addEventListener('click',function(e){
     var g=e.target.closest?e.target.closest('[data-mv]'):null;if(!g)return;
@@ -11660,7 +11701,10 @@ function mvSize(){
      外缝是三维／正文与情报台之间那道界，给足 14px——2px 那一版贴得死紧，
      两块内容像糊在一起。内缝 6px：窗与缩略列本来就是一件东西，不必分那么开。
      这一条总宽因此到 368，比原来那一栏（322）宽 46px，全是三维与正文让的。 */
-  MV.mo=14;MV.mi=6;
+  /* 外缝：桌面 14 就够（左边是三维与正文的收边线）；
+     手机上窗是浮层，左边贴着的是地图／商店／装备那一列缩略窗，
+     留 66 才不会压在它们身上。 */
+  MV.mo=_nar?66:14;MV.mi=6;
   MV.gut=Math.max(240,Math.min(384,W-24));
   try{gEl.style.setProperty('--mvGut',MV.gut+'px');}catch(_){}
   /* 整扇窗在台上，缩略列不再从它头上占位：上限只受台高约束。 */
