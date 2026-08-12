@@ -362,12 +362,11 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
 :root{--ui:1}
 #game .gTop,#game .gNarr,#game .gModes,#game .gLine,#game .gMfd,
 .gDlg .box,#eraBox .box,#persona .box,#psRes .box{zoom:var(--ui)}
+/* 顶栏不再是一块「条」：底色、下沿线、毛玻璃全部去掉，只剩下几颗钮浮在画面上。
+   每颗钮自己那圈细线还在——要去的是它们底下那个大框。 */
 #game .gTop{position:absolute;left:0;top:0;right:0;height:46px;display:flex;align-items:center;
       justify-content:space-between;padding:0 18px;gap:14px;z-index:30;
-      border-bottom:1px solid rgba(236,236,232,.14);background:rgba(6,6,6,.23);
-      /* 毛玻璃：底下是三维画面与正文，直接压半透明黑会糊成一团脏色；
-         模糊+提饱和才能既压住底纹又保住金色图标的通透。 */
-      -webkit-backdrop-filter:blur(14px) saturate(150%);backdrop-filter:blur(14px) saturate(150%)}
+      border-bottom:0;background:transparent}
 #game .gBrand{font-size:10px;letter-spacing:.34em;color:var(--mut);white-space:nowrap}
 /* 这一条是跑马灯的「窗口」：宽度必须由布局定死，不能跟着内容走——
    轨道里塞的是两份内容，元素若按内容自适应就会撑大，把工具钮往屏幕外顶。
@@ -4389,7 +4388,7 @@ $('#miOrac').addEventListener('pointerup',function(e){e.stopPropagation();apiOpe
 $('#miArch').addEventListener('pointerup',function(e){e.stopPropagation();svOpen();});
 
 /* ================= game stage: Ghost layout in ROME dress ================ */
-var BUILD=72;
+var BUILD=73;
 /* 地图初始朝向。原来是 15°E（罗马那边）——这是从罗马那一版继承下来的，
    在秦这一版里一打开地图看到的是欧洲，中国被挤在球体右缘。
    球心画在画布最左缘（cx=gmW*.04），所以可视带约是 lonC ~ lonC+90°，
@@ -7437,7 +7436,6 @@ function applyGlass(){
     +'transparent 55%,rgba(0,0,0,'+(.20+.42*a).toFixed(2)+') 100%) !important}'
     +'#game .gMfd{background:rgba(8,8,8,'+(.06+.25*a).toFixed(2)+') !important}'
     +'#game .gInput{background:linear-gradient(0deg,rgba(6,6,6,'+(.55+.4*a).toFixed(2)+') 0%,rgba(6,6,6,'+(.35+.35*a).toFixed(2)+') 55%,rgba(6,6,6,0) 100%) !important}'
-    +'#game .gTop{background:rgba(6,6,6,'+(.05+.22*a).toFixed(2)+') !important}'
     /* 情报台那几扇窗跟着同一根「面板透明度」拉杆走——它们就是同一种窗，
        底色不该有两套。 */
     +'.gPanel,#pnTx{background:rgba(6,6,6,'+(.04+.16*a).toFixed(2)+') !important}'
