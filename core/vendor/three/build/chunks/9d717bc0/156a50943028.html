@@ -410,13 +410,9 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
       background:linear-gradient(0deg,rgba(6,6,6,.88) 0%,rgba(6,6,6,.66) 55%,rgba(6,6,6,0) 100%)}
 /* 三维面板是 z-index:25 的绝对定位层；放到最大档时它会压住下面这一组控件。
    把输入这一组抬到面板之上——画面可以被盖一点，控件不能点不着。 */
-#game .gModes,#game .gLine,#game .gSugRow{pointer-events:auto}
-/* 单行横滑：七个钮换行要占三行、手机上整个输入层吃掉四分之一屏。
-   改成不换行 + 横向滚动，高度回到一行；桌面装得下就不会出现滚动。 */
-#game .gModes{display:flex;gap:2px;padding:10px 14px 0;flex-wrap:nowrap;
-      overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;
-      touch-action:pan-x;scrollbar-width:none;cursor:grab}
-#game .gModes::-webkit-scrollbar{display:none}
+#game .gLine,#game .gSugRow{pointer-events:auto}
+/* 模式行整条撤了：模式收进一枚钮＋一张单子，四选项也进了那张单子，
+   入梦／起床跟着钮站进输入行。原先那条横滑的 .gModes 至此没有存在的理由。 */
 #game .gm,#game .gsug{flex:none}
 /* 前缀符号单独一个 <i>：桌面留着当装饰，手机上整排要一屏放得下，藏掉它省一截。 */
 #game .gm .ms,#game .gsug .ms{font-style:normal;margin-right:5px}
@@ -456,6 +452,23 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
 #game .gmMenu .gm.on b{color:var(--gold-hi)}
 #game .gmMenu .gm.on .ms{opacity:1;color:var(--gold-hi)}
 #game .gmMenu .gm:hover{background:rgba(236,236,232,.06)}
+#game .gmSep{display:block;height:1px;margin:4px 6px;background:rgba(236,236,232,.14)}
+#game .gmMenu .gsug{display:flex;align-items:center;gap:9px;width:100%;
+      padding:8px 10px !important;letter-spacing:.06em !important;font-size:11px;
+      margin:0;border:0;background:transparent;color:var(--mut);white-space:nowrap}
+#game .gmMenu .gsug .ms{display:inline !important;margin-right:0;flex:none;width:12px;
+      text-align:center;opacity:.75}
+#game .gmMenu .gsug b{font-weight:400;color:#d9d9d4;flex:none}
+#game .gmMenu .gsug em{font-style:normal;font-size:9px;letter-spacing:.02em;color:var(--mut);
+      flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;text-align:right}
+#game .gmMenu .gsug::after{content:'';flex:none;width:11px;margin-left:auto;text-align:right;color:var(--gold-hi)}
+#game .gmMenu .gsug.on::after{content:'✓'}
+#game .gmMenu .gsug.on{color:var(--mut)}
+#game .gmMenu .gsug.on b{color:var(--gold-hi)}
+#game .gmMenu .gsug.on .ms{opacity:1;color:var(--gold-hi)}
+#game .gmMenu .gsug:hover{background:rgba(236,236,232,.06)}
+/* 行里那颗 ○／● 是给一排小钮用的开关指示；单子里右边已经有勾了，不要两套。 */
+#game .gmMenu .gsug::before,#game .gmMenu .gsug.on::before{content:none}
 /* 参谋是开关不是输入模式：它不占模式位，只管「每一幕后要不要给四条可点的下一步」 */
 #game .gsug{font-size:9px;letter-spacing:.2em;padding:6px 12px 5px;cursor:pointer;white-space:nowrap;
       margin-left:10px;border:1px solid rgba(201,155,63,.28);color:var(--mut);background:rgba(6,6,6,.6)}
@@ -638,11 +651,10 @@ html.lux::after{content:'';position:fixed;inset:0;z-index:2147483647;pointer-eve
   /* 输入层原来为了让开底部胶囊留了 34px；胶囊已经撤了，这一段跟着收回来，
      整条从 140px 降到九十上下，情报台的窗才有地方站。 */
   #game .gInput{padding-top:8px !important;padding-bottom:6px !important}
-  #game .gModes{padding:6px 12px 0 !important}
   /* 一屏放得下：藏掉前缀符号、字距收紧、内距再收一档。 */
   #game .gm .ms,#game .gsug .ms{display:none}
   #game .gmMenu{left:12px;right:12px;min-width:0;max-width:none}
-  #game .gmMenu .gm em{display:none}
+  #game .gmMenu .gm em,#game .gmMenu .gsug em{display:none}
   #game .gm,#game .gsug{padding:4px 8px 3px !important;letter-spacing:.04em !important}
   #game .gNarr{padding-bottom:104px}
   /* 手机上左右两条缩略列是浮在正文之上的，7% 的边距（27px）不够躲：
@@ -1563,16 +1575,18 @@ html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx
         <span class="gm" data-tag="INSIDIAE" data-ph="私下说话 · 只有你和同伙看得见"><i class="ms">◈</i><b>聊天模式</b></span>
         <span class="gm" data-tag="EPISTVLA" data-ph="修书一封 · 收件人 @名字"><i class="ms">✉</i><b>写信</b></span>
         <span class="gm" data-tag="EDICTVM" data-ph="下令营造、征发之类 · 折损恩宠"><i class="ms">▣</i><b>建造</b></span>
-      </div>
-      <div class="gModes">
-        <span class="gsug" id="dreamIn" style="display:none" title="入梦：切到埃及一侧，从上一段梦境中断处接续"><i class="ms">☾</i>入梦</span>
-        <span class="gsug" id="dreamOut" style="display:none" title="起床：回到东京的这一天"><i class="ms">☀</i>起床</span>
-        <span class="gsug on" id="gSug" title="每一幕之后，按当下局势给出四条可点选的下一步。点这里开关。"><i class="ms">✦</i>四选项</span>
+        <!-- 四选项不是输入模式，是个开关：隔一条线单列在单子最底下，开着打勾。
+             点它不收单子——开关要能看见自己刚才被打上/取消了勾。 -->
+        <i class="gmSep"></i>
+        <span class="gsug on" id="gSug" title="每一幕之后，按当下局势给出四条可点选的下一步。点这里开关。"><i class="ms">✦</i><b>四选项</b><em>每一幕后给四条可点的下一步</em></span>
       </div>
       <div class="gSugRow" id="gSugRow"></div>
       <div class="gLine">
         <!-- 麦克风撤了：各家输入法自己都带语音，这一颗常年没人点。位置让给模式钮。 -->
         <span class="gmBtn" id="gModeBtn" title="换一个输入模式"><i class="ms">◆</i><b>说话</b><i class="cv">▾</i></span>
+        <!-- 入梦／起床只有艳后线露面（dreamSync 控），跟着模式钮站在输入行里 -->
+        <span class="gsug" id="dreamIn" style="display:none" title="入梦：切到埃及一侧，从上一段梦境中断处接续"><i class="ms">☾</i>入梦</span>
+        <span class="gsug" id="dreamOut" style="display:none" title="起床：回到东京的这一天"><i class="ms">☀</i>起床</span>
         <input id="gIn" autocomplete="off" spellcheck="false" placeholder="出声「…」 · ~开头=内心独白 · @名字 指定对象">
         <span class="gAux" id="gTts" title="朗读这一幕"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.2L12 18.6V5.4L7.2 9.5H4Z"/><path d="M15.6 9.1a4 4 0 0 1 0 5.8"/><path d="M18.3 6.3a7.8 7.8 0 0 1 0 11.4"/></svg></span>
         <span class="gAux" id="gRedo" title="重新演绎这一幕">↻</span>
@@ -4428,7 +4442,7 @@ $('#miOrac').addEventListener('pointerup',function(e){e.stopPropagation();apiOpe
 $('#miArch').addEventListener('pointerup',function(e){e.stopPropagation();svOpen();});
 
 /* ================= game stage: Ghost layout in ROME dress ================ */
-var BUILD=75;
+var BUILD=76;
 /* 地图初始朝向。原来是 15°E（罗马那边）——这是从罗马那一版继承下来的，
    在秦这一版里一打开地图看到的是欧洲，中国被挤在球体右缘。
    球心画在画布最左缘（cx=gmW*.04），所以可视带约是 lonC ~ lonC+90°，
