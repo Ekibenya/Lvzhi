@@ -4520,7 +4520,7 @@ $('#miOrac').addEventListener('pointerup',function(e){e.stopPropagation();apiOpe
 $('#miArch').addEventListener('pointerup',function(e){e.stopPropagation();svOpen();});
 
 /* ================= game stage: Ghost layout in ROME dress ================ */
-var BUILD=93;
+var BUILD=94;
 /* 地图初始朝向。原来是 15°E（罗马那边）——这是从罗马那一版继承下来的，
    在秦这一版里一打开地图看到的是欧洲，中国被挤在球体右缘。
    球心画在画布最左缘（cx=gmW*.04），所以可视带约是 lonC ~ lonC+90°，
@@ -9689,7 +9689,9 @@ function graphHydrate(){ /* 弹簧物理+拖拽+缩放（节点=g.transform 驱�
     raf=act?requestAnimationFrame(step):0;
   }
   function kick(){if(!raf&&alive()){step._t=0;raf=requestAnimationFrame(step);}}
-  function pt(e){var q=svg.createSVGPoint();q.x=e.clientX;q.y=e.clientY;var m=svg.getScreenCTM();return m?q.matrixTransform(m.inverse()):{x:0,y:0};}
+  function gScale(){var r=svg.getBoundingClientRect();var vb=(svg.getAttribute('viewBox')||'').split(/\s+/);
+    var vw=+vb[2]||BW,vh=+vb[3]||BH;
+    return {x:(r.width>1?vw/r.width:1),y:(r.height>1?vh/r.height:1)};}
   GPH.ptrs={};
   function actN(){return Object.keys(GPH.ptrs).length;}
   function nAt(g){var n=null;nodes.forEach(function(x){if(x.g===g)n=x;});return n;}
@@ -9706,7 +9708,18 @@ function graphHydrate(){ /* 弹簧物理+拖拽+缩放（节点=g.transform 驱�
     if(actN()>=2){if(GPH.drag){GPH.drag=null;nodes.forEach(function(o){o.ox=0;o.oy=0;});kick();}GPH.pan=null;pinchInit();e.preventDefault();return;}
     var g=e.target&&e.target.closest?e.target.closest('g[data-npc],g[data-gcenter]'):null;
     var n=g?nAt(g):null;
-    if(n){GPH.drag=n;n._moved=0;n._sx=e.clientX;n._sy=e.clientY;kick();}
+    if(n){
+      GPH.drag=n;n._moved=0;n._sx=e.clientX;n._sy=e.clientY;
+      /* 拖拽改成「记下起点，按位移走」。原来每一帧都 n.x=指针坐标——名牌等于把自己的
+         中心瞬间挪到指针底下，你按住的是牌角，它就先往一边窜一下（「图标躲着鼠标」），
+         名牌放大到 56×66 之后偏心抓到的机会更大，这一窜也更显眼。
+         位移还必须自己换算：图谱挂在情报台窗上，那层窗带 rotateY/scaleY 的 3D 变换，
+         getScreenCTM() 在这种祖先下给的是一份拍扁过的近似矩阵（实测 a=0.484，
+         而真实屏幕比例是 0.740），照它反算指针，名牌会以 1.5 倍速度往外跑。
+         改用 gzPan 同一套口径：viewBox ÷ 实际渲染框。 */
+      n._bx=n.x;n._by=n.y;GPH._sc=gScale();
+      kick();
+    }
     else{GPH.pan={lx:e.clientX,ly:e.clientY};}
     try{svg.setPointerCapture(e.pointerId);}catch(ex){}
     e.preventDefault();
@@ -9714,7 +9727,7 @@ function graphHydrate(){ /* 弹簧物理+拖拽+缩放（节点=g.transform 驱�
   svg.addEventListener('pointermove',function(e){
     if(GPH.ptrs[e.pointerId])GPH.ptrs[e.pointerId]={x:e.clientX,y:e.clientY};
     if(actN()>=2){pinchMove();e.preventDefault();return;}
-    if(GPH.drag){var n=GPH.drag,q=pt(e);n._moved=Math.max(n._moved||0,Math.abs(e.clientX-n._sx)+Math.abs(e.clientY-n._sy));n.x=q.x;n.y=q.y;apply(n);updEdges();if(!low){var dx=n.x-n.x0,dy=n.y-n.y0;nodes.forEach(function(o){if(o===n)return;var dd=Math.hypot(o.x0-n.x0,o.y0-n.y0)||1;var w=Math.min(.42,21/dd);o.ox=dx*w;o.oy=dy*w;});}kick();}
+    if(GPH.drag){var n=GPH.drag,sc=GPH._sc||gScale();n._moved=Math.max(n._moved||0,Math.abs(e.clientX-n._sx)+Math.abs(e.clientY-n._sy));n.x=(n._bx||0)+(e.clientX-n._sx)*sc.x;n.y=(n._by||0)+(e.clientY-n._sy)*sc.y;apply(n);updEdges();if(!low){var dx=n.x-n.x0,dy=n.y-n.y0;nodes.forEach(function(o){if(o===n)return;var dd=Math.hypot(o.x0-n.x0,o.y0-n.y0)||1;var w=Math.min(.42,21/dd);o.ox=dx*w;o.oy=dy*w;});}kick();}
     else if(GPH.pan){gzPan(svg,BW,BH,e.clientX-GPH.pan.lx,e.clientY-GPH.pan.ly);GPH.pan.lx=e.clientX;GPH.pan.ly=e.clientY;}
   });
   function gup(e){
