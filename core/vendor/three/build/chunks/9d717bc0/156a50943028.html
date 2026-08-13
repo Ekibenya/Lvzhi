@@ -891,11 +891,11 @@ input[type=range]:disabled{opacity:.4;cursor:default}
 .mNpc .nName{font-size:12px;letter-spacing:.22em;color:var(--txt)}
 .mNpc .nRole{font-size:10px;letter-spacing:.14em;color:var(--mut)}
 .mNpc .nLine{font-size:10.5px;letter-spacing:.1em;line-height:1.8;color:#c9c9c3;margin-top:5px}
-.mMind{font-size:9px;letter-spacing:.1em;line-height:1.8;color:var(--gold-hi);font-style:italic;
+.mMind{font-size:9px;letter-spacing:.1em;line-height:1.8;color:var(--gold-hi);font-style:normal;
   border-left:1px solid rgba(201,155,63,.55);padding:3px 0 3px 9px;margin:3px 0 2px}
 .mMind.mute{color:var(--mut);font-style:normal;border-left-color:rgba(236,236,232,.18)}
 .mMind.mute b{color:var(--gold);font-weight:400}
-.mNpc .nMind{font-size:10.5px;letter-spacing:.1em;line-height:1.7;color:var(--gold);margin-top:3px;font-style:italic}
+.mNpc .nMind{font-size:10.5px;letter-spacing:.1em;line-height:1.7;color:var(--gold);margin-top:3px;font-style:normal}
 .mNpc .nEye{font-size:9.5px;letter-spacing:.1em;line-height:1.7;color:var(--mut);margin-top:2px;border-left:2px solid rgba(236,200,120,.35);padding-left:6px}
 .mCap{font-size:10px;letter-spacing:.2em;color:var(--gold-hi);margin-top:4px}
 .mGlyph{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--mut);letter-spacing:.12em;margin-top:8px}
@@ -1106,7 +1106,7 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
 .fd-nd{color:#8f8f89;letter-spacing:.16em}
 .fd-bar{height:3px;background:rgba(236,236,232,.10);position:relative;margin-top:7px}
 .fd-bar>i{position:absolute;left:0;top:0;bottom:0;background:var(--gold)}
-.fd-quote{display:block;padding:2px 0;line-height:1.9;color:#ecc878;font-style:italic}
+.fd-quote{display:block;padding:2px 0;line-height:1.9;color:#ecc878;font-style:normal}
 .fd-last{margin-top:16px;font-size:9.5px;color:#9c9c98;letter-spacing:.3em}
 .fd-btn{cursor:pointer;display:inline-block;border:1px solid rgba(236,236,232,.35);background:transparent;color:#d9d9d4;font-size:10px;letter-spacing:.25em;padding:7px 16px 6px;user-select:none;transition:border-color .2s,color .2s}
 .fd-btn:hover{border-color:var(--gold);color:var(--gold-hi)}
@@ -4498,7 +4498,7 @@ $('#miOrac').addEventListener('pointerup',function(e){e.stopPropagation();apiOpe
 $('#miArch').addEventListener('pointerup',function(e){e.stopPropagation();svOpen();});
 
 /* ================= game stage: Ghost layout in ROME dress ================ */
-var BUILD=86;
+var BUILD=87;
 /* 地图初始朝向。原来是 15°E（罗马那边）——这是从罗马那一版继承下来的，
    在秦这一版里一打开地图看到的是欧洲，中国被挤在球体右缘。
    球心画在画布最左缘（cx=gmW*.04），所以可视带约是 lonC ~ lonC+90°，
