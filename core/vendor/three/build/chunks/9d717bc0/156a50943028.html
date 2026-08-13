@@ -4498,7 +4498,7 @@ $('#miOrac').addEventListener('pointerup',function(e){e.stopPropagation();apiOpe
 $('#miArch').addEventListener('pointerup',function(e){e.stopPropagation();svOpen();});
 
 /* ================= game stage: Ghost layout in ROME dress ================ */
-var BUILD=87;
+var BUILD=88;
 /* 地图初始朝向。原来是 15°E（罗马那边）——这是从罗马那一版继承下来的，
    在秦这一版里一打开地图看到的是欧洲，中国被挤在球体右缘。
    球心画在画布最左缘（cx=gmW*.04），所以可视带约是 lonC ~ lonC+90°，
@@ -9511,6 +9511,9 @@ function graphInner(){
      环距与每人占位收紧（视框变小），名牌与字号放大（同样缩放下更大）。 */
   var ring=58,radAt={};
   for(var di=1;di<=maxD;di++){radAt[di]=Math.max(ring*di,(depN[di]||1)*11);}
+  /* 第一圈单独抬一档：本体那一枚连名字往下探到 +32，外圈一枚连名字有 ±33，
+     环距按 58 排的话正下方那一枚会压在「本体│某某」上。71 是两者半高加一道缝。 */
+  if(radAt[1]!=null&&radAt[1]<71)radAt[1]=71;
   for(var dj=2;dj<=maxD;dj++){if(radAt[dj]<radAt[dj-1]+ring)radAt[dj]=radAt[dj-1]+ring;}
   var coreR=radAt[maxD]||ring;
   var floatR=Math.max(coreR+ring*0.6,(floated.length||1)*10);
@@ -9557,12 +9560,12 @@ function graphInner(){
     nodes+='<g data-npc="'+esc(o.name)+'" class="gph-n'+(sel?' gph-sel':'')+'" data-x="'+x.toFixed(1)+'" data-y="'+y.toFixed(1)+'" transform="translate('+x.toFixed(1)+','+y.toFixed(1)+')" style="cursor:grab">'
       +'<g transform="translate(-27,-32) scale(1.28)" style="pointer-events:none">'+fdFolderSvg(fdLampCol(o),false)+'</g>'
       +'<rect x="-28" y="-33" width="56" height="66" fill="transparent"/>'
-      +'<text class="gph-nm" x="0" y="26" text-anchor="middle" font-size="16">'+esc(_pshow)+'</text></g>';
+      +'<text class="gph-nm" x="0" y="24" text-anchor="middle" font-size="12.5">'+esc(_pshow)+'</text></g>';
   });
   var center='<g data-gcenter="1" class="gph-n gph-c" data-x="'+cx+'" data-y="'+cy+'" transform="translate('+cx+','+cy+')" style="cursor:grab">'
-    +'<g transform="translate(-33,-38) scale(1.5)" style="pointer-events:none">'+fdFolderSvg('',true)+'</g>'
+    +'<g transform="translate(-33,-38) scale(1.4)" style="pointer-events:none">'+fdFolderSvg('',true)+'</g>'
     +'<rect x="-34" y="-39" width="68" height="78" fill="transparent"/>'
-    +'<text x="0" y="32" text-anchor="middle" font-size="16" style="fill:#ecc878;font-family:var(--mono);letter-spacing:.05em;pointer-events:none">本体│'+esc(zjSelf())+'</text></g>';
+    +'<text x="0" y="28" text-anchor="middle" font-size="13.5" style="fill:#ecc878;font-family:var(--mono);letter-spacing:.05em;pointer-events:none">本体│'+esc(zjSelf())+'</text></g>';
   var hid=(S.graphHidden||[]).length;
   var resetLine=hid?'<div style="text-align:right;margin-top:6px"><span class="btn" data-act="npcUnhide" style="cursor:pointer;font-size:12px;color:var(--mut)">已移除 '+hid+' 人 · 还原全部</span></div>':'';
   return '<div class="gph-hint">人物图谱：常现之人系于本体、结成一张网——节点=人物名牌（状态灯示好感 <span style="color:#ecc878">金亲</span>·<span style="color:#c99b3f">褐平</span>·<span style="color:#c8402e">赤疏</span>），同幕共处者细线互连（虚线=仅一面之缘），孤身偶现者外环漂浮。名牌可拖拽、轻点开人物档案——手机双指、电脑 Ctrl+滚轮放大细看，拖背景平移。</div>'
