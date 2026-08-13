@@ -4520,7 +4520,7 @@ $('#miOrac').addEventListener('pointerup',function(e){e.stopPropagation();apiOpe
 $('#miArch').addEventListener('pointerup',function(e){e.stopPropagation();svOpen();});
 
 /* ================= game stage: Ghost layout in ROME dress ================ */
-var BUILD=91;
+var BUILD=92;
 /* 地图初始朝向。原来是 15°E（罗马那边）——这是从罗马那一版继承下来的，
    在秦这一版里一打开地图看到的是欧洲，中国被挤在球体右缘。
    球心画在画布最左缘（cx=gmW*.04），所以可视带约是 lonC ~ lonC+90°，
@@ -12426,7 +12426,14 @@ function tiltBind(el,vn,fn,def){
   var lo=Math.min(0,def),hi=Math.max(0,def),d=null;
   el.addEventListener('pointerdown',function(e){
     if(e.pointerType==='mouse'&&e.button!==0)return;
-    if(e.target&&e.target.closest&&e.target.closest('canvas'))return;
+    /* 手势归属：面板里凡是自己就吃指针的那几类（地球画布、人物图谱的 SVG、
+       输入框），一律不参与调倾角。
+       这不只是「谁先响应」的问题：调倾角这一步会 setPointerCapture 到面板上，
+       一旦抢走，图谱那边的 pointermove/up 就再也收不到——名牌拖到一半卡住不动、
+       松手也不回位，手机电脑都一样。所以在按下这一刻就让开，别等到滑动判定。
+       让开之后，那扇窗仍可在图谱之外的地方（顶上那段说明、四周留白、底行）横拖调角，
+       两个功能各在各的地盘上，都不少。 */
+    if(e.target&&e.target.closest&&e.target.closest('canvas,svg,input,textarea,select,[data-nodrag]'))return;
     d={x:e.clientX,y:e.clientY,t0:tiltGet(el,vn,def),on:0,id:e.pointerId};
   });
   el.addEventListener('pointermove',function(e){
