@@ -1094,11 +1094,17 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
 #zjGraphSvg g.gph-sel .fd-fold>rect:first-child{stroke:#ecc878;stroke-opacity:1;stroke-width:1.6}
 #zjGraphSvg g.gph-sel .gph-nm{fill:#ecc878}
 .fd-ov,.fd-ov *{border-radius:0!important}
-.fd-ov{position:fixed;inset:0;z-index:2147481300;display:flex;align-items:center;justify-content:center;background:rgba(4,4,4,.58);font-family:var(--mono)}
+/* 档案窗不再是「凭空出现在屏幕正中」的一块，而是接在情报台那一扇的左沿上：
+   缩略列 → 情报台的窗 → 档案窗，一环接一环往左排。遮罩因此要压得淡，
+   不然身后那一环全被糊掉，接不接得上就看不出来了。 */
+.fd-ov{position:fixed;inset:0;z-index:2147481300;display:flex;align-items:center;justify-content:flex-end;background:rgba(4,4,4,.30);font-family:var(--mono)}
 .fd-win{border:1px solid rgba(236,236,232,.4);
   background:rgba(6,6,6,.24);box-shadow:0 18px 48px rgba(0,0,0,.55);
   -webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%);
-  padding:30px 36px 24px;width:min(92vw,430px);max-height:80vh;overflow-y:auto;color:#d9d9d4;font-family:var(--mono)}
+  padding:24px 26px 20px;width:min(46vw,330px);max-height:66vh;overflow-y:auto;color:#d9d9d4;font-family:var(--mono);
+  /* 与情报台那几扇同向同角（−10°）。perspective 写进自己的 transform，
+     不能给祖先加——给祖先加会切断 backdrop 根，毛玻璃当场变成一块不透的黑。 */
+  transform:perspective(620px) rotateY(-10deg) scaleY(.93)}
 .fd-win h2{font-size:14px;letter-spacing:.3em;font-weight:400;color:#ecece8;margin:18px 0 6px}
 .fd-row{display:flex;gap:22px;font-size:12px;line-height:1.8;padding:11px 0;border-bottom:1px solid rgba(236,236,232,.12);letter-spacing:.04em}
 .fd-k{flex:0 0 74px;font-size:10px;letter-spacing:.24em;color:#9c9c98;padding-top:3px;white-space:nowrap}
@@ -1116,9 +1122,12 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
 .fd-nav:hover{border-color:var(--gold);color:var(--gold-hi)}
 @media (max-width:919px){
  /* 原来手机端把档案窗做成「贴底、全宽、只有上边框」的抽屉——半块屏幕被它占住，
-    看着已经不像一扇弹窗了。改回和电脑同一副：居中、四边有框、宽度仍是 min(92vw,430px)，
-    只把内距和限高各收一档，免得在小屏上顶到天地。 */
- .fd-win{max-height:72vh;padding:22px 20px 18px}
+    看着已经不像一扇弹窗了。改回居中、四边有框的弹窗。
+    「接在情报台左沿」那一套在手机上无从谈起（那边是铺满整屏的浮层），
+    所以这一档不靠右、不倾斜，仍走托起淡入。 */
+ .fd-ov{justify-content:center}
+ .fd-win{width:min(92vw,430px);max-height:72vh;padding:22px 20px 18px;transform:none;margin-right:0 !important}
+ .fd-ov .fd-win{animation:mvRise var(--t-view) var(--e-out) backwards;animation-delay:60ms}
 }
 /* ══ 天下三维 · 顶部停靠（RitusZhou zj3d）══ */
 /* 展开／收起拆成两个钮：原来一个钮循环「关→小→中→大→关」四态，
@@ -1239,9 +1248,16 @@ html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx
 .gDlg{animation:mvFade var(--t-view) var(--e-out) backwards}
 .gDlg .box{animation:mvRise var(--t-view) var(--e-out) backwards;animation-delay:60ms}
 /* 人物档案窗是 fdOpen 现建、fdClose 直接移除的，所以这一对动画每次打开都会重放。
-   原来它不在这一族里，一点名牌就「啪」地蹦出来，和全站别的弹窗完全两个脾气。 */
+   原来它不在这一族里，一点名牌就「啪」地蹦出来，和全站别的弹窗完全两个脾气。
+   它现在接在情报台那一扇的左沿上，所以不走「托起」，走「从右边那一扇底下滑出来」；
+   两端都得带上倾斜，否则动画一结束会从正的猛地跳成斜的。 */
+@keyframes fdSlide{
+  from{opacity:0;transform:perspective(620px) translateX(34px) scale(.97) rotateY(-10deg) scaleY(.93)}
+  to{opacity:1;transform:perspective(620px) rotateY(-10deg) scaleY(.93)}}
 .fd-ov{animation:mvFade var(--t-view) var(--e-out) backwards}
-.fd-ov .fd-win{animation:mvRise var(--t-view) var(--e-out) backwards;animation-delay:60ms}
+.fd-ov .fd-win{animation:fdSlide var(--t-view) var(--e-out) backwards;animation-delay:60ms}
+/* 手机那一档不接不斜，动画也得跟着退回托起——必须写在这条之后才压得住。 */
+@media (max-width:919px){.fd-ov .fd-win{animation:mvRise var(--t-view) var(--e-out) backwards;animation-delay:60ms}}
 
 /* —— 换屏：进入游戏／回菜单／选身份／选年代 —— */
 /* #intro / #menu 不在此列：它们靠 opacity 控显隐（#menu{opacity:0}+.show{opacity:1}），
@@ -4498,7 +4514,7 @@ $('#miOrac').addEventListener('pointerup',function(e){e.stopPropagation();apiOpe
 $('#miArch').addEventListener('pointerup',function(e){e.stopPropagation();svOpen();});
 
 /* ================= game stage: Ghost layout in ROME dress ================ */
-var BUILD=88;
+var BUILD=89;
 /* 地图初始朝向。原来是 15°E（罗马那边）——这是从罗马那一版继承下来的，
    在秦这一版里一打开地图看到的是欧洲，中国被挤在球体右缘。
    球心画在画布最左缘（cx=gmW*.04），所以可视带约是 lonC ~ lonC+90°，
@@ -9766,6 +9782,19 @@ function fdOvClick(e){
   }
   if(t&&t.id==='fdOv')fdClose(); /* 点幕布关窗 */
 }
+/* 把档案窗推到情报台那一扇的左边去：右外边距 = 视口右缘到那一扇左沿的距离 + 一道缝。
+   量的是实时 rect，不写死 --mvGut——那一扇的宽度随窗宽变，写死就对不齐。
+   那一扇没开（或窄屏）就退回居中，交给 CSS。 */
+function fdPlace(){
+  var ov=document.getElementById('fdOv');if(!ov)return;
+  var w=ov.querySelector('.fd-win');if(!w)return;
+  var mv=(innerWidth>919)?document.querySelector('.gMfd.mvDeck .mvWin.on'):null;
+  if(!mv){w.style.marginRight='';return;}
+  var r=mv.getBoundingClientRect();
+  if(!(r.width>1)){w.style.marginRight='';return;}
+  w.style.marginRight=Math.max(12,Math.round(innerWidth-r.left+14))+'px';
+}
+addEventListener('resize',function(){try{fdPlace();}catch(_){}});
 function fdOpen(nm){
   if(!nm)return;
   S.memNpc=nm;
@@ -9782,6 +9811,7 @@ function fdOpen(nm){
     document.body.appendChild(ov);
   }
   fdRefresh();
+  try{fdPlace();}catch(_){}
 }
 /* ---------------- 长程记忆 · 编年长卷 ----------------
    每轮世界回应自动摘为一条编年纪要（年代·时地·玩家之举·记录），永久保存、
