@@ -1114,9 +1114,11 @@ button:focus-visible,.go:focus-visible{outline:1px solid var(--gold);outline-off
 .fd-foot{display:flex;justify-content:space-between;gap:12px;margin-top:22px}
 .fd-nav{cursor:pointer;border:1px solid rgba(236,236,232,.35);color:#d9d9d4;font-size:10px;letter-spacing:.3em;padding:8px 18px 7px;user-select:none;transition:border-color .2s,color .2s}
 .fd-nav:hover{border-color:var(--gold);color:var(--gold-hi)}
-@media (max-width:919px){ /* 手机端：档案窗全宽底部抽屉 */
- .fd-ov{align-items:flex-end}
- .fd-win{width:100%;max-width:none;max-height:78vh;border-left:none;border-right:none;border-bottom:none;padding:24px 22px 20px}
+@media (max-width:919px){
+ /* 原来手机端把档案窗做成「贴底、全宽、只有上边框」的抽屉——半块屏幕被它占住，
+    看着已经不像一扇弹窗了。改回和电脑同一副：居中、四边有框、宽度仍是 min(92vw,430px)，
+    只把内距和限高各收一档，免得在小屏上顶到天地。 */
+ .fd-win{max-height:72vh;padding:22px 20px 18px}
 }
 /* ══ 天下三维 · 顶部停靠（RitusZhou zj3d）══ */
 /* 展开／收起拆成两个钮：原来一个钮循环「关→小→中→大→关」四态，
@@ -1236,6 +1238,10 @@ html.lux #pnTx #zjScene3D>canvas,html.lux #pnTx #mdScene3D>canvas,html.lux #pnTx
 /* —— 弹窗：遮罩淡入，内容托起 —— */
 .gDlg{animation:mvFade var(--t-view) var(--e-out) backwards}
 .gDlg .box{animation:mvRise var(--t-view) var(--e-out) backwards;animation-delay:60ms}
+/* 人物档案窗是 fdOpen 现建、fdClose 直接移除的，所以这一对动画每次打开都会重放。
+   原来它不在这一族里，一点名牌就「啪」地蹦出来，和全站别的弹窗完全两个脾气。 */
+.fd-ov{animation:mvFade var(--t-view) var(--e-out) backwards}
+.fd-ov .fd-win{animation:mvRise var(--t-view) var(--e-out) backwards;animation-delay:60ms}
 
 /* —— 换屏：进入游戏／回菜单／选身份／选年代 —— */
 /* #intro / #menu 不在此列：它们靠 opacity 控显隐（#menu{opacity:0}+.show{opacity:1}），
@@ -4492,7 +4498,7 @@ $('#miOrac').addEventListener('pointerup',function(e){e.stopPropagation();apiOpe
 $('#miArch').addEventListener('pointerup',function(e){e.stopPropagation();svOpen();});
 
 /* ================= game stage: Ghost layout in ROME dress ================ */
-var BUILD=85;
+var BUILD=86;
 /* 地图初始朝向。原来是 15°E（罗马那边）——这是从罗马那一版继承下来的，
    在秦这一版里一打开地图看到的是欧洲，中国被挤在球体右缘。
    球心画在画布最左缘（cx=gmW*.04），所以可视带约是 lonC ~ lonC+90°，
@@ -9500,12 +9506,15 @@ function graphInner(){
   var kidsOf={'__c':[]};ns.forEach(function(o){if(seen[o.name]){var pp=parent[o.name];(kidsOf[pp]=kidsOf[pp]||[]).push(o.name);}});
   var maxD=1;ns.forEach(function(o){if((depthOf[o.name]||0)>maxD)maxD=depthOf[o.name];});
   var depN={};ns.forEach(function(o){if(seen[o.name]){var dd=depthOf[o.name];depN[dd]=(depN[dd]||0)+1;}});
-  var ring=88,radAt={};
-  for(var di=1;di<=maxD;di++){radAt[di]=Math.max(ring*di,(depN[di]||1)*9);}
+  /* 一张 4 人的图谱都要 542 的视框、塞进 287px 的窗里——0.53 的缩放，
+     11 号字落到屏上只剩 5.8px，电脑上都读不出。两头一起治：
+     环距与每人占位收紧（视框变小），名牌与字号放大（同样缩放下更大）。 */
+  var ring=58,radAt={};
+  for(var di=1;di<=maxD;di++){radAt[di]=Math.max(ring*di,(depN[di]||1)*11);}
   for(var dj=2;dj<=maxD;dj++){if(radAt[dj]<radAt[dj-1]+ring)radAt[dj]=radAt[dj-1]+ring;}
   var coreR=radAt[maxD]||ring;
-  var floatR=Math.max(coreR+ring*0.6,(floated.length||1)*8.6);
-  var maxR=Math.max(coreR,floatR),W=Math.round((maxR+42)*2),H=W,cx=W/2,cy=H/2;
+  var floatR=Math.max(coreR+ring*0.6,(floated.length||1)*10);
+  var maxR=Math.max(coreR,floatR),W=Math.round((maxR+30)*2),H=W,cx=W/2,cy=H/2;
   function leafN(nm){var k=kidsOf[nm]||[];if(!k.length)return 1;var s=0;k.forEach(function(c){s+=leafN(c);});return s;}
   var pos={'__c':{x:cx,y:cy}};
   function lay(nm,a0,a1,depth){
@@ -9546,14 +9555,14 @@ function graphInner(){
     var sel=S.memNpc===o.name;
     var _pn=String(o.name),_pshow=_pn.length>6?_pn.slice(0,6):_pn;
     nodes+='<g data-npc="'+esc(o.name)+'" class="gph-n'+(sel?' gph-sel':'')+'" data-x="'+x.toFixed(1)+'" data-y="'+y.toFixed(1)+'" transform="translate('+x.toFixed(1)+','+y.toFixed(1)+')" style="cursor:grab">'
-      +'<g transform="translate(-21,-25)" style="pointer-events:none">'+fdFolderSvg(fdLampCol(o),false)+'</g>'
-      +'<rect x="-22" y="-26" width="44" height="52" fill="transparent"/>'
-      +'<text class="gph-nm" x="0" y="21" text-anchor="middle" font-size="11">'+esc(_pshow)+'</text></g>';
+      +'<g transform="translate(-27,-32) scale(1.28)" style="pointer-events:none">'+fdFolderSvg(fdLampCol(o),false)+'</g>'
+      +'<rect x="-28" y="-33" width="56" height="66" fill="transparent"/>'
+      +'<text class="gph-nm" x="0" y="26" text-anchor="middle" font-size="16">'+esc(_pshow)+'</text></g>';
   });
   var center='<g data-gcenter="1" class="gph-n gph-c" data-x="'+cx+'" data-y="'+cy+'" transform="translate('+cx+','+cy+')" style="cursor:grab">'
-    +'<g transform="translate(-26,-30) scale(1.18)" style="pointer-events:none">'+fdFolderSvg('',true)+'</g>'
-    +'<rect x="-27" y="-31" width="54" height="62" fill="transparent"/>'
-    +'<text x="0" y="25" text-anchor="middle" font-size="11.5" style="fill:#ecc878;font-family:var(--mono);letter-spacing:.05em;pointer-events:none">本体│'+esc(zjSelf())+'</text></g>';
+    +'<g transform="translate(-33,-38) scale(1.5)" style="pointer-events:none">'+fdFolderSvg('',true)+'</g>'
+    +'<rect x="-34" y="-39" width="68" height="78" fill="transparent"/>'
+    +'<text x="0" y="32" text-anchor="middle" font-size="16" style="fill:#ecc878;font-family:var(--mono);letter-spacing:.05em;pointer-events:none">本体│'+esc(zjSelf())+'</text></g>';
   var hid=(S.graphHidden||[]).length;
   var resetLine=hid?'<div style="text-align:right;margin-top:6px"><span class="btn" data-act="npcUnhide" style="cursor:pointer;font-size:12px;color:var(--mut)">已移除 '+hid+' 人 · 还原全部</span></div>':'';
   return '<div class="gph-hint">人物图谱：常现之人系于本体、结成一张网——节点=人物名牌（状态灯示好感 <span style="color:#ecc878">金亲</span>·<span style="color:#c99b3f">褐平</span>·<span style="color:#c8402e">赤疏</span>），同幕共处者细线互连（虚线=仅一面之缘），孤身偶现者外环漂浮。名牌可拖拽、轻点开人物档案——手机双指、电脑 Ctrl+滚轮放大细看，拖背景平移。</div>'
@@ -9646,6 +9655,11 @@ function graphHydrate(){ /* 弹簧物理+拖拽+缩放（节点=g.transform 驱�
   function pinchInit(){var ids=Object.keys(GPH.ptrs),a=GPH.ptrs[ids[0]],b=GPH.ptrs[ids[1]];GPH._pinch={d:Math.hypot(a.x-b.x,a.y-b.y)||1,mx:(a.x+b.x)/2,my:(a.y+b.y)/2};}
   function pinchMove(){var ids=Object.keys(GPH.ptrs);if(ids.length<2)return;var a=GPH.ptrs[ids[0]],b=GPH.ptrs[ids[1]];var d=Math.hypot(a.x-b.x,a.y-b.y)||1,mx=(a.x+b.x)/2,my=(a.y+b.y)/2;var pcx=GPH._pinch;if(!pcx){GPH._pinch={d:d,mx:mx,my:my};return;}gzZoom(svg,BW,BH,mx,my,d/pcx.d);gzPan(svg,BW,BH,mx-pcx.mx,my-pcx.my);GPH._pinch={d:d,mx:mx,my:my};}
   svg.addEventListener('pointerdown',function(e){
+    /* 一次手势结束时若有一枚指针的 up 没回来（松手在 SVG 之外、指针被系统收走、
+       捕获失败……），GPH.ptrs 里就留着一条幽灵记录：下次单指一按 actN() 就已经是 2，
+       于是「单指平移」被当成双指捏合——手机上表现为一拖就乱缩放，
+       电脑上表现为松了手节点还粘着走。新手势的第一枚指针一律清台重来。 */
+    if(e.isPrimary){GPH.ptrs={};GPH._pinch=null;GPH.drag=null;GPH.pan=null;}
     GPH.ptrs[e.pointerId]={x:e.clientX,y:e.clientY};
     if(actN()>=2){if(GPH.drag){GPH.drag=null;nodes.forEach(function(o){o.ox=0;o.oy=0;});kick();}GPH.pan=null;pinchInit();e.preventDefault();return;}
     var g=e.target&&e.target.closest?e.target.closest('g[data-npc],g[data-gcenter]'):null;
@@ -9662,7 +9676,10 @@ function graphHydrate(){ /* 弹簧物理+拖拽+缩放（节点=g.transform 驱�
     else if(GPH.pan){gzPan(svg,BW,BH,e.clientX-GPH.pan.lx,e.clientY-GPH.pan.ly);GPH.pan.lx=e.clientX;GPH.pan.ly=e.clientY;}
   });
   function gup(e){
-    if(e&&e.pointerId!=null)delete GPH.ptrs[e.pointerId];
+    if(e&&e.pointerId!=null){
+      delete GPH.ptrs[e.pointerId];
+      try{if(svg.hasPointerCapture&&svg.hasPointerCapture(e.pointerId))svg.releasePointerCapture(e.pointerId);}catch(_){}
+    }
     if(actN()<2)GPH._pinch=null;
     if(actN()>0)return;
     if(GPH.drag){var n=GPH.drag;GPH.drag=null;var tap=(n._moved||0)<=10;nodes.forEach(function(o){o.ox=0;o.oy=0;});kick();GPH.squelch=true;setTimeout(function(){GPH.squelch=false;},400);if(tap&&!n.isC){fdOpen(n.g.getAttribute('data-npc'));gphMark();}}
@@ -9670,6 +9687,11 @@ function graphHydrate(){ /* 弹簧物理+拖拽+缩放（节点=g.transform 驱�
   }
   svg.addEventListener('pointerup',gup);
   svg.addEventListener('pointercancel',gup);
+  /* 只在 svg 上收 up 是不够的：捕获一旦没拿到（或被系统撤销），松在窗外那一下
+     根本不会回到这里，拖着的节点就一直跟着鼠标走。窗上再收一道，捕获阶段先拿到。 */
+  addEventListener('pointerup',gup,true);
+  addEventListener('pointercancel',gup,true);
+  addEventListener('blur',function(){GPH.ptrs={};GPH._pinch=null;GPH.drag=null;GPH.pan=null;});
   /* 滚轮：面板滚动优先，只有按住 Ctrl／⌘ 才缩放图谱。
      原来这里无条件 preventDefault——鼠标一压到图谱上，整条情报台就再也滚不动了，
      用户只能继续空转滚轮；而每一格滚轮都要 getBoundingClientRect 强制回流 + 改 viewBox，
