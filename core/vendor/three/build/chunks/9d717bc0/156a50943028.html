@@ -4520,7 +4520,7 @@ $('#miOrac').addEventListener('pointerup',function(e){e.stopPropagation();apiOpe
 $('#miArch').addEventListener('pointerup',function(e){e.stopPropagation();svOpen();});
 
 /* ================= game stage: Ghost layout in ROME dress ================ */
-var BUILD=92;
+var BUILD=93;
 /* 地图初始朝向。原来是 15°E（罗马那边）——这是从罗马那一版继承下来的，
    在秦这一版里一打开地图看到的是欧洲，中国被挤在球体右缘。
    球心画在画布最左缘（cx=gmW*.04），所以可视带约是 lonC ~ lonC+90°，
@@ -9640,6 +9640,13 @@ function graphHydrate(){ /* 弹簧物理+拖拽+缩放（节点=g.transform 驱�
   var svg=document.getElementById('zjGraphSvg');
   if(!svg||svg.__gph)return;
   svg.__gph=1;
+  /* 情报台每幕重绘一次，图谱于是被整棵换掉、graphHydrate 再跑一遍。
+     旧那一份的弹簧循环还活着，而它写的是同一个全局 GPH.raf——新旧两条链抢同一个格子：
+     旧链先跑完、把 GPH.raf 归零，新链就此断掉，被拖开的名牌停在半路再也不回位。
+     所以每一份自己拿一个 raf 槽，另外发一张号（gen）：DOM 已经换掉、或号不是最新的，
+     一律立刻收手，事件也不再受理。 */
+  var raf=0,gen=(GPH.gen=(GPH.gen||0)+1);
+  function alive(){return svg.isConnected&&gen===GPH.gen;}
   var low=false;try{low=reducedMotion();}catch(e){}
   var BW=+svg.getAttribute('data-bw')||360,BH=+svg.getAttribute('data-bh')||360;
   gzApplyVB(svg,BW,BH);
@@ -9658,21 +9665,30 @@ function graphHydrate(){ /* 弹簧物理+拖拽+缩放（节点=g.transform 驱�
   });
   function updEdges(){edges.forEach(function(e){e.el.setAttribute('x1',e.a.x);e.el.setAttribute('y1',e.a.y);e.el.setAttribute('x2',e.b.x);e.el.setAttribute('y2',e.b.y);});}
   function apply(n){n.g.setAttribute('transform','translate('+n.x.toFixed(1)+','+n.y.toFixed(1)+')');}
-  function step(){
-    if(low){nodes.forEach(function(n){if(GPH.drag===n)return;n.x=n.x0+n.ox;n.y=n.y0+n.oy;apply(n);});updEdges();GPH.raf=0;return;}
-    var act=false;
+  /* 归位原来是「每帧朝目标收 14%、速度留 80%」的弹簧：按帧算，不按时间算。
+     图谱这一层的帧率是跟着三维场景走的——手机上常掉到十几帧，软件渲染时只有个位数
+     （本机实测 3fps）。于是松手之后要好几秒才回得去，中途还来回过冲，
+     看着就是「拖完整个被拖走、不复位」。
+     改成按真实时间收敛，并且不再过冲：快机慢机都在半秒上下归位，
+     差到 0.4 以内直接吸附到位，免得留一截永远收不完的尾巴。 */
+  function step(ts){
+    if(!alive()){raf=0;return;}
+    if(low){nodes.forEach(function(n){if(GPH.drag===n)return;n.x=n.x0+n.ox;n.y=n.y0+n.oy;apply(n);});updEdges();raf=0;return;}
+    var now=ts||performance.now();
+    var dt=Math.min(4,Math.max(.25,(now-(step._t||(now-16.7)))/16.7));   /* 以 60fps 一帧为 1 */
+    step._t=now;
+    var k=1-Math.pow(1-.22,dt),act=false;
     nodes.forEach(function(n){
       if(GPH.drag===n){act=true;return;}
-      var tx=n.x0+n.ox,ty=n.y0+n.oy;
-      n.vx=(n.vx+(tx-n.x)*.14)*.8;n.vy=(n.vy+(ty-n.y)*.14)*.8;
-      n.x+=n.vx;n.y+=n.vy;
-      if(Math.abs(n.vx)+Math.abs(n.vy)+Math.abs(tx-n.x)+Math.abs(ty-n.y)>.15)act=true;
+      var tx=n.x0+n.ox,ty=n.y0+n.oy,dx=tx-n.x,dy=ty-n.y;
+      if(Math.abs(dx)<.4&&Math.abs(dy)<.4){n.x=tx;n.y=ty;n.vx=n.vy=0;}
+      else{n.x+=dx*k;n.y+=dy*k;act=true;}
       apply(n);
     });
     updEdges();
-    GPH.raf=act?requestAnimationFrame(step):0;
+    raf=act?requestAnimationFrame(step):0;
   }
-  function kick(){if(!GPH.raf)GPH.raf=requestAnimationFrame(step);}
+  function kick(){if(!raf&&alive()){step._t=0;raf=requestAnimationFrame(step);}}
   function pt(e){var q=svg.createSVGPoint();q.x=e.clientX;q.y=e.clientY;var m=svg.getScreenCTM();return m?q.matrixTransform(m.inverse()):{x:0,y:0};}
   GPH.ptrs={};
   function actN(){return Object.keys(GPH.ptrs).length;}
@@ -9680,6 +9696,7 @@ function graphHydrate(){ /* 弹簧物理+拖拽+缩放（节点=g.transform 驱�
   function pinchInit(){var ids=Object.keys(GPH.ptrs),a=GPH.ptrs[ids[0]],b=GPH.ptrs[ids[1]];GPH._pinch={d:Math.hypot(a.x-b.x,a.y-b.y)||1,mx:(a.x+b.x)/2,my:(a.y+b.y)/2};}
   function pinchMove(){var ids=Object.keys(GPH.ptrs);if(ids.length<2)return;var a=GPH.ptrs[ids[0]],b=GPH.ptrs[ids[1]];var d=Math.hypot(a.x-b.x,a.y-b.y)||1,mx=(a.x+b.x)/2,my=(a.y+b.y)/2;var pcx=GPH._pinch;if(!pcx){GPH._pinch={d:d,mx:mx,my:my};return;}gzZoom(svg,BW,BH,mx,my,d/pcx.d);gzPan(svg,BW,BH,mx-pcx.mx,my-pcx.my);GPH._pinch={d:d,mx:mx,my:my};}
   svg.addEventListener('pointerdown',function(e){
+    if(!alive())return;
     /* 一次手势结束时若有一枚指针的 up 没回来（松手在 SVG 之外、指针被系统收走、
        捕获失败……），GPH.ptrs 里就留着一条幽灵记录：下次单指一按 actN() 就已经是 2，
        于是「单指平移」被当成双指捏合——手机上表现为一拖就乱缩放，
@@ -9701,6 +9718,7 @@ function graphHydrate(){ /* 弹簧物理+拖拽+缩放（节点=g.transform 驱�
     else if(GPH.pan){gzPan(svg,BW,BH,e.clientX-GPH.pan.lx,e.clientY-GPH.pan.ly);GPH.pan.lx=e.clientX;GPH.pan.ly=e.clientY;}
   });
   function gup(e){
+    if(!alive())return;
     if(e&&e.pointerId!=null){
       delete GPH.ptrs[e.pointerId];
       try{if(svg.hasPointerCapture&&svg.hasPointerCapture(e.pointerId))svg.releasePointerCapture(e.pointerId);}catch(_){}
